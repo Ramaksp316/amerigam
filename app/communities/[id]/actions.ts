@@ -4,6 +4,7 @@ import { prisma } from '../../../lib/prisma';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '../../../utils/supabase/server';
+import { sendWebPushNotification } from '../../actions/sendWebPush';
 
 export async function createCommunityPost(formData: FormData) {
   const cookieStore = await cookies();
@@ -49,6 +50,37 @@ export async function createCommunityPost(formData: FormData) {
         communityId,
       },
     });
+
+    const community = await prisma.community.findUnique({
+      where: { id: communityId },
+      include: { members: true }
+    });
+
+    if (community) {
+      const actorUser = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, username: true } });
+      const actorName = actorUser ? (actorUser.username || actorUser.name || 'Someone') : 'Someone';
+
+      for (const member of community.members) {
+        if (member.userId !== userId) {
+          await prisma.notification.create({
+            data: {
+              userId: member.userId,
+              actorId: userId,
+              type: 'community_post',
+              content: `posted in ${community.name}.`,
+              link: `/communities/${communityId}`,
+            }
+          });
+          await sendWebPushNotification(
+            member.userId, 
+            `New post in ${community.name}`, 
+            `${actorName}: ${content.length > 30 ? content.substring(0, 30) + '...' : content}`, 
+            `/communities/${communityId}`
+          );
+        }
+      }
+    }
+
     revalidatePath(`/communities/${communityId}`);
   }
 }

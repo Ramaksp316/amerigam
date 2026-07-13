@@ -2,6 +2,7 @@ import { prisma } from '../../../lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createCommunityPost } from './actions';
+import LocalTime from '../../components/LocalTime';
 
 export default async function CommunityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
@@ -88,7 +89,9 @@ export default async function CommunityDetailPage({ params }: { params: Promise<
                   <strong style={{ fontSize: '1.1rem' }}>
                     <a href={`/user/${post.authorId}`} style={{ textDecoration: 'none' }}>{post.author.name || post.author.username}</a>
                   </strong>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{new Date(post.createdAt).toLocaleDateString()}</span>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                    <LocalTime date={post.createdAt} format="date" />
+                  </span>
                 </div>
 
                 {post.content && <p style={{ marginBottom: '15px', fontSize: '1.1rem' }}>{post.content}</p>}

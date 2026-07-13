@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
 import Link from 'next/link';
@@ -7,6 +8,15 @@ import { Home, Search, Compass, Users, MessageCircle, User, PlusSquare, Trophy, 
 
 export default function Sidebar({ unreadCount = 0 }: { unreadCount?: number }) {
   const pathname = usePathname();
+  const [displayUnread, setDisplayUnread] = useState(unreadCount);
+
+  useEffect(() => {
+    if (pathname === '/notifications') {
+      setDisplayUnread(0);
+    } else {
+      setDisplayUnread(unreadCount);
+    }
+  }, [pathname, unreadCount]);
 
   if (pathname === '/login') {
     return null;
@@ -44,7 +54,7 @@ export default function Sidebar({ unreadCount = 0 }: { unreadCount?: number }) {
         <Link href="/notifications" className={pathname === '/notifications' ? 'active' : ''}>
           <span className="icon" style={{ position: 'relative' }}>
             <Bell size={24} strokeWidth={pathname === '/notifications' ? 2.5 : 2} />
-            {unreadCount > 0 && (
+            {displayUnread > 0 && (
               <span style={{
                 position: 'absolute',
                 top: '-2px',
@@ -61,7 +71,7 @@ export default function Sidebar({ unreadCount = 0 }: { unreadCount?: number }) {
                 justifyContent: 'center',
                 border: '2px solid var(--sidebar-bg)'
               }}>
-                {unreadCount > 99 ? '99+' : unreadCount}
+                {displayUnread > 99 ? '99+' : displayUnread}
               </span>
             )}
           </span> 

@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import PushNotificationManager from '../components/PushNotificationManager';
+import NotificationItem from '../components/NotificationItem';
 
 export default async function NotificationsPage() {
   const cookieStore = await cookies();
@@ -42,32 +43,12 @@ export default async function NotificationsPage() {
             const actorInitial = actorName.charAt(0).toUpperCase();
 
             return (
-              <Link 
-                href={notif.link || '#'} 
+              <NotificationItem 
                 key={notif.id} 
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '15px', 
-                  padding: '15px 20px', 
-                  borderBottom: '1px solid var(--border-color)', 
-                  textDecoration: 'none',
-                  color: 'inherit',
-                  backgroundColor: notif.isRead ? 'transparent' : 'rgba(var(--text-primary-rgb), 0.05)'
-                }}
-              >
-                <div className="post-avatar" style={{ width: '40px', height: '40px', fontSize: '1.2rem' }}>
-                  <div className="post-avatar-inner">{actorInitial}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '1rem' }}>
-                    <strong>{actorName}</strong> {notif.content}
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                    {new Date(notif.createdAt).toLocaleDateString()} at {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-              </Link>
+                notif={notif} 
+                actorName={actorName} 
+                actorInitial={actorInitial} 
+              />
             );
           })
         )}

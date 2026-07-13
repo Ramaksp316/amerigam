@@ -7,6 +7,9 @@ import ShareButton from './ShareButton';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from 'lucide-react';
+import { createPost, toggleLike, addComment } from '../actions/postActions';
+import PostActions from '../components/PostActions';
+import LocalTime from '../components/LocalTime';
 import DeletePostButton from '../components/DeletePostButton';
 import LikeButton from '../components/LikeButton';
 import CommentForm from '../components/CommentForm';
@@ -134,9 +137,14 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
 
               {/* Likes & Content */}
               <div className="post-content">
-                <strong style={{ fontSize: '0.9rem', display: 'block', marginBottom: '6px' }}>
-                  {post.likes.length} {post.likes.length === 1 ? 'like' : 'likes'}
-                </strong>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <strong style={{ fontSize: '0.9rem' }}>
+                    {post.likes.length} {post.likes.length === 1 ? 'like' : 'likes'}
+                  </strong>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                    <LocalTime date={post.createdAt} format="date" />
+                  </span>
+                </div>
                 
                 {post.content && (
                   <p style={{ fontSize: '0.9rem', marginBottom: '8px' }}>

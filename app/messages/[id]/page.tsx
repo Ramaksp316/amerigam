@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import SubmitButton from '../../components/SubmitButton';
+import LocalTime from '../../components/LocalTime';
+import { sendWebPushNotification } from '../../actions/sendWebPush';
 
 async function sendMessage(formData: FormData) {
   'use server';
@@ -31,6 +33,10 @@ async function sendMessage(formData: FormData) {
         link: `/messages/${userId}`,
       }
     });
+
+    const actorUser = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, username: true } });
+    const actorName = actorUser ? (actorUser.username || actorUser.name || 'Someone') : 'Someone';
+    await sendWebPushNotification(receiverId, 'New Message', `${actorName}: ${content.length > 30 ? content.substring(0, 30) + '...' : content}`, `/messages/${userId}`);
 
     revalidatePath(`/messages/${receiverId}`);
   }
@@ -108,7 +114,7 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
                   {msg.content}
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '5px' }}>
-                  {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <LocalTime date={msg.createdAt} format="time" />
                 </div>
               </div>
             );

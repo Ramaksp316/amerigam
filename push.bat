@@ -1,3 +1,3 @@
 git add .
-git commit -m "Implement Native Web Push Notifications"
+git commit -m "Fix mobile UI, Timezones, and Notification UX"
 git push
