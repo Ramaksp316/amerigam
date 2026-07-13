@@ -3,7 +3,7 @@
 import { prisma } from '../../lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createClient } from '../../utils/supabase/server';
+// Removed createClient since we don't upload from server anymore
 
 export async function createPost(formData: FormData) {
   const cookieStore = await cookies();
@@ -11,35 +11,11 @@ export async function createPost(formData: FormData) {
   if (!userId) return;
 
   const content = formData.get('content') as string;
-  const media = formData.get('media') as File | null;
+  const mediaUrl = formData.get('mediaUrl') as string | null;
+  const mediaType = formData.get('mediaType') as string | null;
   const relatedMasterPath = formData.get('relatedMasterPath') as string;
   const relatedCorePath = formData.get('relatedCorePath') as string;
   const type = formData.get('type') as string || 'post';
-  
-  let mediaUrl = null;
-  let mediaType = null;
-
-  if (media && media.size > 0) {
-    const supabase = await createClient();
-    const fileName = `${Date.now()}-${media.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
-    
-    const { data, error } = await supabase.storage
-      .from('uploads')
-      .upload(fileName, media, {
-        contentType: media.type,
-      });
-
-    if (!error && data) {
-      const { data: publicUrlData } = supabase.storage
-        .from('uploads')
-        .getPublicUrl(fileName);
-      
-      mediaUrl = publicUrlData.publicUrl;
-      mediaType = media.type.startsWith('video/') ? 'video' : 'image';
-    } else {
-      console.error('Storage upload error:', error);
-    }
-  }
 
   if (content || mediaUrl) {
     let finalContent = content;
