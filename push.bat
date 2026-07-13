@@ -1,3 +1,3 @@
 git add .
-git commit -m "Add unread notification badge to Sidebar"
+git commit -m "Implement Native Web Push Notifications"
 git push

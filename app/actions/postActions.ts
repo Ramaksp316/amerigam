@@ -3,6 +3,7 @@
 import { prisma } from '../../lib/prisma';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { sendWebPushNotification } from './sendWebPush';
 
 export async function deletePost(postId: string) {
   const cookieStore = await cookies();
@@ -58,6 +59,10 @@ export async function toggleLike(postId: string) {
           link: `/post/${postId}`,
         }
       });
+      
+      const actorUser = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, username: true } });
+      const actorName = actorUser ? (actorUser.username || actorUser.name || 'Someone') : 'Someone';
+      await sendWebPushNotification(post.authorId, 'New Like', `${actorName} liked your post.`, `/post/${postId}`);
     }
   }
   revalidatePath('/feed');
@@ -93,6 +98,10 @@ export async function addComment(postId: string, content: string) {
         link: `/post/${postId}`,
       }
     });
+
+    const actorUser = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, username: true } });
+    const actorName = actorUser ? (actorUser.username || actorUser.name || 'Someone') : 'Someone';
+    await sendWebPushNotification(post.authorId, 'New Comment', `${actorName} commented on your post.`, `/post/${postId}`);
   }
 
   revalidatePath('/feed');

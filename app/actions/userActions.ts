@@ -3,6 +3,7 @@
 import { prisma } from '../../lib/prisma';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { sendWebPushNotification } from './sendWebPush';
 
 export async function toggleFollow(targetUserId: string) {
   const cookieStore = await cookies();
@@ -38,6 +39,10 @@ export async function toggleFollow(targetUserId: string) {
         link: `/user/${currentUserId}`,
       }
     });
+
+    const actorUser = await prisma.user.findUnique({ where: { id: currentUserId }, select: { name: true, username: true } });
+    const actorName = actorUser ? (actorUser.username || actorUser.name || 'Someone') : 'Someone';
+    await sendWebPushNotification(targetUserId, 'New Follower', `${actorName} started following you.`, `/user/${currentUserId}`);
   }
   revalidatePath(`/user/${targetUserId}`);
 }

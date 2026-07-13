@@ -2,6 +2,7 @@ import { prisma } from '../../lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import PushNotificationManager from '../components/PushNotificationManager';
 
 export default async function NotificationsPage() {
   const cookieStore = await cookies();
@@ -26,8 +27,10 @@ export default async function NotificationsPage() {
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: '40px' }}>
-      <h1 className="heading-jakaas" style={{ fontSize: '1.8rem', marginBottom: '20px' }}>Notifications</h1>
+      <h1 className="heading-jakaas" style={{ fontSize: '1.8rem', marginBottom: '10px' }}>Notifications</h1>
       
+      <PushNotificationManager />
+
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         {notifications.length === 0 ? (
           <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
