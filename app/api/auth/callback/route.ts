@@ -21,6 +21,7 @@ export async function GET(request: Request) {
             email: data.user.email!,
             name: data.user.email!.split('@')[0],
             username: data.user.email!.split('@')[0],
+            password: '',
           }
         })
       }

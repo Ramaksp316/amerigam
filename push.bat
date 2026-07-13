@@ -1,6 +1,3 @@
-git init
 git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/Ramaksp316/amerigam.git
-git push -u origin main
+git commit -m "Fix Prisma type error for Vercel build"
+git push

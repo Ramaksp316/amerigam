@@ -35,6 +35,7 @@ export async function login(formData: FormData) {
           email: data.user.email!,
           name: data.user.email!.split('@')[0],
           username: data.user.email!.split('@')[0],
+          password: '',
         }
       })
     }
@@ -101,6 +102,7 @@ export async function signup(formData: FormData) {
           email: data.user.email!,
           name: data.user.email!.split('@')[0],
           username: data.user.email!.split('@')[0],
+          password: '',
         }
       })
     }
