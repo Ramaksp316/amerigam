@@ -121,9 +121,11 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                 <button className="post-action-btn">
                   <MessageCircle size={24} />
                 </button>
-                <button className="post-action-btn">
-                  <Send size={24} />
-                </button>
+                <ShareButton 
+                  url={`/post/${post.id}`} 
+                  title={`${post.author.username || post.author.name} on Amerigam`} 
+                  text={post.content.substring(0, 50)} 
+                />
                 <div style={{ flex: 1 }}></div>
                 <button className="post-action-btn">
                   <Bookmark size={24} />

@@ -8,6 +8,39 @@ import ShareButton from '../../feed/ShareButton';
 import DeletePostButton from '../../components/DeletePostButton';
 import LikeButton from '../../components/LikeButton';
 import CommentForm from '../../components/CommentForm';
+import CommentForm from '../../components/CommentForm';
+import { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const post = await prisma.post.findUnique({
+    where: { id },
+    include: { author: true }
+  });
+
+  if (!post) return { title: 'Post not found' };
+
+  const title = `${post.author.username || post.author.name} on Amerigam`;
+  const description = post.content ? (post.content.length > 100 ? post.content.substring(0, 100) + '...' : post.content) : 'Check out this post on Amerigam';
+  
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `/post/${post.id}`,
+      images: post.mediaUrl && post.mediaType === 'image' ? [post.mediaUrl] : [],
+      type: 'website',
+    },
+    twitter: {
+      card: post.mediaUrl && post.mediaType === 'image' ? 'summary_large_image' : 'summary',
+      title,
+      description,
+      images: post.mediaUrl && post.mediaType === 'image' ? [post.mediaUrl] : [],
+    }
+  };
+}
 
 export default async function SinglePostPage({ params }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
@@ -92,7 +125,11 @@ export default async function SinglePostPage({ params }: { params: Promise<{ id:
           <button className="post-action-btn">
             <MessageCircle size={24} />
           </button>
-          <ShareButton url={post.mediaUrl || ''} />
+          <ShareButton 
+            url={`/post/${post.id}`} 
+            title={`${post.author.username || post.author.name} on Amerigam`} 
+            text={post.content.substring(0, 50)} 
+          />
           <div style={{ flex: 1 }}></div>
           <button className="post-action-btn">
             <Bookmark size={24} />

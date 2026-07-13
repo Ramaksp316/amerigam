@@ -5,6 +5,37 @@ import { notFound, redirect } from 'next/navigation';
 import ShareButton from '../../feed/ShareButton';
 import Link from 'next/link';
 import FollowButton from '../../components/FollowButton';
+import { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const user = await prisma.user.findUnique({
+    where: { id },
+  });
+
+  if (!user) return { title: 'User not found' };
+
+  const title = `${user.username || user.name} on Amerigam`;
+  const description = user.bio || `Check out ${user.name}'s profile on Amerigam`;
+  
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `/user/${user.id}`,
+      images: user.avatarData ? [user.avatarData] : [],
+      type: 'profile',
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+      images: user.avatarData ? [user.avatarData] : [],
+    }
+  };
+}
 
 export default async function UserProfilePage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ tab?: string }> }) {
   const cookieStore = await cookies();
@@ -70,7 +101,21 @@ export default async function UserProfilePage({ params, searchParams }: { params
               </div>
             )}
             {currentUserId === targetUserId && (
-              <Link href="/settings" className="btn btn-small btn-outline" style={{ fontWeight: 600 }}>Edit Profile</Link>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <Link href="/settings" className="btn btn-small btn-outline" style={{ fontWeight: 600 }}>Edit Profile</Link>
+                <ShareButton 
+                  url={`/user/${user.id}`} 
+                  title={`${user.username || user.name} on Amerigam`} 
+                  text={`Check out ${user.name}'s profile!`} 
+                />
+              </div>
+            )}
+            {currentUserId !== targetUserId && (
+              <ShareButton 
+                url={`/user/${user.id}`} 
+                title={`${user.username || user.name} on Amerigam`} 
+                text={`Check out ${user.name}'s profile!`} 
+              />
             )}
           </div>
 
