@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { Oswald } from 'next/font/google';
 import { ThemeProvider } from './components/ThemeProvider';
 import Sidebar from './components/Sidebar';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 import { cookies } from 'next/headers';
 import { prisma } from '../lib/prisma';
 
@@ -48,6 +49,7 @@ export default async function RootLayout({
             <main className="main-content">
               {children}
             </main>
+            <PWAInstallPrompt />
           </div>
           <script
             dangerouslySetInnerHTML={{
