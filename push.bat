@@ -1,3 +1,3 @@
 git add .
-git commit -m "Fix Prisma type error for Vercel build"
+git commit -m "Fix null user check for cookies"
 git push

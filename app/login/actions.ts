@@ -39,15 +39,15 @@ export async function login(formData: FormData) {
         }
       })
     }
-  }
 
-  const cookieStore = await cookies()
-  cookieStore.set('userId', data.user.id, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 7,
-    path: '/',
-  })
+    const cookieStore = await cookies()
+    cookieStore.set('userId', data.user.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+    })
+  }
 
   revalidatePath('/feed')
   redirect('/feed')
@@ -106,15 +106,15 @@ export async function signup(formData: FormData) {
         }
       })
     }
-  }
 
-  const cookieStore = await cookies()
-  cookieStore.set('userId', data.user.id, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 7,
-    path: '/',
-  })
+    const cookieStore = await cookies()
+    cookieStore.set('userId', data.user.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+    })
+  }
 
   revalidatePath('/feed')
   redirect('/feed')
