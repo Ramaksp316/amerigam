@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, ArrowLeft } from 'lucide-react';
 import ShareButton from '../../feed/ShareButton';
+import DeletePostButton from '../../components/DeletePostButton';
 
 async function toggleLike(formData: FormData) {
   'use server';
@@ -105,7 +106,12 @@ export default async function SinglePostPage({ params }: { params: Promise<{ id:
               )}
             </div>
           </div>
-          <MoreHorizontal size={20} color="var(--text-primary)" style={{ cursor: 'pointer' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {post.authorId === userId && (
+              <DeletePostButton postId={post.id} />
+            )}
+            <MoreHorizontal size={20} color="var(--text-primary)" style={{ cursor: 'pointer' }} />
+          </div>
         </div>
 
         {/* Media */}

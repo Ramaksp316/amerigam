@@ -1,3 +1,3 @@
 git add .
-git commit -m "Migrate file uploads to Supabase Storage"
+git commit -m "Add post deletion feature"
 git push

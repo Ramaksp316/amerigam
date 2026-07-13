@@ -7,6 +7,7 @@ import ShareButton from './ShareButton';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from 'lucide-react';
+import DeletePostButton from '../components/DeletePostButton';
 
 
 
@@ -136,7 +137,12 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                     )}
                   </div>
                 </div>
-                <MoreHorizontal size={20} color="var(--text-primary)" style={{ cursor: 'pointer' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  {post.authorId === userId && (
+                    <DeletePostButton postId={post.id} />
+                  )}
+                  <MoreHorizontal size={20} color="var(--text-primary)" style={{ cursor: 'pointer' }} />
+                </div>
               </div>
 
               {/* Media */}
