@@ -1,3 +1,3 @@
 git add .
-git commit -m "Fix mobile UI, Timezones, and Notification UX"
+git commit -m "Fix Vercel build error (removed broken import)"
 git push
