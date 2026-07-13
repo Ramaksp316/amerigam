@@ -35,7 +35,7 @@ export default async function NotificationsPage() {
           </div>
         ) : (
           notifications.map(notif => {
-            const actorName = notif.actor ? (notif.actor.username || notif.actor.name) : 'Someone';
+            const actorName = notif.actor ? (notif.actor.username || notif.actor.name || 'Someone') : 'Someone';
             const actorInitial = actorName.charAt(0).toUpperCase();
 
             return (
