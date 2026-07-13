@@ -1,0 +1,180 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  name             String?
+
+  // Onboarding Fields
+  masterPath    String?
+  corePath      String?
+  hobbies       String?  // Store as stringified JSON array
+  mindset       String?
+  vision        String?
+  username      String?  @unique
+  bio           String?
+  location      String?
+  portfolioUrl  String?
+  avatarData    String?  // Base64 string for cropped image
+  onboarded     Boolean  @default(false)
+
+  posts            Post[]
+  comments         Comment[]
+  likes            Like[]
+  followers        Follow[]  @relation("followers")
+  following        Follow[]  @relation("following")
+  sentMessages     Message[] @relation("sentMessages")
+  receivedMessages Message[] @relation("receivedMessages")
+  createdAt        DateTime  @default(now())
+
+  // Communities (Phase 1)
+  ownedCommunities Community[]
+  communityMembers CommunityMember[]
+  communityPosts   CommunityPost[]
+
+  // Competitions & Portfolios (Phase 2)
+  participations   Participant[]
+  achievements     Achievement[]
+}
+
+model Post {
+  id        String    @id @default(uuid())
+  content   String
+  mediaUrl  String?
+  mediaType String?
+  relatedMasterPath String?
+  relatedCorePath   String?
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id])
+  comments  Comment[]
+  likes     Like[]
+  createdAt DateTime  @default(now())
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  follower    User     @relation("following", fields: [followerId], references: [id])
+  following   User     @relation("followers", fields: [followingId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  content    String
+  senderId   String
+  receiverId String
+  sender     User     @relation("sentMessages", fields: [senderId], references: [id])
+  receiver   User     @relation("receivedMessages", fields: [receiverId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+// =========================================
+// Communities & Guilds (Phase 1)
+// =========================================
+
+model Community {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  category    String?  // e.g. "Tech & AI", "Visual Arts"
+  creatorId   String
+  creator     User     @relation(fields: [creatorId], references: [id])
+  members     CommunityMember[]
+  posts       CommunityPost[]
+  createdAt   DateTime @default(now())
+}
+
+model CommunityMember {
+  id          String   @id @default(uuid())
+  userId      String
+  communityId String
+  user        User      @relation(fields: [userId], references: [id])
+  community   Community @relation(fields: [communityId], references: [id])
+  joinedAt    DateTime  @default(now())
+  
+  @@unique([userId, communityId])
+}
+
+model CommunityPost {
+  id          String   @id @default(uuid())
+  content     String
+  mediaUrl    String?
+  mediaType   String?
+  authorId    String
+  communityId String
+  author      User      @relation(fields: [authorId], references: [id])
+  community   Community @relation(fields: [communityId], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+// =========================================
+// Competitions & Portfolios (Phase 2)
+// =========================================
+
+model Competition {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  category    String   // e.g., "Tech & AI", "Visual Arts"
+  level       String   // e.g., "State", "National", "International"
+  reward      String?  
+  startDate   DateTime
+  endDate     DateTime
+  participants Participant[]
+  createdAt   DateTime @default(now())
+}
+
+model Participant {
+  id            String   @id @default(uuid())
+  userId        String
+  competitionId String
+  score         Int?     // Score assigned by judges/system
+  rank          Int?     // 1 for 1st, 2 for 2nd, etc.
+  user          User     @relation(fields: [userId], references: [id])
+  competition   Competition @relation(fields: [competitionId], references: [id])
+  joinedAt      DateTime @default(now())
+
+  @@unique([userId, competitionId])
+}
+
+model Achievement {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String   // e.g., "National Champion 2026"
+  description String?
+  badgeIcon   String?  // Emoji or image URL
+  user        User     @relation(fields: [userId], references: [id])
+  earnedAt    DateTime @default(now())
+}
