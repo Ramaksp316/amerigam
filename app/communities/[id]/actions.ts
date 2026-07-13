@@ -3,8 +3,7 @@
 import { prisma } from '../../../lib/prisma';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import fs from 'fs';
-import path from 'path';
+import { createClient } from '../../../utils/supabase/server';
 
 export async function createCommunityPost(formData: FormData) {
   const cookieStore = await cookies();
@@ -19,14 +18,25 @@ export async function createCommunityPost(formData: FormData) {
   let mediaType = null;
 
   if (media && media.size > 0) {
-    const arrayBuffer = await media.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const fileName = `${Date.now()}-${media.name}`;
-    const filePath = path.join(process.cwd(), 'public', 'uploads', fileName);
-    fs.writeFileSync(filePath, buffer);
+    const supabase = await createClient();
+    const fileName = `${Date.now()}-${media.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
     
-    mediaUrl = `/uploads/${fileName}`;
-    mediaType = media.type.startsWith('video/') ? 'video' : 'image';
+    const { data, error } = await supabase.storage
+      .from('uploads')
+      .upload(fileName, media, {
+        contentType: media.type,
+      });
+
+    if (!error && data) {
+      const { data: publicUrlData } = supabase.storage
+        .from('uploads')
+        .getPublicUrl(fileName);
+      
+      mediaUrl = publicUrlData.publicUrl;
+      mediaType = media.type.startsWith('video/') ? 'video' : 'image';
+    } else {
+      console.error('Storage upload error:', error);
+    }
   }
 
   if (content || mediaUrl) {
