@@ -5,7 +5,7 @@ import ThemeToggle from './ThemeToggle';
 import Link from 'next/link';
 import { Home, Search, Compass, Users, MessageCircle, User, PlusSquare, Trophy, Bell } from 'lucide-react';
 
-export default function Sidebar() {
+export default function Sidebar({ unreadCount = 0 }: { unreadCount?: number }) {
   const pathname = usePathname();
 
   if (pathname === '/login') {
@@ -42,7 +42,29 @@ export default function Sidebar() {
           <span className="text">Messages</span>
         </Link>
         <Link href="/notifications" className={pathname === '/notifications' ? 'active' : ''}>
-          <span className="icon"><Bell size={24} strokeWidth={pathname === '/notifications' ? 2.5 : 2} /></span> 
+          <span className="icon" style={{ position: 'relative' }}>
+            <Bell size={24} strokeWidth={pathname === '/notifications' ? 2.5 : 2} />
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-2px',
+                right: '-2px',
+                backgroundColor: '#ef4444',
+                color: 'white',
+                fontSize: '0.65rem',
+                fontWeight: 'bold',
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px solid var(--sidebar-bg)'
+              }}>
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </span> 
           <span className="text">Notifications</span>
         </Link>
         <Link href="/create" className={pathname === '/create' ? 'active' : ''}>

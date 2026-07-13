@@ -1,3 +1,3 @@
 git add .
-git commit -m "Fix notifications actorName type error"
+git commit -m "Add unread notification badge to Sidebar"
 git push

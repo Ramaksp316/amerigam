@@ -3,6 +3,8 @@ import { Metadata } from 'next';
 import { Oswald } from 'next/font/google';
 import { ThemeProvider } from './components/ThemeProvider';
 import Sidebar from './components/Sidebar';
+import { cookies } from 'next/headers';
+import { prisma } from '../lib/prisma';
 
 const oswald = Oswald({ 
   subsets: ['latin'],
@@ -23,17 +25,26 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  let unreadCount = 0;
+  if (userId) {
+    unreadCount = await prisma.notification.count({
+      where: { userId, isRead: false }
+    });
+  }
+
   return (
     <html lang="en">
       <body className={oswald.className}>
         <ThemeProvider>
           <div className="app-layout">
-            <Sidebar />
+            <Sidebar unreadCount={unreadCount} />
             <main className="main-content">
               {children}
             </main>
