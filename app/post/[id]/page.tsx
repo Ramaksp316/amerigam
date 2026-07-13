@@ -8,7 +8,6 @@ import ShareButton from '../../feed/ShareButton';
 import DeletePostButton from '../../components/DeletePostButton';
 import LikeButton from '../../components/LikeButton';
 import CommentForm from '../../components/CommentForm';
-import CommentForm from '../../components/CommentForm';
 import { Metadata } from 'next';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

@@ -1,3 +1,3 @@
 git add .
-git commit -m "Add Native Sharing API and Open Graph metadata"
+git commit -m "Fix duplicate import in post page"
 git push
