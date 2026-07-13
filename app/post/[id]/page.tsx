@@ -6,47 +6,8 @@ import Link from 'next/link';
 import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, ArrowLeft } from 'lucide-react';
 import ShareButton from '../../feed/ShareButton';
 import DeletePostButton from '../../components/DeletePostButton';
-
-async function toggleLike(formData: FormData) {
-  'use server';
-  const cookieStore = await cookies();
-  const userId = cookieStore.get('userId')?.value;
-  if (!userId) return;
-
-  const postId = formData.get('postId') as string;
-
-  const existingLike = await prisma.like.findFirst({
-    where: { userId, postId },
-  });
-
-  if (existingLike) {
-    await prisma.like.delete({ where: { id: existingLike.id } });
-  } else {
-    await prisma.like.create({ data: { userId, postId } });
-  }
-  revalidatePath(`/post/${postId}`);
-}
-
-async function addComment(formData: FormData) {
-  'use server';
-  const cookieStore = await cookies();
-  const userId = cookieStore.get('userId')?.value;
-  if (!userId) return;
-
-  const postId = formData.get('postId') as string;
-  const content = formData.get('content') as string;
-
-  if (content && content.trim().length > 0) {
-    await prisma.comment.create({
-      data: {
-        content,
-        postId,
-        authorId: userId,
-      },
-    });
-    revalidatePath(`/post/${postId}`);
-  }
-}
+import LikeButton from '../../components/LikeButton';
+import CommentForm from '../../components/CommentForm';
 
 export default async function SinglePostPage({ params }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
@@ -127,12 +88,7 @@ export default async function SinglePostPage({ params }: { params: Promise<{ id:
 
         {/* Action Bar */}
         <div className="post-actions">
-          <form action={toggleLike} style={{ display: 'inline' }}>
-            <input type="hidden" name="postId" value={post.id} />
-            <button type="submit" className="post-action-btn">
-              <Heart size={24} fill={hasLiked ? "#ff3040" : "none"} color={hasLiked ? "#ff3040" : "var(--text-primary)"} />
-            </button>
-          </form>
+          <LikeButton postId={post.id} initialHasLiked={hasLiked} initialLikesCount={post.likes.length} />
           <button className="post-action-btn">
             <MessageCircle size={24} />
           </button>
@@ -168,11 +124,7 @@ export default async function SinglePostPage({ params }: { params: Promise<{ id:
             )}
           </div>
           
-          <form action={addComment} style={{ marginTop: '15px', display: 'flex', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '15px' }}>
-            <input type="hidden" name="postId" value={post.id} />
-            <input type="text" name="content" placeholder="Add a comment..." required style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', color: 'var(--text-primary)', fontSize: '0.9rem' }} />
-            <button type="submit" style={{ background: 'none', border: 'none', color: 'var(--btn-primary-bg)', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem' }}>Post</button>
-          </form>
+          <CommentForm postId={post.id} />
         </div>
 
       </div>

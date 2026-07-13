@@ -4,38 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { notFound, redirect } from 'next/navigation';
 import ShareButton from '../../feed/ShareButton';
 import Link from 'next/link';
-
-async function toggleFollow(formData: FormData) {
-  'use server';
-  const cookieStore = await cookies();
-  const currentUserId = cookieStore.get('userId')?.value;
-  if (!currentUserId) return;
-
-  const targetUserId = formData.get('targetUserId') as string;
-
-  if (currentUserId === targetUserId) return;
-
-  const existingFollow = await prisma.follow.findUnique({
-    where: {
-      followerId_followingId: {
-        followerId: currentUserId,
-        followingId: targetUserId,
-      }
-    }
-  });
-
-  if (existingFollow) {
-    await prisma.follow.delete({ where: { id: existingFollow.id } });
-  } else {
-    await prisma.follow.create({
-      data: {
-        followerId: currentUserId,
-        followingId: targetUserId,
-      }
-    });
-  }
-  revalidatePath(`/user/${targetUserId}`);
-}
+import FollowButton from '../../components/FollowButton';
 
 export default async function UserProfilePage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ tab?: string }> }) {
   const cookieStore = await cookies();
@@ -94,12 +63,7 @@ export default async function UserProfilePage({ params, searchParams }: { params
             
             {currentUserId && currentUserId !== targetUserId && (
               <div style={{ display: 'flex', gap: '10px' }}>
-                <form action={toggleFollow}>
-                  <input type="hidden" name="targetUserId" value={targetUserId} />
-                  <button type="submit" className={`btn btn-small ${isFollowing ? 'btn-outline' : ''}`} style={{ fontWeight: 600 }}>
-                    {isFollowing ? 'Following' : 'Follow'}
-                  </button>
-                </form>
+                <FollowButton targetUserId={targetUserId} initialIsFollowing={isFollowing} />
                 <form action={`/messages/${targetUserId}`}>
                   <button type="submit" className="btn btn-small btn-outline" style={{ fontWeight: 600 }}>Message</button>
                 </form>

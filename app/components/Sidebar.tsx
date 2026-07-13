@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
 import Link from 'next/link';
-import { Home, Search, Compass, Users, MessageCircle, User, PlusSquare, Trophy } from 'lucide-react';
+import { Home, Search, Compass, Users, MessageCircle, User, PlusSquare, Trophy, Bell } from 'lucide-react';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -40,6 +40,10 @@ export default function Sidebar() {
         <Link href="/messages" className={pathname === '/messages' ? 'active' : ''}>
           <span className="icon"><MessageCircle size={24} strokeWidth={pathname === '/messages' ? 2.5 : 2} /></span> 
           <span className="text">Messages</span>
+        </Link>
+        <Link href="/notifications" className={pathname === '/notifications' ? 'active' : ''}>
+          <span className="icon"><Bell size={24} strokeWidth={pathname === '/notifications' ? 2.5 : 2} /></span> 
+          <span className="text">Notifications</span>
         </Link>
         <Link href="/create" className={pathname === '/create' ? 'active' : ''}>
           <span className="icon"><PlusSquare size={24} strokeWidth={pathname === '/create' ? 2.5 : 2} /></span> 

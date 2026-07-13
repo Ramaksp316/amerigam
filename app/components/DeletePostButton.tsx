@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react';
 import { deletePost } from '../actions/postActions';
+import { Trash2 } from 'lucide-react';
 
 export default function DeletePostButton({ postId }: { postId: string }) {
   const [isPending, startTransition] = useTransition();
@@ -28,7 +29,7 @@ export default function DeletePostButton({ postId }: { postId: string }) {
       }}
       title="Delete Post"
     >
-      🗑️
+      <Trash2 size={20} color="var(--text-secondary)" />
     </button>
   );
 }

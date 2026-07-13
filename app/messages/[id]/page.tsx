@@ -2,6 +2,7 @@ import { prisma } from '../../../lib/prisma';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import SubmitButton from '../../components/SubmitButton';
 
 async function sendMessage(formData: FormData) {
   'use server';
@@ -20,6 +21,17 @@ async function sendMessage(formData: FormData) {
         receiverId,
       }
     });
+
+    await prisma.notification.create({
+      data: {
+        userId: receiverId,
+        actorId: userId,
+        type: 'message',
+        content: 'sent you a message.',
+        link: `/messages/${userId}`,
+      }
+    });
+
     revalidatePath(`/messages/${receiverId}`);
   }
 }
@@ -115,7 +127,7 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
             required 
             style={{ margin: 0, flexGrow: 1 }} 
           />
-          <button type="submit" className="btn" style={{ width: 'auto', padding: '0 30px' }}>Send</button>
+          <SubmitButton defaultText="Send" pendingText="Sending..." style={{ width: 'auto', padding: '0 30px', backgroundColor: 'var(--text-primary)', color: 'var(--bg-color)', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }} />
         </form>
       </div>
 
