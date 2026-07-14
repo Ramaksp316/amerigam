@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '../../utils/supabase/client';
 import SubmitButton from './SubmitButton';
+import { useRouter } from 'next/navigation';
 
 export default function ChatClient({ 
   myId, 
@@ -18,6 +19,7 @@ export default function ChatClient({
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const channelRef = useRef<any>(null);
   const supabase = createClient();
+  const router = useRouter();
 
   useEffect(() => {
     // Create a unique channel name based on both IDs sorted to ensure both users join the same channel
@@ -25,12 +27,16 @@ export default function ChatClient({
     const channel = supabase.channel(channelName);
     channelRef.current = channel;
 
-    // Subscribe to broadcast events for typing
+    // Subscribe to broadcast events for typing and new messages
     channel
       .on('broadcast', { event: 'typing' }, (payload) => {
         if (payload.payload.userId === partnerId) {
           setPartnerTyping(payload.payload.isTyping);
         }
+      })
+      .on('broadcast', { event: 'new_message' }, () => {
+        // Refresh the page data when a new message is received
+        router.refresh();
       })
       .subscribe();
 
@@ -70,8 +76,20 @@ export default function ChatClient({
   return (
     <div style={{ padding: '20px', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)' }}>
       {partnerTyping && (
-        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px', fontStyle: 'italic' }}>
-          User is typing...
+        <div style={{
+          display: 'inline-block',
+          backgroundColor: 'var(--card-bg)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '16px',
+          padding: '4px 16px',
+          marginBottom: '8px',
+          color: 'var(--text-secondary)',
+          fontWeight: 'bold',
+          letterSpacing: '4px',
+          fontSize: '1.2rem',
+          animation: 'pulse 1.5s infinite'
+        }}>
+          ...
         </div>
       )}
       <form action={async (formData) => {
@@ -86,6 +104,16 @@ export default function ChatClient({
         
         await sendMessageAction(formData);
         
+        // Broadcast new message event to the partner so they refresh
+        channelRef.current?.send({
+          type: 'broadcast',
+          event: 'new_message',
+          payload: {}
+        });
+
+        // Refresh our own page to show the new message
+        router.refresh();
+
         // Reset the form manually since it's a client form with action
         const form = document.getElementById('chat-form') as HTMLFormElement;
         if (form) form.reset();

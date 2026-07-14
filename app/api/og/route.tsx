@@ -44,7 +44,7 @@ export async function GET(request: Request) {
           }}
         >
           {/* Background Image (if any) */}
-          {hasMedia && (
+          {hasMedia && !isVideo && (
             <img
               src={post.mediaUrl!}
               style={{
