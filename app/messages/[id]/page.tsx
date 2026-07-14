@@ -2,8 +2,8 @@ import { prisma } from '../../../lib/prisma';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import SubmitButton from '../../components/SubmitButton';
 import LocalTime from '../../components/LocalTime';
+import ChatClient from '../../components/ChatClient';
 import { sendWebPushNotification } from '../../actions/sendWebPush';
 
 async function sendMessage(formData: FormData) {
@@ -122,20 +122,7 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
         )}
       </div>
 
-      <div style={{ padding: '20px', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)' }}>
-        <form action={sendMessage} style={{ display: 'flex', gap: '10px' }}>
-          <input type="hidden" name="receiverId" value={partnerId} />
-          <input 
-            type="text" 
-            name="content" 
-            className="input-field"
-            placeholder="Type a message..." 
-            required 
-            style={{ margin: 0, flexGrow: 1 }} 
-          />
-          <SubmitButton defaultText="Send" pendingText="Sending..." style={{ width: 'auto', padding: '0 30px', backgroundColor: 'var(--text-primary)', color: 'var(--bg-color)', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }} />
-        </form>
-      </div>
+      <ChatClient myId={userId} partnerId={partnerId} sendMessageAction={sendMessage} />
 
     </div>
   );

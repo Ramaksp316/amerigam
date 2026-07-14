@@ -24,6 +24,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const title = `${post.author.username || post.author.name} on Amerigam`;
   const description = post.content ? (post.content.length > 100 ? post.content.substring(0, 100) + '...' : post.content) : 'Check out this post on Amerigam';
   
+  const ogImageUrl = `https://${process.env.VERCEL_URL || 'amerigam-wk8l.vercel.app'}/api/og?postId=${post.id}`;
+
   return {
     title,
     description,
@@ -31,14 +33,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       title,
       description,
       url: `/post/${post.id}`,
-      images: post.mediaUrl && post.mediaType === 'image' ? [post.mediaUrl] : [],
+      images: [ogImageUrl],
       type: 'website',
     },
     twitter: {
-      card: post.mediaUrl && post.mediaType === 'image' ? 'summary_large_image' : 'summary',
+      card: 'summary_large_image',
       title,
       description,
-      images: post.mediaUrl && post.mediaType === 'image' ? [post.mediaUrl] : [],
+      images: [ogImageUrl],
     }
   };
 }
