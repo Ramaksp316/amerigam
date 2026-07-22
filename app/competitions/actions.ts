@@ -24,3 +24,26 @@ export async function joinCompetition(formData: FormData) {
 
   revalidatePath('/competitions');
 }
+
+export async function cancelRegistration(formData: FormData) {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) return;
+
+  const competitionId = formData.get('competitionId') as string;
+
+  try {
+    await prisma.participant.delete({
+      where: {
+        userId_competitionId: {
+          userId,
+          competitionId,
+        }
+      }
+    });
+  } catch (e) {
+    // Not joined
+  }
+
+  revalidatePath('/competitions');
+}

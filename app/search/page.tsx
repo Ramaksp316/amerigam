@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 export default async function SearchPage({
   searchParams,
@@ -43,47 +44,56 @@ export default async function SearchPage({
   }
 
   return (
-    <div>
-      <h1 className="heading-jakaas" style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '30px' }}>SEARCH</h1>
+    <div style={{ animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
+      <h1 className="heading-jakaas" style={{ fontSize: '2.5rem', textAlign: 'center', marginBottom: 'var(--space-6)' }}>SEARCH</h1>
       
-      <div className="card" style={{ marginBottom: '30px' }}>
-        <form method="GET" action="/search" style={{ display: 'flex', gap: '10px' }}>
+      <div className="glass-card" style={{ marginBottom: 'var(--space-8)' }}>
+        <form method="GET" action="/search" style={{ display: 'flex', gap: 'var(--space-3)' }}>
           <input 
             type="text" 
             name="q" 
             defaultValue={query} 
             className="input-field" 
             placeholder="Search for people by name or email..." 
-            style={{ margin: 0, flexGrow: 1 }} 
+            style={{ margin: 0, flexGrow: 1, border: '1px solid var(--border-color)', background: 'var(--surface-0)' }} 
             required
           />
-          <button type="submit" className="btn" style={{ width: 'auto', padding: '0 30px' }}>Search</button>
+          <button type="submit" className="btn" style={{ width: 'auto', padding: '0 var(--space-8)' }}>Search</button>
         </form>
       </div>
 
       {query && (
         <div>
-          <div className="divider" style={{ marginBottom: '20px' }}>RESULTS FOR "{query}"</div>
+          <div className="divider" style={{ marginBottom: 'var(--space-6)' }}>RESULTS FOR "{query}"</div>
           
           {users.length === 0 ? (
-            <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No users found.</p>
+            <div className="glass-card" style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: 'var(--space-8)' }}>
+              No users found matching "{query}".
+            </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               {users.map(user => (
-                <a key={user.id} href={`/user/${user.id}`} style={{ textDecoration: 'none' }}>
-                  <div className="card hoverable-card" style={{ padding: '20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Link key={user.id} href={`/user/${user.id}`} style={{ textDecoration: 'none' }}>
+                  <div className="glass-card hoverable-card" style={{ padding: 'var(--space-4)', margin: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     
-                    <div>
-                      <strong style={{ fontSize: '1.2rem', color: 'var(--text-primary)', display: 'block' }}>{user.name || 'Unnamed User'}</strong>
-                      <small style={{ color: 'var(--text-secondary)' }}>{user.email}</small>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+                      <div className="post-avatar" style={{ width: '48px', height: '48px' }}>
+                        <div className="post-avatar-inner" style={{ fontSize: '1.2rem' }}>
+                          {(user.name || user.username || '?').charAt(0).toUpperCase()}
+                        </div>
+                      </div>
+                      <div>
+                        <strong style={{ fontSize: 'var(--text-lg)', color: 'var(--text-primary)', display: 'block' }}>{user.name || 'Unnamed User'}</strong>
+                        <small style={{ color: 'var(--text-secondary)' }}>@{user.username || user.name?.toLowerCase().replace(/\s+/g, '') || 'user'}</small>
+                      </div>
                     </div>
                     
-                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
                       {user.followers.length} Followers
                     </div>
 
                   </div>
-                </a>
+                </Link>
               ))}
             </div>
           )}

@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createCommunityPost } from './actions';
 import LocalTime from '../../components/LocalTime';
+import Link from 'next/link';
+import { Users, LayoutGrid, ArrowLeft } from 'lucide-react';
 
 export default async function CommunityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
@@ -29,9 +31,9 @@ export default async function CommunityDetailPage({ params }: { params: Promise<
 
   if (!community) {
     return (
-      <div style={{ textAlign: 'center', marginTop: '50px' }}>
-        <h2>Community not found</h2>
-        <a href="/communities" className="btn">Back to Communities</a>
+      <div style={{ textAlign: 'center', marginTop: 'var(--space-10)' }}>
+        <h2 className="heading-jakaas">Community not found</h2>
+        <Link href="/communities" className="btn btn-outline" style={{ display: 'inline-flex', marginTop: 'var(--space-4)' }}><ArrowLeft size={16} /> Back to Communities</Link>
       </div>
     );
   }
@@ -39,65 +41,91 @@ export default async function CommunityDetailPage({ params }: { params: Promise<
   const isMember = community.members.some(member => member.userId === userId);
 
   return (
-    <div>
-      <div className="card" style={{ marginBottom: '30px', textAlign: 'center' }}>
-        <span style={{ fontSize: '0.8rem', backgroundColor: 'var(--border-color)', color: 'var(--text-secondary)', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', display: 'inline-block', marginBottom: '10px' }}>
-          {community.category}
-        </span>
-        <h1 className="heading-jakaas" style={{ margin: '0 0 10px 0', fontSize: '2.5rem' }}>{community.name}</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: '20px' }}>{community.description}</p>
+    <div style={{ animation: 'fadeIn var(--duration-slow) var(--ease-smooth)', maxWidth: '720px', margin: '0 auto' }}>
+      
+      <Link href="/communities" style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)', color: 'var(--text-secondary)', textDecoration: 'none', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
+        <ArrowLeft size={16} /> All Communities
+      </Link>
+
+      <div className="glass-card" style={{ marginBottom: 'var(--space-8)', textAlign: 'center', position: 'relative', overflow: 'hidden', padding: 'var(--space-8) var(--space-4)' }}>
+        <div style={{ position: 'absolute', top: '-100px', left: '50%', transform: 'translateX(-50%)', width: '300px', height: '150px', background: 'var(--accent-glow-strong)', filter: 'blur(80px)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' }}></div>
         
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-          Created by <strong><a href={`/user/${community.creatorId}`} style={{ textDecoration: 'none' }}>{community.creator.name || community.creator.username}</a></strong> • {community.members.length} Members
-        </p>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <span style={{ fontSize: '0.75rem', background: 'var(--surface-2)', color: 'var(--accent-emerald)', padding: 'var(--space-1) var(--space-3)', borderRadius: 'var(--radius-full)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', border: '1px solid var(--border-color)', display: 'inline-block', marginBottom: 'var(--space-4)' }}>
+            {community.category}
+          </span>
+          <h1 className="heading-jakaas" style={{ margin: '0 0 var(--space-3) 0', fontSize: '3rem' }}>{community.name}</h1>
+          <p style={{ color: 'var(--text-primary)', fontSize: 'var(--text-lg)', marginBottom: 'var(--space-6)', maxWidth: '500px', margin: '0 auto var(--space-6) auto', lineHeight: 1.6 }}>{community.description}</p>
+          
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-4)', color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', background: 'var(--surface-2)', padding: 'var(--space-2) var(--space-4)', borderRadius: 'var(--radius-full)' }}>
+            <span>Created by <strong style={{ color: 'var(--text-primary)' }}><Link href={`/user/${community.creatorId}`} style={{ color: 'inherit', textDecoration: 'none' }}>{community.creator.name || community.creator.username}</Link></strong></span>
+            <span>•</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', fontWeight: 600, color: 'var(--text-primary)' }}><Users size={14} /> {community.members.length} Members</span>
+          </div>
+        </div>
 
         {!isMember && (
-          <div style={{ marginTop: '20px' }}>
-            <p style={{ color: 'var(--text-primary)', marginBottom: '10px' }}>You need to join this community to see its posts.</p>
-            <a href="/communities" className="btn">Go Back</a>
+          <div style={{ marginTop: 'var(--space-8)', paddingTop: 'var(--space-6)', borderTop: '1px solid var(--border-color)' }}>
+            <p style={{ color: 'var(--text-primary)', marginBottom: 'var(--space-4)', fontWeight: 600 }}>You need to join this community to see its posts.</p>
+            <Link href="/communities" className="btn btn-outline" style={{ display: 'inline-flex' }}>Go Back</Link>
           </div>
         )}
       </div>
 
       {isMember && (
         <>
-          <div className="card" style={{ marginBottom: '30px' }}>
-            <h2 style={{ marginBottom: '20px', fontFamily: 'Oswald, sans-serif' }}>POST TO COMMUNITY</h2>
-            <form action={createCommunityPost}>
+          <div className="glass-card" style={{ marginBottom: 'var(--space-8)', padding: 'var(--space-6)' }}>
+            <h2 style={{ marginBottom: 'var(--space-4)', fontSize: '1.2rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>POST TO COMMUNITY</h2>
+            <form action={createCommunityPost} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               <input type="hidden" name="communityId" value={community.id} />
               <div>
-                <textarea name="content" className="input-field" placeholder={`What's happening in ${community.name}?`} style={{ resize: 'vertical', minHeight: '80px' }}></textarea>
+                <textarea name="content" className="input-field" placeholder={`What's happening in ${community.name}?`} style={{ resize: 'vertical', minHeight: '100px', fontSize: 'var(--text-md)' }}></textarea>
               </div>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text-secondary)' }}>Upload Photo/Video: </label>
-                <input type="file" name="media" accept="image/*,video/*" style={{ color: 'var(--text-secondary)' }} />
+              <div>
+                <label style={{ display: 'block', marginBottom: 'var(--space-2)', color: 'var(--text-secondary)', fontWeight: 500 }}>Upload Photo/Video</label>
+                <input type="file" name="media" accept="image/*,video/*" className="input-field" style={{ padding: 'var(--space-2)' }} />
               </div>
-              <button type="submit" className="btn">Post</button>
+              <button type="submit" className="btn" style={{ marginTop: 'var(--space-2)' }}>Post</button>
             </form>
           </div>
 
-          <div className="divider">COMMUNITY POSTS</div>
+          <div className="divider" style={{ fontSize: 'var(--text-sm)' }}>COMMUNITY POSTS</div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
             {community.posts.length === 0 && (
-              <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No posts in this community yet.</p>
+              <div className="glass-card" style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: 'var(--space-10)' }}>
+                No posts in this community yet. Be the first to start the conversation!
+              </div>
             )}
 
             {community.posts.map(post => (
-              <div key={post.id} className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                  <strong style={{ fontSize: '1.1rem' }}>
-                    <a href={`/user/${post.authorId}`} style={{ textDecoration: 'none' }}>{post.author.name || post.author.username}</a>
-                  </strong>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                    <LocalTime date={post.createdAt} format="date" />
-                  </span>
+              <div key={post.id} className="post-card">
+                <div className="post-header">
+                  <div className="post-header-left">
+                    <div className="post-avatar">
+                      <div className="post-avatar-inner">
+                        {(post.author.name || post.author.username || '?').charAt(0).toUpperCase()}
+                      </div>
+                    </div>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: 'var(--text-base)', color: 'var(--text-primary)' }}>
+                        <Link href={`/user/${post.authorId}`} style={{ textDecoration: 'none', color: 'inherit' }}>{post.author.name || post.author.username}</Link>
+                      </strong>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>
+                        <LocalTime date={post.createdAt} format="full" />
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {post.content && <p style={{ marginBottom: '15px', fontSize: '1.1rem' }}>{post.content}</p>}
+                {post.content && (
+                  <div className="post-content" style={{ fontSize: 'var(--text-base)', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                    {post.content}
+                  </div>
+                )}
                 
                 {post.mediaUrl && (
-                  <div className="media-container" style={{ marginBottom: '15px' }}>
+                  <div className="media-container">
                     {post.mediaType === 'image' ? (
                       <img src={post.mediaUrl} alt="Post media" />
                     ) : (

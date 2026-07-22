@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { createClient } from '../../utils/supabase/client';
 import { createPost } from './actions';
+import { UploadCloud } from 'lucide-react';
 
 export default function CreatePostForm({ currentUser }: { currentUser: any }) {
   const [isUploading, setIsUploading] = useState(false);
@@ -21,7 +22,6 @@ export default function CreatePostForm({ currentUser }: { currentUser: any }) {
     let mediaUrl = '';
     let mediaType = '';
 
-    // Upload file directly from Client if present
     if (mediaFile && mediaFile.size > 0) {
       const fileName = `${Date.now()}-${mediaFile.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
       
@@ -48,8 +48,6 @@ export default function CreatePostForm({ currentUser }: { currentUser: any }) {
       }
     }
 
-    // Call the server action with the exact URL instead of the file
-    // We create a new FormData without the large file to avoid Vercel's 4.5MB limit
     const actionData = new FormData();
     actionData.append('type', formData.get('type') as string);
     actionData.append('content', formData.get('content') as string);
@@ -61,28 +59,24 @@ export default function CreatePostForm({ currentUser }: { currentUser: any }) {
       actionData.append('mediaType', mediaType);
     }
 
-    // We can't await redirect from the server action directly in a component try-catch easily 
-    // unless we let the action execute and let it redirect on the server.
     try {
       await createPost(actionData);
     } catch (error) {
-      // If error occurs, we handle it. But standard Next.js redirect throws a specific error we shouldn't catch,
-      // but wrapping it usually works since server actions handle redirect internally.
-      // Since createPost calls redirect(), we don't need to do anything else here.
+      // Handled by Next.js redirect
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       {errorMsg && (
-        <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '10px', borderRadius: '5px', marginBottom: '15px' }}>
+        <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', color: '#ef4444', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', border: '1px solid #dc2626' }}>
           {errorMsg}
         </div>
       )}
 
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text-primary)', fontWeight: 600 }}>Post Type:</label>
-        <select name="type" className="input-field" style={{ cursor: 'pointer', backgroundColor: 'var(--card-bg)' }}>
+      <div>
+        <label style={{ display: 'block', marginBottom: 'var(--space-2)', color: 'var(--text-primary)', fontWeight: 600 }}>Post Type</label>
+        <select name="type" className="input-field" style={{ cursor: 'pointer' }}>
           <option value="post">Normal Post</option>
           <option value="project">Project / Portfolio Update</option>
           <option value="status">Status Update</option>
@@ -90,12 +84,12 @@ export default function CreatePostForm({ currentUser }: { currentUser: any }) {
       </div>
 
       <div>
-        <textarea name="content" className="input-field" placeholder="What's on your mind? Describe your post or project here..." style={{ resize: 'vertical', minHeight: '120px' }}></textarea>
+        <textarea name="content" className="input-field" placeholder="What's on your mind? Describe your post or project here..." style={{ resize: 'vertical', minHeight: '140px', fontSize: 'var(--text-md)' }}></textarea>
       </div>
       
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-4)' }}>
         <div>
-          <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text-secondary)' }}>Related Path:</label>
+          <label style={{ display: 'block', marginBottom: 'var(--space-2)', color: 'var(--text-secondary)', fontWeight: 500 }}>Related Path</label>
           <select name="relatedMasterPath" className="input-field" defaultValue={currentUser?.masterPath || ""} style={{ cursor: 'pointer' }}>
             <option value="">None</option>
             <option value="The Professional">The Professional</option>
@@ -105,20 +99,22 @@ export default function CreatePostForm({ currentUser }: { currentUser: any }) {
           </select>
         </div>
         <div>
-          <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text-secondary)' }}>Specific Arena (Optional):</label>
+          <label style={{ display: 'block', marginBottom: 'var(--space-2)', color: 'var(--text-secondary)', fontWeight: 500 }}>Specific Arena (Optional)</label>
           <input type="text" name="relatedCorePath" className="input-field" placeholder="e.g. Tech & AI" defaultValue={currentUser?.corePath || ""} />
         </div>
       </div>
 
-      <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text-secondary)' }}>Upload Photo/Video: </label>
-        <div style={{ padding: '20px', border: '1px dashed var(--border-color)', borderRadius: '8px', textAlign: 'center' }}>
-          <input type="file" name="media" accept="image/*,video/*" style={{ color: 'var(--text-secondary)' }} disabled={isUploading} />
+      <div>
+        <label style={{ display: 'block', marginBottom: 'var(--space-2)', color: 'var(--text-secondary)', fontWeight: 500 }}>Upload Photo/Video</label>
+        <div style={{ position: 'relative', padding: 'var(--space-8)', border: '2px dashed var(--border-color)', borderRadius: 'var(--radius-lg)', textAlign: 'center', backgroundColor: 'var(--surface-2)', transition: 'all var(--duration-fast) var(--ease-smooth)' }} onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--accent-purple)'} onMouseOut={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}>
+          <UploadCloud size={32} color="var(--text-secondary)" style={{ marginBottom: 'var(--space-2)' }} />
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)' }}>Drag and drop or click to upload</p>
+          <input type="file" name="media" accept="image/*,video/*" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} disabled={isUploading} />
         </div>
       </div>
 
-      <button type="submit" className="btn" disabled={isUploading}>
-        {isUploading ? 'Uploading & Sharing...' : 'Share'}
+      <button type="submit" className="btn" disabled={isUploading} style={{ marginTop: 'var(--space-4)' }}>
+        {isUploading ? 'Uploading & Sharing...' : 'Share Now'}
       </button>
     </form>
   );

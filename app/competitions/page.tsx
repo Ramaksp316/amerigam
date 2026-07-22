@@ -1,8 +1,8 @@
 import { prisma } from '../../lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { joinCompetition } from './actions';
-import { Trophy, MapPin, Globe, Star } from 'lucide-react';
+import { joinCompetition, cancelRegistration } from './actions';
+import { Trophy, MapPin, Globe, Star, Clock, Users } from 'lucide-react';
 
 export default async function CompetitionsPage() {
   const cookieStore = await cookies();
@@ -12,7 +12,6 @@ export default async function CompetitionsPage() {
     redirect('/login');
   }
 
-  // --- DEV SEEDING START (Create dummy competitions if empty) ---
   const count = await prisma.competition.count();
   if (count === 0) {
     await prisma.competition.createMany({
@@ -47,12 +46,11 @@ export default async function CompetitionsPage() {
       ]
     });
   }
-  // --- DEV SEEDING END ---
 
   const competitions = await prisma.competition.findMany({
     include: {
       participants: {
-        where: { userId } // Check if current user is participating
+        where: { userId }
       },
       _count: {
         select: { participants: true }
@@ -62,67 +60,78 @@ export default async function CompetitionsPage() {
   });
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <h1 className="heading-jakaas" style={{ fontSize: '2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
-          <Trophy size={40} color="#f09433" /> COMPETITIONS
+    <div style={{ maxWidth: '800px', margin: '0 auto', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
+      <div style={{ textAlign: 'center', marginBottom: 'var(--space-10)' }}>
+        <h1 className="heading-jakaas" style={{ fontSize: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-3)', margin: '0 0 var(--space-2) 0' }}>
+          <Trophy size={40} color="var(--accent-amber)" style={{ filter: 'drop-shadow(0 0 10px rgba(245, 158, 11, 0.5))' }} /> COMPETITIONS
         </h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Compete at the State, National, or International level. Build your portfolio.</p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-lg)' }}>Compete at the State, National, or International level. Build your portfolio.</p>
       </div>
 
-      <div style={{ display: 'grid', gap: '20px' }}>
+      <div style={{ display: 'grid', gap: 'var(--space-6)' }}>
         {competitions.map(comp => {
           const isParticipating = comp.participants.length > 0;
           const isOngoing = new Date() >= new Date(comp.startDate) && new Date() <= new Date(comp.endDate);
           const isUpcoming = new Date() < new Date(comp.startDate);
 
           return (
-            <div key={comp.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div key={comp.id} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', margin: 0, position: 'relative', overflow: 'hidden', borderLeft: isOngoing ? '4px solid var(--success)' : isUpcoming ? '4px solid var(--accent-purple)' : '4px solid var(--border-color)' }}>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 600 }}>{comp.title}</h3>
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-                    <span style={{ fontSize: '0.8rem', backgroundColor: 'var(--border-color)', color: 'var(--text-secondary)', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>
+                  <h3 style={{ margin: '0 0 var(--space-2) 0', fontSize: '1.5rem', fontWeight: 800 }}>{comp.title}</h3>
+                  <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.75rem', background: 'var(--surface-2)', color: 'var(--text-primary)', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-full)', fontWeight: 700, border: '1px solid var(--border-color)' }}>
                       {comp.category}
                     </span>
-                    <span style={{ fontSize: '0.8rem', backgroundColor: 
-                      comp.level === 'State' ? '#e0f2fe' : 
-                      comp.level === 'National' ? '#dcfce7' : '#fef08a', 
-                      color: '#1f2937', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '0.75rem', background: 
+                      comp.level === 'State' ? 'rgba(59, 130, 246, 0.15)' : 
+                      comp.level === 'National' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)', 
+                      color: comp.level === 'State' ? '#60a5fa' : comp.level === 'National' ? '#34d399' : '#fbbf24', 
+                      padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-full)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid currentColor' }}>
                       {comp.level === 'State' ? <MapPin size={12}/> : comp.level === 'National' ? <Star size={12}/> : <Globe size={12}/>}
                       {comp.level}
                     </span>
                   </div>
                 </div>
                 
-                {isOngoing ? (
-                  <span style={{ color: '#16a34a', fontWeight: 'bold', fontSize: '0.9rem' }}>● LIVE NOW</span>
-                ) : isUpcoming ? (
-                  <span style={{ color: 'var(--btn-primary-bg)', fontWeight: 'bold', fontSize: '0.9rem' }}>UPCOMING</span>
-                ) : (
-                  <span style={{ color: 'var(--text-secondary)', fontWeight: 'bold', fontSize: '0.9rem' }}>ENDED</span>
-                )}
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-1)', padding: 'var(--space-1) var(--space-3)', borderRadius: 'var(--radius-full)', background: isOngoing ? 'rgba(16, 185, 129, 0.1)' : isUpcoming ? 'rgba(139, 92, 246, 0.1)' : 'var(--surface-2)' }}>
+                  {isOngoing ? (
+                    <><span style={{ color: 'var(--success)', fontWeight: 800, fontSize: '0.8rem' }}>● LIVE NOW</span></>
+                  ) : isUpcoming ? (
+                    <><Clock size={12} color="var(--accent-purple)" /><span style={{ color: 'var(--accent-purple)', fontWeight: 800, fontSize: '0.8rem' }}>UPCOMING</span></>
+                  ) : (
+                    <><span style={{ color: 'var(--text-muted)', fontWeight: 800, fontSize: '0.8rem' }}>ENDED</span></>
+                  )}
+                </div>
               </div>
               
-              <p style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>{comp.description}</p>
+              <p style={{ fontSize: 'var(--text-md)', color: 'var(--text-primary)', lineHeight: 1.6 }}>{comp.description}</p>
               
-              <div style={{ backgroundColor: 'var(--bg-color)', padding: '10px', borderRadius: '8px', fontSize: '0.9rem' }}>
-                <strong>🏆 Reward:</strong> {comp.reward}
+              <div style={{ background: 'var(--gradient-primary)', padding: '2px', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ background: 'var(--surface-1)', padding: 'var(--space-3)', borderRadius: 'calc(var(--radius-md) - 2px)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <Trophy size={16} color="var(--accent-amber)" />
+                  <strong>Reward:</strong> <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{comp.reward}</span>
+                </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                  👥 {comp._count.participants} Participants • Starts: {new Date(comp.startDate).toLocaleDateString()}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'var(--space-2)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+                <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', fontWeight: 500 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}><Users size={14} /> {comp._count.participants} Participants</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}><Clock size={14} /> Starts: {new Date(comp.startDate).toLocaleDateString()}</span>
                 </span>
                 
                 {isParticipating ? (
-                  <button disabled className="btn btn-small" style={{ backgroundColor: '#22c55e', borderColor: '#22c55e', color: 'white', cursor: 'default' }}>
-                    ✓ Registered
-                  </button>
+                  <form action={cancelRegistration}>
+                    <input type="hidden" name="competitionId" value={comp.id} />
+                    <button type="submit" className="btn btn-small btn-outline" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}>
+                      Cancel Registration
+                    </button>
+                  </form>
                 ) : (
                   <form action={joinCompetition}>
                     <input type="hidden" name="competitionId" value={comp.id} />
-                    <button type="submit" className="btn btn-outline btn-small" style={{ fontWeight: 600 }}>Participate Now</button>
+                    <button type="submit" className="btn btn-small" style={{ padding: 'var(--space-2) var(--space-5)' }}>Participate Now</button>
                   </form>
                 )}
               </div>

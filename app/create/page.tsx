@@ -19,13 +19,13 @@ export default async function CreatePage() {
   if (!currentUser.onboarded) redirect('/onboarding');
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <h1 className="heading-jakaas" style={{ fontSize: '1.8rem' }}>Create New Post</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Share a status, project, or thought with your network.</p>
+    <div style={{ maxWidth: '680px', margin: '0 auto', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
+      <div style={{ textAlign: 'center', marginBottom: 'var(--space-8)' }}>
+        <h1 className="heading-jakaas" style={{ fontSize: '2.5rem' }}>Create New Post</h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-lg)' }}>Share a status, project, or thought with your network.</p>
       </div>
 
-      <div className="card">
+      <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
         <CreatePostForm currentUser={currentUser} />
       </div>
     </div>

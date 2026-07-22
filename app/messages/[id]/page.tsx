@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import LocalTime from '../../components/LocalTime';
 import ChatClient from '../../components/ChatClient';
+import MessageList from '../../components/MessageList';
 import { sendWebPushNotification } from '../../actions/sendWebPush';
 
 async function sendMessage(formData: FormData) {
@@ -41,6 +42,49 @@ async function sendMessage(formData: FormData) {
     await sendWebPushNotification(receiverId, 'New Message', `${actorName}: ${content.length > 30 ? content.substring(0, 30) + '...' : content}`, `/messages/${userId}`);
 
     revalidatePath(`/messages/${receiverId}`);
+  }
+}
+
+async function deleteMessage(formData: FormData) {
+  'use server';
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) return;
+
+  const messageId = formData.get('messageId') as string;
+  const message = await prisma.message.findUnique({ where: { id: messageId } });
+  
+  if (message && message.senderId === userId) {
+    const THREE_HOURS = 3 * 60 * 60 * 1000;
+    if (Date.now() - message.createdAt.getTime() < THREE_HOURS) {
+      await prisma.message.delete({ where: { id: messageId } });
+      revalidatePath(`/messages/${message.receiverId}`);
+    }
+  }
+}
+
+async function editMessage(formData: FormData) {
+  'use server';
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) return;
+
+  const messageId = formData.get('messageId') as string;
+  const content = formData.get('content') as string;
+  
+  if (!content || content.trim().length === 0) return;
+
+  const message = await prisma.message.findUnique({ where: { id: messageId } });
+  
+  if (message && message.senderId === userId) {
+    const THREE_HOURS = 3 * 60 * 60 * 1000;
+    if (Date.now() - message.createdAt.getTime() < THREE_HOURS) {
+      await prisma.message.update({ 
+        where: { id: messageId },
+        data: { content, isEdited: true }
+      });
+      revalidatePath(`/messages/${message.receiverId}`);
+    }
   }
 }
 
@@ -110,39 +154,13 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
         display: 'flex', flexDirection: 'column', gap: 'var(--space-3)',
         backgroundColor: 'var(--surface-0)'
       }}>
-        {messages.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginTop: 'var(--space-8)', fontSize: 'var(--text-sm)' }}>
-            No messages yet. Say hi!
-          </p>
-        ) : (
-          messages.map((msg) => {
-            const isMe = msg.senderId === userId;
-            return (
-              <div key={msg.id} style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: isMe ? 'flex-end' : 'flex-start',
-              }}>
-                <div style={{ 
-                  maxWidth: '75%',
-                  padding: 'var(--space-2) var(--space-4)', 
-                  background: isMe ? 'var(--gradient-primary)' : 'var(--surface-2)', 
-                  color: isMe ? '#FFFFFF' : 'var(--text-primary)',
-                  borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                  fontSize: 'var(--text-sm)',
-                  lineHeight: '1.4',
-                  boxShadow: isMe ? 'var(--shadow-sm)' : 'none',
-                  wordBreak: 'break-word'
-                }}>
-                  {msg.content}
-                </div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: '2px', padding: '0 4px' }}>
-                  <LocalTime date={msg.createdAt} format="time" />
-                </div>
-              </div>
-            );
-          })
-        )}
+        <MessageList 
+          messages={messages} 
+          myId={userId} 
+          partnerId={partnerId} 
+          deleteAction={deleteMessage} 
+          editAction={editMessage} 
+        />
       </div>
 
       <ChatClient myId={userId} partnerId={partnerId} sendMessageAction={sendMessage} />

@@ -21,25 +21,32 @@ export default function NotificationItem({ notif, actorName, actorInitial }: { n
     <Link 
       href={notif.link || '#'} 
       onClick={handleClick}
+      className="hoverable-card"
       style={{ 
         display: 'flex', 
         alignItems: 'center', 
-        gap: '15px', 
-        padding: '15px 20px', 
+        gap: 'var(--space-4)', 
+        padding: 'var(--space-4)', 
         borderBottom: '1px solid var(--border-color)', 
         textDecoration: 'none',
         color: 'inherit',
-        backgroundColor: notif.isRead ? 'transparent' : 'rgba(var(--text-primary-rgb), 0.05)'
+        backgroundColor: notif.isRead ? 'transparent' : 'var(--accent-glow)',
+        transition: 'background-color var(--duration-fast) var(--ease-smooth)',
+        borderRadius: 0,
+        margin: 0,
+        borderLeft: notif.isRead ? '3px solid transparent' : '3px solid var(--accent-pink)'
       }}
     >
-      <div className="post-avatar" style={{ width: '40px', height: '40px', fontSize: '1.2rem' }}>
-        <div className="post-avatar-inner">{actorInitial}</div>
-      </div>
-      <div>
-        <div style={{ fontSize: '1rem' }}>
-          <strong>{actorName}</strong> {notif.content}
+      <div className="post-avatar" style={{ width: '42px', height: '42px' }}>
+        <div className="post-avatar-inner" style={{ fontSize: '1.2rem' }}>
+          {actorInitial}
         </div>
-        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-primary)' }}>
+          <strong style={{ fontWeight: 700 }}>{actorName}</strong> {notif.content}
+        </div>
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginTop: 'var(--space-1)', fontWeight: 500 }}>
           <LocalTime date={notif.createdAt} format="full" />
         </div>
       </div>

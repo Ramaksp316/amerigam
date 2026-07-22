@@ -2,6 +2,7 @@ import { prisma } from '../../lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { Settings, LogOut, UserCircle } from 'lucide-react';
 
 async function updateProfile(formData: FormData) {
   'use server';
@@ -45,34 +46,46 @@ export default async function SettingsPage() {
   if (!user.onboarded) redirect('/onboarding');
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.5rem', marginBottom: '20px' }}>Edit Profile</h1>
+    <div style={{ maxWidth: '600px', margin: '0 auto', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-8)' }}>
+        <Settings size={32} color="var(--accent-purple)" />
+        <h1 className="heading-jakaas" style={{ fontSize: '2rem', margin: 0 }}>Settings</h1>
+      </div>
       
-      <div className="card">
-        <form action={updateProfile}>
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600 }}>Name</label>
+      <div className="glass-card" style={{ marginBottom: 'var(--space-8)' }}>
+        <h2 style={{ fontSize: '1.2rem', marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <UserCircle size={20} color="var(--text-secondary)" /> Edit Profile
+        </h2>
+        
+        <form action={updateProfile} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: 'var(--space-2)', fontWeight: 600, color: 'var(--text-secondary)' }}>Display Name</label>
             <input type="text" name="name" className="input-field" defaultValue={user.name || ''} placeholder="Your Name" required />
           </div>
           
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600 }}>Bio</label>
-            <textarea name="bio" className="input-field" defaultValue={user.bio || ''} placeholder="Write a short bio..." style={{ resize: 'vertical', minHeight: '80px' }}></textarea>
+          <div>
+            <label style={{ display: 'block', marginBottom: 'var(--space-2)', fontWeight: 600, color: 'var(--text-secondary)' }}>Bio</label>
+            <textarea name="bio" className="input-field" defaultValue={user.bio || ''} placeholder="Write a short bio..." style={{ resize: 'vertical', minHeight: '100px' }}></textarea>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600 }}>Portfolio URL</label>
+          <div>
+            <label style={{ display: 'block', marginBottom: 'var(--space-2)', fontWeight: 600, color: 'var(--text-secondary)' }}>Portfolio URL</label>
             <input type="url" name="portfolioUrl" className="input-field" defaultValue={user.portfolioUrl || ''} placeholder="https://yourwebsite.com" />
           </div>
 
-          <button type="submit" className="btn">Save Profile</button>
+          <button type="submit" className="btn" style={{ marginTop: 'var(--space-2)' }}>Save Profile</button>
         </form>
       </div>
 
-      <div className="card" style={{ marginTop: '20px' }}>
-        <h2 style={{ fontSize: '1.2rem', color: 'red', marginBottom: '15px' }}>Danger Zone</h2>
+      <div className="glass-card" style={{ borderLeft: '4px solid var(--danger)', backgroundColor: 'rgba(239, 68, 68, 0.02)' }}>
+        <h2 style={{ fontSize: '1.2rem', color: 'var(--danger)', marginBottom: 'var(--space-4)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <LogOut size={20} /> Danger Zone
+        </h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)' }}>
+          Logging out will end your current session. You will need to sign in again to access your account.
+        </p>
         <form action={logout}>
-          <button type="submit" className="btn btn-outline" style={{ color: 'red', borderColor: 'red' }}>Log Out</button>
+          <button type="submit" className="btn btn-outline" style={{ color: 'var(--danger)', borderColor: 'var(--danger)', width: 'auto', padding: 'var(--space-2) var(--space-6)' }}>Log Out</button>
         </form>
       </div>
     </div>
