@@ -52,7 +52,7 @@ export default async function UserProfilePage({ params, searchParams }: { params
       {/* Profile Header (Glass Card) */}
       <div className="glass-card" style={{ display: 'flex', gap: 'var(--space-6)', alignItems: 'center', flexWrap: 'wrap', position: 'relative', overflow: 'hidden' }}>
         {/* Background Accent Glow */}
-        <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '200px', height: '200px', background: 'var(--accent-glow-strong)', filter: 'blur(80px)', borderRadius: '50%', zIndex: 0 pointerEvents: 'none' }}></div>
+        <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '200px', height: '200px', background: 'var(--accent-glow-strong)', filter: 'blur(80px)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' }}></div>
         
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 'var(--space-6)', alignItems: 'center', width: '100%', flexWrap: 'wrap' }}>
           {/* Avatar with Gradient Ring */}
