@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import LocalTime from './LocalTime';
 import { Pencil, Trash2, X, Check } from 'lucide-react';
 
@@ -27,6 +27,11 @@ export default function MessageList({
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const endOfMessagesRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const now = new Date().getTime();
   const THREE_HOURS = 3 * 60 * 60 * 1000;
@@ -129,6 +134,8 @@ export default function MessageList({
         );
       })}
       
+      <div ref={endOfMessagesRef} />
+
       <style dangerouslySetInnerHTML={{__html: `
         .message-actions { opacity: 0; transition: opacity 0.2s; }
         .message-item-container:hover .message-actions { opacity: 1; }
