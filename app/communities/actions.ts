@@ -13,6 +13,7 @@ export async function createCommunity(formData: FormData) {
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
   const category = formData.get('category') as string;
+  const type = formData.get('type') as string || 'PUBLIC';
 
   if (name) {
     const community = await prisma.community.create({
@@ -20,6 +21,7 @@ export async function createCommunity(formData: FormData) {
         name,
         description,
         category,
+        type,
         creatorId: userId,
       }
     });
@@ -35,7 +37,6 @@ export async function createCommunity(formData: FormData) {
 
   revalidatePath('/communities');
 }
-
 export async function joinCommunity(formData: FormData) {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;

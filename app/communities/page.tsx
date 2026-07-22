@@ -40,28 +40,26 @@ export default async function CommunitiesPage() {
         <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-lg)' }}>Find your tribe. Build your network.</p>
       </div>
 
-      <div className="glass-card" style={{ marginBottom: 'var(--space-10)', padding: 'var(--space-6)' }}>
-        <h2 style={{ marginBottom: 'var(--space-4)', fontSize: '1.2rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>START A NEW COMMUNITY</h2>
-        <form action={createCommunity} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <div>
-            <input type="text" name="name" className="input-field" placeholder="Community Name" required />
-          </div>
-          <div>
-            <textarea name="description" className="input-field" placeholder="What is this community about?" style={{ resize: 'vertical', minHeight: '80px' }}></textarea>
-          </div>
-          <div>
-            <select name="category" className="input-field" style={{ cursor: 'pointer' }}>
-              <option value="Tech & AI">Tech & AI</option>
-              <option value="Business & Startups">Business & Startups</option>
-              <option value="Visual Arts">Visual Arts</option>
-              <option value="Fitness & Strength">Fitness & Strength</option>
-              <option value="Travel & Culture">Travel & Culture</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          <button type="submit" className="btn" style={{ marginTop: 'var(--space-2)' }}>Create Community</button>
-        </form>
-      </div>
+            <div className="glass-card" style={{ flexBasis: '300px', flexGrow: 1, margin: 0 }}>
+              <h2 style={{ fontSize: '1.25rem', marginBottom: 'var(--space-4)', fontWeight: 700 }}>Create New</h2>
+              <form action={createCommunity} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+                <input type="text" name="name" placeholder="Name" required className="input-field" />
+                <textarea name="description" placeholder="Description" rows={3} className="input-field" style={{ resize: 'none' }}></textarea>
+                <select name="category" className="input-field" required>
+                  <option value="">Select Category</option>
+                  <option value="Tech & AI">Tech & AI</option>
+                  <option value="Visual Arts">Visual Arts</option>
+                  <option value="Business & Startups">Business & Startups</option>
+                  <option value="Gaming">Gaming</option>
+                  <option value="General">General</option>
+                </select>
+                <select name="type" className="input-field" required>
+                  <option value="PUBLIC">Public Community</option>
+                  <option value="FRIEND_GROUP">Private Friend Group</option>
+                </select>
+                <button type="submit" className="btn" style={{ width: '100%' }}>Create Space</button>
+              </form>
+            </div>
 
       <div className="divider" style={{ fontSize: 'var(--text-sm)' }}>EXPLORE COMMUNITIES</div>
 

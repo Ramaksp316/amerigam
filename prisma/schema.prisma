@@ -39,6 +39,10 @@ model User {
   actedNotifications Notification[] @relation("actorNotifications")
   pushSubscriptions  PushSubscription[]
 
+  // Task relations
+  assignedTasks    CommunityTask[] @relation("assignedTasks")
+  createdTasks     CommunityTask[] @relation("createdTasks")
+
   createdAt        DateTime  @default(now())
 
   // Communities (Phase 1)
@@ -115,10 +119,12 @@ model Community {
   name        String
   description String?
   category    String?  // e.g. "Tech & AI", "Visual Arts"
+  type        String   @default("PUBLIC") // "PUBLIC" or "FRIEND_GROUP"
   creatorId   String
   creator     User     @relation(fields: [creatorId], references: [id])
   members     CommunityMember[]
   posts       CommunityPost[]
+  tasks       CommunityTask[]
   createdAt   DateTime @default(now())
 }
 
@@ -142,6 +148,22 @@ model CommunityPost {
   communityId String
   author      User      @relation(fields: [authorId], references: [id])
   community   Community @relation(fields: [communityId], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+model CommunityTask {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  communityId String
+  assigneeId  String?
+  creatorId   String
+  deadline    DateTime?
+  status      String   @default("PENDING") // "PENDING", "IN_PROGRESS", "COMPLETED"
+  
+  community   Community @relation(fields: [communityId], references: [id])
+  assignee    User?     @relation("assignedTasks", fields: [assigneeId], references: [id])
+  creator     User      @relation("createdTasks", fields: [creatorId], references: [id])
   createdAt   DateTime  @default(now())
 }
 

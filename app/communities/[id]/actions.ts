@@ -84,3 +84,49 @@ export async function createCommunityPost(formData: FormData) {
     revalidatePath(`/communities/${communityId}`);
   }
 }
+
+export async function createCommunityTask(formData: FormData) {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) return;
+
+  const communityId = formData.get('communityId') as string;
+  const title = formData.get('title') as string;
+  const description = formData.get('description') as string;
+  const assigneeId = formData.get('assigneeId') as string || null;
+  const deadlineStr = formData.get('deadline') as string;
+  
+  if (!title || title.trim().length === 0) return;
+
+  const deadline = deadlineStr ? new Date(deadlineStr) : null;
+
+  await prisma.communityTask.create({
+    data: {
+      title,
+      description,
+      communityId,
+      creatorId: userId,
+      assigneeId,
+      deadline,
+    }
+  });
+
+  revalidatePath(`/communities/${communityId}`);
+}
+
+export async function updateTaskStatus(formData: FormData) {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) return;
+
+  const taskId = formData.get('taskId') as string;
+  const status = formData.get('status') as string;
+  const communityId = formData.get('communityId') as string;
+
+  await prisma.communityTask.update({
+    where: { id: taskId },
+    data: { status }
+  });
+
+  revalidatePath(`/communities/${communityId}`);
+}
