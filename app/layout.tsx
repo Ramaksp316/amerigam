@@ -1,20 +1,20 @@
 import './globals.css';
 import { Metadata } from 'next';
-import { Oswald } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import { ThemeProvider } from './components/ThemeProvider';
 import Sidebar from './components/Sidebar';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import { cookies } from 'next/headers';
 import { prisma } from '../lib/prisma';
 
-const oswald = Oswald({ 
+const inter = Inter({ 
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  style: ['normal'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+  display: 'swap',
 });
 
 export const viewport = {
-  themeColor: '#000000',
+  themeColor: '#0B0C10',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -41,8 +41,8 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en">
-      <body className={oswald.className}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
         <ThemeProvider>
           <div className="app-layout">
             <Sidebar unreadCount={unreadCount} />

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '../../utils/supabase/client';
-import SubmitButton from './SubmitButton';
 import { useRouter } from 'next/navigation';
+import { Send } from 'lucide-react';
 
 export default function ChatClient({ 
   myId, 
@@ -16,18 +16,17 @@ export default function ChatClient({
 }) {
   const [isTyping, setIsTyping] = useState(false);
   const [partnerTyping, setPartnerTyping] = useState(false);
+  const [hasText, setHasText] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const channelRef = useRef<any>(null);
   const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {
-    // Create a unique channel name based on both IDs sorted to ensure both users join the same channel
     const channelName = `chat-${[myId, partnerId].sort().join('-')}`;
     const channel = supabase.channel(channelName);
     channelRef.current = channel;
 
-    // Subscribe to broadcast events for typing and new messages
     channel
       .on('broadcast', { event: 'typing' }, (payload) => {
         if (payload.payload.userId === partnerId) {
@@ -35,18 +34,24 @@ export default function ChatClient({
         }
       })
       .on('broadcast', { event: 'new_message' }, () => {
-        // Refresh the page data when a new message is received
         router.refresh();
       })
       .subscribe();
+
+    const container = document.getElementById('chat-container');
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
 
     return () => {
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
-  }, [myId, partnerId, supabase]);
+  }, [myId, partnerId, supabase, router]);
 
-  const handleTyping = () => {
+  const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setHasText(e.target.value.trim().length > 0);
+
     if (!channelRef.current) return;
 
     if (!isTyping) {
@@ -58,11 +63,8 @@ export default function ChatClient({
       });
     }
 
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
-    // Stop typing after 2 seconds of inactivity
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
       channelRef.current.send({
@@ -74,27 +76,28 @@ export default function ChatClient({
   };
 
   return (
-    <div style={{ padding: '20px', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)' }}>
+    <div style={{ 
+      padding: 'var(--space-3) var(--space-4)', 
+      borderTop: '1px solid var(--border-color)', 
+      background: 'var(--surface-1)',
+      position: 'relative'
+    }}>
+      
       {partnerTyping && (
-        <div style={{
-          display: 'inline-block',
-          backgroundColor: 'var(--card-bg)',
-          border: '1px solid var(--border-color)',
-          borderRadius: '16px',
-          padding: '4px 16px',
-          marginBottom: '8px',
-          color: 'var(--text-secondary)',
-          fontWeight: 'bold',
-          letterSpacing: '4px',
-          fontSize: '1.2rem',
-          animation: 'pulse 1.5s infinite'
+        <div style={{ 
+          position: 'absolute', top: '-36px', left: 'var(--space-4)',
+          background: 'var(--surface-2)', padding: '4px 12px',
+          borderRadius: 'var(--radius-full)', fontSize: 'var(--text-xs)',
+          color: 'var(--text-secondary)', fontWeight: 600,
+          border: '1px solid var(--border-color)'
         }}>
-          ...
+          Typing...
         </div>
       )}
+
       <form action={async (formData) => {
-        // Immediately clear typing state when sent
         setIsTyping(false);
+        setHasText(false);
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         channelRef.current?.send({
           type: 'broadcast',
@@ -104,20 +107,23 @@ export default function ChatClient({
         
         await sendMessageAction(formData);
         
-        // Broadcast new message event to the partner so they refresh
         channelRef.current?.send({
           type: 'broadcast',
           event: 'new_message',
           payload: {}
         });
 
-        // Refresh our own page to show the new message
         router.refresh();
 
-        // Reset the form manually since it's a client form with action
         const form = document.getElementById('chat-form') as HTMLFormElement;
         if (form) form.reset();
-      }} id="chat-form" style={{ display: 'flex', gap: '10px' }}>
+        
+        setTimeout(() => {
+          const container = document.getElementById('chat-container');
+          if (container) container.scrollTop = container.scrollHeight;
+        }, 100);
+
+      }} id="chat-form" style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
         <input type="hidden" name="receiverId" value={partnerId} />
         <input 
           type="text" 
@@ -126,9 +132,29 @@ export default function ChatClient({
           placeholder="Type a message..." 
           required 
           onChange={handleTyping}
-          style={{ margin: 0, flexGrow: 1 }} 
+          autoComplete="off"
+          style={{ 
+            margin: 0, 
+            flexGrow: 1, 
+            borderRadius: 'var(--radius-full)',
+            padding: 'var(--space-2) var(--space-4)',
+            background: 'var(--surface-2)'
+          }} 
         />
-        <SubmitButton defaultText="Send" pendingText="Sending..." style={{ width: 'auto', padding: '0 30px', backgroundColor: 'var(--text-primary)', color: 'var(--bg-color)', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }} />
+        
+        <button 
+          type="submit"
+          className="btn"
+          style={{
+            width: '38px', height: '38px', padding: 0,
+            borderRadius: 'var(--radius-full)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            opacity: hasText ? 1 : 0.6,
+            flexShrink: 0
+          }}
+        >
+          <Send size={16} style={{ marginLeft: '-1px' }} />
+        </button>
       </form>
     </div>
   );

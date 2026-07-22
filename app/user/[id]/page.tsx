@@ -1,11 +1,11 @@
 import { prisma } from '../../../lib/prisma';
 import { cookies } from 'next/headers';
-import { revalidatePath } from 'next/cache';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import ShareButton from '../../feed/ShareButton';
 import Link from 'next/link';
 import FollowButton from '../../components/FollowButton';
 import { Metadata } from 'next';
+import { MessageCircle, Settings, Play } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,89 +70,97 @@ export default async function UserProfilePage({ params, searchParams }: { params
   const authorInitial = (user.name || user.username || '?').charAt(0).toUpperCase();
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '750px', margin: '0 auto' }}>
       
       {/* Profile Header */}
-      <div style={{ display: 'flex', gap: '30px', marginBottom: '40px', alignItems: 'center' }}>
-        <div style={{ 
-          width: '150px', 
-          height: '150px', 
-          borderRadius: '50%', 
-          backgroundColor: 'var(--border-color)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '3rem',
-          fontWeight: 'bold',
-          overflow: 'hidden',
-          flexShrink: 0
-        }}>
-          {user.avatarData ? <img src={user.avatarData} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : authorInitial}
+      <div style={{ display: 'flex', gap: 'var(--space-6)', marginBottom: 'var(--space-8)', alignItems: 'center', flexWrap: 'wrap' }}>
+        
+        {/* Avatar with Gradient Ring */}
+        <div className="post-avatar" style={{ width: '130px', height: '130px', flexShrink: 0 }}>
+          <div className="post-avatar-inner" style={{ fontSize: 'var(--text-4xl)' }}>
+            {user.avatarData ? <img src={user.avatarData} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : authorInitial}
+          </div>
         </div>
 
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '15px' }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 600, margin: 0 }}>{user.username || user.name}</h1>
+        {/* User Stats & Info */}
+        <div style={{ flex: 1, minWidth: '260px' }}>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginBottom: 'var(--space-3)', flexWrap: 'wrap' }}>
+            <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 800, margin: 0 }}>{user.username || user.name}</h1>
             
-            {currentUserId && currentUserId !== targetUserId && (
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <FollowButton targetUserId={targetUserId} initialIsFollowing={isFollowing} />
-                <form action={`/messages/${targetUserId}`}>
-                  <button type="submit" className="btn btn-small btn-outline" style={{ fontWeight: 600 }}>Message</button>
-                </form>
-              </div>
-            )}
-            {currentUserId === targetUserId && (
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <Link href="/settings" className="btn btn-small btn-outline" style={{ fontWeight: 600 }}>Edit Profile</Link>
-                <ShareButton 
-                  url={`/user/${user.id}`} 
-                  title={`${user.username || user.name} on Amerigam`} 
-                  text={`Check out ${user.name}'s profile!`} 
-                />
-              </div>
-            )}
-            {currentUserId !== targetUserId && (
+            <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+              {currentUserId && currentUserId !== targetUserId && (
+                <>
+                  <FollowButton targetUserId={targetUserId} initialIsFollowing={isFollowing} />
+                  <form action={`/messages/${targetUserId}`}>
+                    <button type="submit" className="btn btn-small btn-outline" style={{ fontWeight: 600 }}>
+                      <MessageCircle size={15} /> Message
+                    </button>
+                  </form>
+                </>
+              )}
+              {currentUserId === targetUserId && (
+                <Link href="/settings" className="btn btn-small btn-outline" style={{ fontWeight: 600 }}>
+                  <Settings size={15} /> Edit Profile
+                </Link>
+              )}
               <ShareButton 
                 url={`/user/${user.id}`} 
                 title={`${user.username || user.name} on Amerigam`} 
                 text={`Check out ${user.name}'s profile!`} 
               />
+            </div>
+          </div>
+
+          {/* Stats Row */}
+          <div style={{ display: 'flex', gap: 'var(--space-6)', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>
+            <span><strong style={{ fontSize: 'var(--text-md)' }}>{user.posts.length}</strong> posts</span>
+            <span><strong style={{ fontSize: 'var(--text-md)' }}>{user.followers.length}</strong> followers</span>
+            <span><strong style={{ fontSize: 'var(--text-md)' }}>{user.following.length}</strong> following</span>
+          </div>
+
+          {/* Bio Glass Card */}
+          <div className="card" style={{ padding: 'var(--space-4)', margin: 0 }}>
+            <strong style={{ display: 'block', fontSize: 'var(--text-base)', marginBottom: 'var(--space-1)' }}>{user.name}</strong>
+            {(user.masterPath || user.corePath) && (
+              <span style={{ color: 'var(--accent-pink)', fontSize: 'var(--text-xs)', fontWeight: 700, display: 'block', marginBottom: 'var(--space-2)' }}>
+                {user.masterPath} {user.corePath ? `• ${user.corePath}` : ''}
+              </span>
+            )}
+            <p style={{ whiteSpace: 'pre-line', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>{user.bio}</p>
+            {user.portfolioUrl && (
+              <a href={user.portfolioUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-purple)', textDecoration: 'none', fontWeight: 600, fontSize: 'var(--text-xs)', display: 'block', marginTop: 'var(--space-2)' }}>
+                🔗 {user.portfolioUrl.replace(/^https?:\/\//, '')}
+              </a>
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: '30px', marginBottom: '15px' }}>
-            <span><strong>{user.posts.length}</strong> posts</span>
-            <span><strong>{user.followers.length}</strong> followers</span>
-            <span><strong>{user.following.length}</strong> following</span>
-          </div>
-
-          <div>
-            <strong style={{ display: 'block' }}>{user.name}</strong>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{user.masterPath} {user.corePath ? `• ${user.corePath}` : ''}</span>
-            <p style={{ marginTop: '5px', whiteSpace: 'pre-line' }}>{user.bio}</p>
-            {user.portfolioUrl && <a href={user.portfolioUrl} target="_blank" rel="noreferrer" style={{ color: '#00376b', textDecoration: 'none', fontWeight: 600, display: 'block', marginTop: '5px' }}>{user.portfolioUrl}</a>}
-          </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', borderTop: '1px solid var(--border-color)', marginTop: '20px', marginBottom: '20px' }}>
+      {/* Grid Filter Tabs */}
+      <div style={{ display: 'flex', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', marginBottom: 'var(--space-6)' }}>
         <Link href={`/user/${targetUserId}?tab=posts`} style={{
-          flex: 1, textAlign: 'center', padding: '15px 0', textDecoration: 'none', color: activeTab === 'posts' ? 'var(--text-primary)' : 'var(--text-secondary)',
-          borderTop: activeTab === 'posts' ? '1px solid var(--text-primary)' : '1px solid transparent', marginTop: '-1px', fontWeight: activeTab === 'posts' ? 600 : 400, textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px'
+          flex: 1, textAlign: 'center', padding: 'var(--space-3) 0', textDecoration: 'none', 
+          color: activeTab === 'posts' ? 'var(--text-primary)' : 'var(--text-secondary)',
+          borderBottom: activeTab === 'posts' ? '2px solid var(--accent-pink)' : '2px solid transparent',
+          fontWeight: activeTab === 'posts' ? 700 : 500, fontSize: 'var(--text-xs)', letterSpacing: '1px', textTransform: 'uppercase'
         }}>
           Posts & Projects
         </Link>
         <Link href={`/user/${targetUserId}?tab=competitions`} style={{
-          flex: 1, textAlign: 'center', padding: '15px 0', textDecoration: 'none', color: activeTab === 'competitions' ? 'var(--text-primary)' : 'var(--text-secondary)',
-          borderTop: activeTab === 'competitions' ? '1px solid var(--text-primary)' : '1px solid transparent', marginTop: '-1px', fontWeight: activeTab === 'competitions' ? 600 : 400, textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px'
+          flex: 1, textAlign: 'center', padding: 'var(--space-3) 0', textDecoration: 'none', 
+          color: activeTab === 'competitions' ? 'var(--text-primary)' : 'var(--text-secondary)',
+          borderBottom: activeTab === 'competitions' ? '2px solid var(--accent-pink)' : '2px solid transparent',
+          fontWeight: activeTab === 'competitions' ? 700 : 500, fontSize: 'var(--text-xs)', letterSpacing: '1px', textTransform: 'uppercase'
         }}>
           Competitions
         </Link>
         <Link href={`/user/${targetUserId}?tab=achievements`} style={{
-          flex: 1, textAlign: 'center', padding: '15px 0', textDecoration: 'none', color: activeTab === 'achievements' ? 'var(--text-primary)' : 'var(--text-secondary)',
-          borderTop: activeTab === 'achievements' ? '1px solid var(--text-primary)' : '1px solid transparent', marginTop: '-1px', fontWeight: activeTab === 'achievements' ? 600 : 400, textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px'
+          flex: 1, textAlign: 'center', padding: 'var(--space-3) 0', textDecoration: 'none', 
+          color: activeTab === 'achievements' ? 'var(--text-primary)' : 'var(--text-secondary)',
+          borderBottom: activeTab === 'achievements' ? '2px solid var(--accent-pink)' : '2px solid transparent',
+          fontWeight: activeTab === 'achievements' ? 700 : 500, fontSize: 'var(--text-xs)', letterSpacing: '1px', textTransform: 'uppercase'
         }}>
           Achievements
         </Link>
@@ -161,18 +169,21 @@ export default async function UserProfilePage({ params, searchParams }: { params
       {/* Tab Content */}
       <div>
         {activeTab === 'posts' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-2)' }}>
             {user.posts.length === 0 ? (
-              <div style={{ gridColumn: 'span 3', textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>No posts yet.</div>
+              <div style={{ gridColumn: 'span 3', textAlign: 'center', padding: 'var(--space-8)', color: 'var(--text-secondary)' }}>No posts yet.</div>
             ) : user.posts.map(post => (
-              <Link key={post.id} href={`/post/${post.id}`} style={{ aspectRatio: '1/1', backgroundColor: 'var(--border-color)', position: 'relative', overflow: 'hidden', display: 'block', textDecoration: 'none', color: 'inherit' }}>
+              <Link key={post.id} href={`/post/${post.id}`} style={{ aspectRatio: '1/1', backgroundColor: 'var(--surface-2)', position: 'relative', overflow: 'hidden', display: 'block', borderRadius: 'var(--radius-md)' }}>
                 {post.mediaUrl ? (
                   post.mediaType === 'image' ? 
                     <img src={post.mediaUrl} alt="Post" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : 
-                    <video src={post.mediaUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                      <video src={post.mediaUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <Play size={20} color="white" style={{ position: 'absolute', top: '10px', right: '10px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />
+                    </div>
                 ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center', fontSize: '0.9rem', backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)' }}>
-                    {post.content.length > 100 ? post.content.substring(0, 100) + '...' : post.content}
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-3)', textAlign: 'center', fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', backgroundColor: 'var(--surface-1)' }}>
+                    {post.content.length > 80 ? post.content.substring(0, 80) + '...' : post.content}
                   </div>
                 )}
               </Link>
@@ -181,24 +192,24 @@ export default async function UserProfilePage({ params, searchParams }: { params
         )}
 
         {activeTab === 'competitions' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {user.participations.length === 0 ? (
-              <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginTop: '20px' }}>No competitions joined yet.</p>
+              <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: 'var(--space-6)' }}>No competitions joined yet.</p>
             ) : user.participations.map(part => (
-              <div key={part.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div key={part.id} className="card hoverable-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0 }}>
                 <div>
-                  <strong style={{ display: 'block', fontSize: '1.2rem' }}>{part.competition.title}</strong>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{part.competition.level} • {part.competition.category}</span>
+                  <strong style={{ display: 'block', fontSize: 'var(--text-md)', color: 'var(--text-primary)' }}>{part.competition.title}</strong>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>{part.competition.level} • {part.competition.category}</span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   {part.rank ? (
-                    <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 'bold', color: part.rank === 1 ? '#eab308' : part.rank === 2 ? '#9ca3af' : '#d97706' }}>
+                    <span style={{ display: 'block', fontSize: 'var(--text-lg)', fontWeight: 800, color: part.rank === 1 ? '#F59E0B' : part.rank === 2 ? '#9CA3AF' : '#D97706' }}>
                       Rank #{part.rank}
                     </span>
                   ) : (
-                    <span style={{ color: 'var(--text-secondary)' }}>Pending Result</span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>Pending Result</span>
                   )}
-                  {part.score && <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Score: {part.score}</span>}
+                  {part.score && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Score: {part.score}</span>}
                 </div>
               </div>
             ))}
@@ -206,14 +217,14 @@ export default async function UserProfilePage({ params, searchParams }: { params
         )}
 
         {activeTab === 'achievements' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-3)' }}>
             {user.achievements.length === 0 ? (
-              <div style={{ gridColumn: 'span 3', textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>No achievements yet.</div>
+              <div style={{ gridColumn: 'span 3', textAlign: 'center', padding: 'var(--space-8)', color: 'var(--text-secondary)' }}>No achievements yet.</div>
             ) : user.achievements.map(ach => (
-              <div key={ach.id} className="card" style={{ textAlign: 'center', padding: '20px' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '10px' }}>{ach.badgeIcon || '🏆'}</div>
-                <strong style={{ display: 'block' }}>{ach.title}</strong>
-                {ach.description && <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '5px' }}>{ach.description}</p>}
+              <div key={ach.id} className="card hoverable-card" style={{ textAlign: 'center', padding: 'var(--space-4)', margin: 0 }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: 'var(--space-2)' }}>{ach.badgeIcon || '🏆'}</div>
+                <strong style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-primary)' }}>{ach.title}</strong>
+                {ach.description && <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginTop: 'var(--space-1)' }}>{ach.description}</p>}
               </div>
             ))}
           </div>

@@ -2,6 +2,8 @@ import { prisma } from '../../../lib/prisma';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import LocalTime from '../../components/LocalTime';
 import ChatClient from '../../components/ChatClient';
 import { sendWebPushNotification } from '../../actions/sendWebPush';
@@ -54,9 +56,9 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
   
   if (userId === partnerId) {
     return (
-      <div className="card" style={{ textAlign: 'center', marginTop: '40px' }}>
-        <p style={{ fontSize: '1.2rem', marginBottom: '20px' }}>You cannot message yourself.</p>
-        <a href="/messages" className="btn">Back to Inbox</a>
+      <div className="card" style={{ textAlign: 'center', marginTop: 'var(--space-8)', padding: 'var(--space-8)' }}>
+        <p style={{ fontSize: 'var(--text-md)', marginBottom: 'var(--space-4)' }}>You cannot message yourself.</p>
+        <Link href="/messages" className="btn btn-small">Back to Inbox</Link>
       </div>
     );
   }
@@ -77,43 +79,64 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
   });
 
   return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '70vh', padding: '0', overflow: 'hidden' }}>
+    <div className="card" style={{ 
+      display: 'flex', flexDirection: 'column', 
+      height: 'calc(100vh - 120px)', maxHeight: '750px',
+      padding: '0', overflow: 'hidden', margin: '0 auto', maxWidth: '750px'
+    }}>
       
-      <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h2 style={{ fontSize: '1.5rem', margin: 0 }}>
-          <a href={`/user/${partnerId}`} style={{ color: 'var(--text-primary)', textDecoration: 'none' }}>
-            {partner.name || partner.email}
-          </a>
-        </h2>
-        <a href="/messages" className="btn-text">Back to Inbox</a>
+      {/* Chat Header */}
+      <div style={{ 
+        padding: 'var(--space-3) var(--space-4)', 
+        borderBottom: '1px solid var(--border-color)', 
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        background: 'var(--surface-1)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <Link href="/messages" className="btn-text" style={{ padding: '4px' }} title="Back to Inbox">
+            <ArrowLeft size={20} />
+          </Link>
+          <h2 style={{ fontSize: 'var(--text-md)', margin: 0, fontWeight: 700 }}>
+            <Link href={`/user/${partnerId}`} style={{ color: 'var(--text-primary)' }}>
+              {partner.name || partner.username || partner.email}
+            </Link>
+          </h2>
+        </div>
       </div>
       
-      <div style={{ flexGrow: 1, overflowY: 'auto', padding: '20px', backgroundColor: 'var(--bg-color)' }}>
+      {/* Messages Thread Container */}
+      <div id="chat-container" style={{ 
+        flexGrow: 1, overflowY: 'auto', padding: 'var(--space-4)', 
+        display: 'flex', flexDirection: 'column', gap: 'var(--space-3)',
+        backgroundColor: 'var(--surface-0)'
+      }}>
         {messages.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginTop: '20px' }}>No messages yet. Say hi!</p>
+          <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginTop: 'var(--space-8)', fontSize: 'var(--text-sm)' }}>
+            No messages yet. Say hi!
+          </p>
         ) : (
-          messages.map(msg => {
+          messages.map((msg) => {
             const isMe = msg.senderId === userId;
             return (
               <div key={msg.id} style={{ 
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: isMe ? 'flex-end' : 'flex-start',
-                marginBottom: '15px'
               }}>
                 <div style={{ 
                   maxWidth: '75%',
-                  padding: '12px 18px', 
-                  backgroundColor: isMe ? 'var(--text-primary)' : 'var(--card-bg)', 
-                  color: isMe ? 'var(--bg-color)' : 'var(--text-primary)',
-                  border: isMe ? 'none' : '1px solid var(--border-color)',
-                  borderRadius: isMe ? '20px 20px 0 20px' : '20px 20px 20px 0',
-                  fontSize: '1.05rem',
-                  lineHeight: '1.4'
+                  padding: 'var(--space-2) var(--space-4)', 
+                  background: isMe ? 'var(--gradient-primary)' : 'var(--surface-2)', 
+                  color: isMe ? '#FFFFFF' : 'var(--text-primary)',
+                  borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                  fontSize: 'var(--text-sm)',
+                  lineHeight: '1.4',
+                  boxShadow: isMe ? 'var(--shadow-sm)' : 'none',
+                  wordBreak: 'break-word'
                 }}>
                   {msg.content}
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '5px' }}>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: '2px', padding: '0 4px' }}>
                   <LocalTime date={msg.createdAt} format="time" />
                 </div>
               </div>

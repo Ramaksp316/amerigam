@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition, useOptimistic } from 'react';
+import { useTransition, useOptimistic, useState } from 'react';
 import { Heart } from 'lucide-react';
 import { toggleLike } from '../actions/postActions';
 
@@ -14,6 +14,7 @@ export default function LikeButton({
   initialLikesCount: number
 }) {
   const [isPending, startTransition] = useTransition();
+  const [isAnimating, setIsAnimating] = useState(false);
   const [optimisticLike, addOptimisticLike] = useOptimistic(
     { hasLiked: initialHasLiked, count: initialLikesCount },
     (state, newHasLiked: boolean) => ({
@@ -23,6 +24,10 @@ export default function LikeButton({
   );
 
   const handleLike = () => {
+    if (!optimisticLike.hasLiked) {
+      setIsAnimating(true);
+      setTimeout(() => setIsAnimating(false), 500);
+    }
     startTransition(async () => {
       addOptimisticLike(!optimisticLike.hasLiked);
       await toggleLike(postId);
@@ -30,17 +35,20 @@ export default function LikeButton({
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
       <button 
         onClick={handleLike} 
         disabled={isPending}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+        className="post-action-btn"
+        style={{ 
+          transform: isAnimating ? 'scale(1.3)' : 'scale(1)',
+          transition: 'transform var(--duration-normal) var(--ease-spring)'
+        }}
       >
         <Heart 
           size={24} 
-          fill={optimisticLike.hasLiked ? "#ff3040" : "none"} 
-          color={optimisticLike.hasLiked ? "#ff3040" : "var(--text-primary)"} 
-          style={{ transition: 'all 0.2s ease-in-out', transform: isPending ? 'scale(0.9)' : 'scale(1)' }}
+          fill={optimisticLike.hasLiked ? "#EF4444" : "none"} 
+          color={optimisticLike.hasLiked ? "#EF4444" : "var(--text-primary)"} 
         />
       </button>
     </div>
