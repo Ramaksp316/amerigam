@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '../../utils/supabase/client';
 import { useRouter } from 'next/navigation';
-import { Send } from 'lucide-react';
+import { Smile, Send } from 'lucide-react';
+import EmojiPicker from 'emoji-picker-react';
 
 export default function ChatClient({ 
   myId, 
@@ -17,6 +18,9 @@ export default function ChatClient({
   const [isTyping, setIsTyping] = useState(false);
   const [partnerTyping, setPartnerTyping] = useState(false);
   const [hasText, setHasText] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const channelRef = useRef<any>(null);
   const supabase = createClient();
@@ -49,8 +53,9 @@ export default function ChatClient({
     };
   }, [myId, partnerId, supabase, router]);
 
-  const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setHasText(e.target.value.trim().length > 0);
+  const handleTyping = (val: string) => {
+    setInputValue(val);
+    setHasText(val.trim().length > 0);
 
     if (!channelRef.current) return;
 
@@ -75,6 +80,10 @@ export default function ChatClient({
     }, 2000);
   };
 
+  const onEmojiClick = (emojiObject: any) => {
+    handleTyping(inputValue + emojiObject.emoji);
+  };
+
   return (
     <div style={{ 
       padding: 'var(--space-3) var(--space-4)', 
@@ -95,9 +104,16 @@ export default function ChatClient({
         </div>
       )}
 
+      {showPicker && (
+        <div style={{ position: 'absolute', bottom: '100%', left: 'var(--space-4)', marginBottom: 'var(--space-2)', zIndex: 10 }}>
+          <EmojiPicker onEmojiClick={onEmojiClick} theme="dark" />
+        </div>
+      )}
+
       <form action={async (formData) => {
         setIsTyping(false);
         setHasText(false);
+        setShowPicker(false);
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         channelRef.current?.send({
           type: 'broadcast',
@@ -114,9 +130,7 @@ export default function ChatClient({
         });
 
         router.refresh();
-
-        const form = document.getElementById('chat-form') as HTMLFormElement;
-        if (form) form.reset();
+        setInputValue('');
         
         setTimeout(() => {
           const container = document.getElementById('chat-container');
@@ -125,13 +139,19 @@ export default function ChatClient({
 
       }} id="chat-form" style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
         <input type="hidden" name="receiverId" value={partnerId} />
+        
+        <button type="button" onClick={() => setShowPicker(!showPicker)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 'var(--space-2)' }} title="Add Emoji/Sticker">
+          <Smile size={24} />
+        </button>
+
         <input 
           type="text" 
           name="content" 
           className="input-field"
           placeholder="Type a message..." 
           required 
-          onChange={handleTyping}
+          value={inputValue}
+          onChange={(e) => handleTyping(e.target.value)}
           autoComplete="off"
           style={{ 
             margin: 0, 
