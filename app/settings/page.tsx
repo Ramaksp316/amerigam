@@ -25,22 +25,6 @@ async function updateProfile(formData: FormData) {
   }
 }
 
-async function updatePrivacy(formData: FormData) {
-  'use server';
-  const shareTimeTable = formData.get('shareTimeTable') === 'on';
-  const cookieStore = await cookies();
-  const userId = cookieStore.get('userId')?.value;
-  
-  if (userId) {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { shareTimeTable },
-    });
-    revalidatePath('/settings');
-    revalidatePath(`/user/${userId}`);
-  }
-}
-
 async function logout() {
   'use server';
   const cookieStore = await cookies();
@@ -76,30 +60,6 @@ export default async function SettingsPage() {
         </h2>
         
         <ProfileFormClient user={user} updateAction={updateProfile} />
-      </div>
-
-      <div className="glass-card" style={{ marginBottom: 'var(--space-8)' }}>
-        <h2 style={{ fontSize: '1.2rem', marginBottom: 'var(--space-6)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <Settings size={20} color="var(--text-secondary)" /> Privacy Settings
-        </h2>
-        
-        <form action={updatePrivacy} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)', cursor: 'pointer' }}>
-            <input 
-              type="checkbox" 
-              name="shareTimeTable" 
-              defaultChecked={user.shareTimeTable}
-              style={{ marginTop: '4px', transform: 'scale(1.2)', accentColor: 'var(--accent-purple)' }}
-            />
-            <div>
-              <strong style={{ display: 'block', color: 'var(--text-primary)', marginBottom: '4px' }}>Share Productivity & Time Table</strong>
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
-                Allow followers to view your daily routine, productivity score, and live task status on your profile.
-              </span>
-            </div>
-          </label>
-          <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>Save Privacy</button>
-        </form>
       </div>
 
       <div className="glass-card" style={{ borderLeft: '4px solid var(--danger)', backgroundColor: 'rgba(239, 68, 68, 0.02)' }}>
