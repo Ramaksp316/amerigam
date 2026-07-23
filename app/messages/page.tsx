@@ -45,7 +45,7 @@ export default async function InboxPage() {
   const partners = Array.from(partnersMap.values());
 
   return (
-    <div style={{ maxWidth: '650px', margin: '0 auto', padding: '0 var(--space-4)' }}>
+    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 var(--space-4)', width: '100%' }}>
       <PageRefresher intervalMs={15000} />
       {/* Inbox Glassmorphic Header */}
       <div style={{ 

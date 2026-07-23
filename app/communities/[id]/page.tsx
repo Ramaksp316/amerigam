@@ -59,7 +59,7 @@ export default async function CommunityDetailPage({
   const isMember = community.members.some(member => member.userId === userId);
 
   return (
-    <div style={{ animation: 'fadeIn var(--duration-slow) var(--ease-smooth)', maxWidth: '900px', margin: '0 auto', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)' }}>
+    <div style={{ animation: 'fadeIn var(--duration-slow) var(--ease-smooth)', maxWidth: '1200px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)' }}>
       <PageRefresher intervalMs={15000} />
       {!isMember ? (
         <div className="glass-card" style={{ textAlign: 'center', padding: 'var(--space-8)', borderRadius: '16px' }}>

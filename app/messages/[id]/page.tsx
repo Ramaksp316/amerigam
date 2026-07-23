@@ -128,7 +128,7 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
     <div className="card" style={{ 
       display: 'flex', flexDirection: 'column', 
       height: '100%', maxHeight: 'calc(100dvh - 80px)',
-      padding: '0', overflow: 'hidden', margin: '0 auto', maxWidth: '750px',
+      padding: '0', overflow: 'hidden', margin: '0 auto', maxWidth: '1000px', width: '100%',
       position: 'relative'
     }}>
       <PageRefresher intervalMs={15000} />

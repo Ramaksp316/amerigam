@@ -55,7 +55,7 @@ export default async function UserProfilePage({ params, searchParams }: { params
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
+    <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
       
       {/* Profile Header (Glass Card) */}
       <div className="glass-card" style={{ display: 'flex', gap: 'var(--space-6)', alignItems: 'center', flexWrap: 'wrap', position: 'relative', overflow: 'hidden' }}>

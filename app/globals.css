@@ -268,9 +268,10 @@ a {
 .main-content {
   flex: 1;
   padding: var(--space-8);
-  max-width: 620px;
+  max-width: 1400px;
   margin: 0 auto;
   animation: fadeIn var(--duration-slow) var(--ease-smooth);
+  width: 100%;
 }
 
 /* ─── TYPOGRAPHY & HEADINGS ─── */

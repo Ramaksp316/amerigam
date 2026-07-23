@@ -55,7 +55,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   });
 
   return (
-    <div>
+    <div style={{ maxWidth: '680px', margin: '0 auto', width: '100%' }}>
       {/* Feed Category Tabs */}
       <div style={{ display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-6)' }}>
         <Link 
