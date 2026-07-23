@@ -14,6 +14,7 @@ export default function ProfileFormClient({
   updateAction: (formData: FormData) => Promise<void> 
 }) {
   const [avatarData, setAvatarData] = useState<string>(user.avatarData || '');
+  const [status, setStatus] = useState<string>(user.status || 'ONLINE');
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [isCropping, setIsCropping] = useState(false);
   
@@ -86,10 +87,11 @@ export default function ProfileFormClient({
       <form action={updateAction} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         {/* Hidden inputs to send avatar data */}
         <input type="hidden" name="avatarData" value={avatarData} />
+        <input type="hidden" name="status" value={status} />
         
         {/* Profile Picture Upload Section */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginBottom: 'var(--space-2)' }}>
-          <ProfilePicture user={{ ...user, avatarData }} size={80} />
+          <ProfilePicture user={{ ...user, avatarData, status }} size={80} />
           <div>
             <button 
               type="button" 
@@ -107,6 +109,20 @@ export default function ProfileFormClient({
               style={{ display: 'none' }} 
             />
           </div>
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: 'var(--space-2)', fontWeight: 600, color: 'var(--text-secondary)' }}>Online Status</label>
+          <select 
+            value={status} 
+            onChange={(e) => setStatus(e.target.value)} 
+            className="input-field"
+            style={{ background: 'var(--surface-2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '10px 14px', borderRadius: '10px', width: '100%', outline: 'none' }}
+          >
+            <option value="ONLINE" style={{ background: 'var(--surface-1)' }}>Online (Green dot)</option>
+            <option value="DND" style={{ background: 'var(--surface-1)' }}>Do Not Disturb (Dark dot with line)</option>
+            <option value="OFFLINE" style={{ background: 'var(--surface-1)' }}>Offline (Dark dot)</option>
+          </select>
         </div>
 
         <div>

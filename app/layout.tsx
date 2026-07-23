@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import { ThemeProvider } from './components/ThemeProvider';
 import Sidebar from './components/Sidebar';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import ActiveStatusTracker from './components/ActiveStatusTracker';
 import { cookies } from 'next/headers';
 import { prisma } from '../lib/prisma';
 
@@ -44,6 +45,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider>
+          <ActiveStatusTracker userId={userId} />
           <div className="app-layout">
             <Sidebar unreadCount={unreadCount} />
             <main className="main-content">

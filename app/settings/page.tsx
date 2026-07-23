@@ -11,13 +11,14 @@ async function updateProfile(formData: FormData) {
   const bio = formData.get('bio') as string;
   const portfolioUrl = formData.get('portfolioUrl') as string;
   const avatarData = formData.get('avatarData') as string;
+  const status = formData.get('status') as string;
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
   
   if (userId) {
     await prisma.user.update({
       where: { id: userId },
-      data: { name, bio, portfolioUrl, avatarData },
+      data: { name, bio, portfolioUrl, avatarData, status },
     });
     revalidatePath('/profile');
     revalidatePath(`/user/${userId}`);
