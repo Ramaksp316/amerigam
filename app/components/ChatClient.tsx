@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createClient } from '../../utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Smile, Send } from 'lucide-react';
-import EmojiPicker from 'emoji-picker-react';
+import EmojiPicker, { Theme } from 'emoji-picker-react';
 
 export default function ChatClient({ 
   myId, 
@@ -106,7 +106,7 @@ export default function ChatClient({
 
       {showPicker && (
         <div style={{ position: 'absolute', bottom: '100%', left: 'var(--space-4)', marginBottom: 'var(--space-2)', zIndex: 10 }}>
-          <EmojiPicker onEmojiClick={onEmojiClick} theme="dark" />
+          <EmojiPicker onEmojiClick={onEmojiClick} theme={Theme.DARK} />
         </div>
       )}
 
