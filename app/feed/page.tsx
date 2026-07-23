@@ -10,6 +10,7 @@ import DeletePostButton from '../components/DeletePostButton';
 import LikeButton from '../components/LikeButton';
 import CommentForm from '../components/CommentForm';
 import ProfilePicture from '../components/ProfilePicture';
+import CustomVideoPlayer from '../components/CustomVideoPlayer';
 
 export default async function FeedPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const cookieStore = await cookies();
@@ -121,7 +122,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                   {post.mediaType === 'image' ? (
                     <img src={post.mediaUrl} alt="Post media" loading="lazy" />
                   ) : (
-                    <video src={post.mediaUrl} controls playsInline />
+                    <CustomVideoPlayer src={post.mediaUrl} />
                   )}
                 </div>
               )}

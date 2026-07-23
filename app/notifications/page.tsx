@@ -12,7 +12,12 @@ export default async function NotificationsPage() {
     redirect('/login');
   }
 
-  // Mark all as read when visited
+  // Delete notifications that have already been read (clearing them from the screen)
+  await prisma.notification.deleteMany({
+    where: { userId, isRead: true }
+  });
+
+  // Mark all fresh unread notifications as read (so they will be cleared next time)
   await prisma.notification.updateMany({
     where: { userId, isRead: false },
     data: { isRead: true }

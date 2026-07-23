@@ -9,6 +9,8 @@ import DeletePostButton from '../../components/DeletePostButton';
 import LikeButton from '../../components/LikeButton';
 import CommentForm from '../../components/CommentForm';
 import { Metadata } from 'next';
+import ProfilePicture from '../../components/ProfilePicture';
+import CustomVideoPlayer from '../../components/CustomVideoPlayer';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,9 +91,7 @@ export default async function SinglePostPage({ params }: { params: Promise<{ id:
         {/* Post Header */}
         <div className="post-header">
           <div className="post-header-left">
-            <div className="post-avatar">
-              <div className="post-avatar-inner">{authorInitial}</div>
-            </div>
+            <ProfilePicture user={post.author} size={38} />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <strong style={{ fontSize: '0.9rem' }}>
                 <Link href={`/user/${post.authorId}`} style={{ textDecoration: 'none', color: 'var(--text-primary)' }}>{post.author.username || post.author.name}</Link>
@@ -117,7 +117,7 @@ export default async function SinglePostPage({ params }: { params: Promise<{ id:
             {post.mediaType === 'image' ? (
               <img src={post.mediaUrl} alt="Post media" />
             ) : (
-              <video src={post.mediaUrl} controls />
+              <CustomVideoPlayer src={post.mediaUrl} />
             )}
           </div>
         )}

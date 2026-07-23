@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '../../../utils/supabase/client';
 import ProfilePicture from '../../components/ProfilePicture';
 import CommunityAvatar from '../../components/CommunityAvatar';
+import CustomVideoPlayer from '../../components/CustomVideoPlayer';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.min.css';
 import { updateCommunityAvatar } from './actions';
@@ -356,7 +357,7 @@ export default function CommunityClient({
                             <div style={{ marginTop: post.content ? '8px' : '0', borderRadius: '8px', overflow: 'hidden' }}>
                               {post.mediaType === 'image' 
                                 ? <img src={post.mediaUrl} style={{ maxWidth: '100%', display: 'block', borderRadius: '6px' }} /> 
-                                : <video src={post.mediaUrl} controls style={{ maxWidth: '100%', display: 'block', borderRadius: '6px' }} />
+                                : <CustomVideoPlayer src={post.mediaUrl} style={{ maxWidth: '100%', display: 'block', borderRadius: '6px' }} />
                               }
                             </div>
                           )}
