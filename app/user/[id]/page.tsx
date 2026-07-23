@@ -6,6 +6,7 @@ import Link from 'next/link';
 import FollowButton from '../../components/FollowButton';
 import { Metadata } from 'next';
 import { MessageCircle, Settings, Play, MapPin, Link as LinkIcon, Calendar } from 'lucide-react';
+import ProfilePicture from '../../components/ProfilePicture';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,10 +57,8 @@ export default async function UserProfilePage({ params, searchParams }: { params
         
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 'var(--space-6)', alignItems: 'center', width: '100%', flexWrap: 'wrap' }}>
           {/* Avatar with Gradient Ring */}
-          <div style={{ width: '120px', height: '120px', borderRadius: 'var(--radius-full)', background: 'var(--gradient-primary)', padding: '3px', flexShrink: 0, boxShadow: 'var(--shadow-glow)' }}>
-            <div style={{ width: '100%', height: '100%', borderRadius: 'var(--radius-full)', backgroundColor: 'var(--surface-1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-4xl)', fontWeight: 800, color: 'var(--text-primary)', overflow: 'hidden' }}>
-              {user.avatarData ? <img src={user.avatarData} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : authorInitial}
-            </div>
+          <div style={{ width: '124px', height: '124px', borderRadius: 'var(--radius-full)', background: 'var(--gradient-primary)', padding: '3px', flexShrink: 0, boxShadow: 'var(--shadow-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ProfilePicture user={user} size={118} />
           </div>
 
           {/* User Info */}

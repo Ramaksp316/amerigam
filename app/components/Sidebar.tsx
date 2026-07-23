@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
 import Link from 'next/link';
-import { Home, Search, Compass, Users, MessageCircle, User, PlusSquare, Trophy, Bell } from 'lucide-react';
+import { Home, Search, Compass, Users, MessageCircle, User, PlusSquare, Trophy, Bell, Sparkles } from 'lucide-react';
+import ProfilePicture from './ProfilePicture';
 
-export default function Sidebar({ unreadCount = 0 }: { unreadCount?: number }) {
+export default function Sidebar({ unreadCount = 0, currentUser = null }: { unreadCount?: number, currentUser?: any }) {
   const pathname = usePathname();
   const [displayUnread, setDisplayUnread] = useState(unreadCount);
 
@@ -67,10 +68,40 @@ export default function Sidebar({ unreadCount = 0 }: { unreadCount?: number }) {
           <span className="text">Create</span>
         </Link>
         <Link href="/profile" className={pathname === '/profile' ? 'active' : ''}>
-          <span className="icon"><User size={22} strokeWidth={pathname === '/profile' ? 2.5 : 1.8} /></span> 
+          <span className="icon" style={{ borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {currentUser ? (
+              <ProfilePicture user={currentUser} size={24} showStatus={false} />
+            ) : (
+              <User size={22} strokeWidth={pathname === '/profile' ? 2.5 : 1.8} />
+            )}
+          </span> 
           <span className="text">Profile</span>
         </Link>
       </div>
+
+      {currentUser && (
+        <Link href="/profile" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '12px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          borderRadius: '12px',
+          marginBottom: '16px',
+          textDecoration: 'none'
+        }} className="hoverable-card-glass sidebar-user-card">
+          <ProfilePicture user={currentUser} size={36} />
+          <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <strong style={{ fontSize: '13px', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {currentUser.name || currentUser.username}
+            </strong>
+            <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
+              {currentUser.status === 'ONLINE' ? 'Online' : currentUser.status === 'DND' ? 'Do Not Disturb' : 'Offline'}
+            </span>
+          </div>
+        </Link>
+      )}
 
       <div className="theme-toggle-container" style={{ 
         marginTop: 'auto', 

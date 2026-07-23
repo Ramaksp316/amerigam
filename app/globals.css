@@ -556,6 +556,7 @@ a {
 
   .sidebar .logo,
   .sidebar .theme-toggle-container,
+  .sidebar-user-card,
   .nav-links a .text {
     display: none !important;
   }

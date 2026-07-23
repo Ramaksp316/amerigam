@@ -9,6 +9,7 @@ import LocalTime from '../components/LocalTime';
 import DeletePostButton from '../components/DeletePostButton';
 import LikeButton from '../components/LikeButton';
 import CommentForm from '../components/CommentForm';
+import ProfilePicture from '../components/ProfilePicture';
 
 export default async function FeedPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const cookieStore = await cookies();
@@ -90,9 +91,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
               {/* Post Header */}
               <div className="post-header">
                 <div className="post-header-left">
-                  <div className="post-avatar">
-                    <div className="post-avatar-inner">{authorInitial}</div>
-                  </div>
+                  <ProfilePicture user={post.author} size={38} />
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <strong style={{ fontSize: 'var(--text-sm)' }}>
                       <Link href={`/user/${post.authorId}`} style={{ color: 'var(--text-primary)' }}>

@@ -35,9 +35,14 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
   let unreadCount = 0;
+  let currentUser = null;
   if (userId) {
     unreadCount = await prisma.notification.count({
       where: { userId, isRead: false }
+    });
+    currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, username: true, avatarData: true, status: true, lastSeen: true }
     });
   }
 
@@ -47,7 +52,7 @@ export default async function RootLayout({
         <ThemeProvider>
           <ActiveStatusTracker userId={userId} />
           <div className="app-layout">
-            <Sidebar unreadCount={unreadCount} />
+            <Sidebar unreadCount={unreadCount} currentUser={currentUser} />
             <main className="main-content">
               {children}
             </main>
