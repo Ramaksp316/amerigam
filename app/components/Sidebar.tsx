@@ -10,6 +10,7 @@ import ProfilePicture from './ProfilePicture';
 export default function Sidebar({ unreadCount = 0, currentUser = null }: { unreadCount?: number, currentUser?: any }) {
   const pathname = usePathname();
   const [displayUnread, setDisplayUnread] = useState(unreadCount);
+  const [isCreateExpanded, setIsCreateExpanded] = useState(false);
 
   useEffect(() => {
     if (pathname === '/notifications') {
@@ -67,10 +68,39 @@ export default function Sidebar({ unreadCount = 0, currentUser = null }: { unrea
           </span> 
           <span className="text">Notifications</span>
         </Link>
-        <Link href="/create" className={pathname === '/create' ? 'active' : ''}>
-          <span className="icon"><PlusSquare size={22} strokeWidth={pathname === '/create' ? 2.5 : 1.8} /></span> 
-          <span className="text">Create</span>
-        </Link>
+        <div style={{ position: 'relative' }}>
+          <button 
+            onClick={() => setIsCreateExpanded(!isCreateExpanded)} 
+            className={`sidebar-link ${pathname?.startsWith('/create') ? 'active' : ''}`}
+            style={{ width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}
+          >
+            <span className="icon"><PlusSquare size={22} strokeWidth={pathname?.startsWith('/create') ? 2.5 : 1.8} /></span> 
+            <span className="text">Create</span>
+          </button>
+          
+          {isCreateExpanded && (
+            <div style={{ 
+              display: 'flex', flexDirection: 'column', paddingLeft: 'var(--space-10)', marginTop: 'var(--space-2)', gap: 'var(--space-2)',
+              animation: 'fadeIn 0.2s ease-out' 
+            }}>
+              <Link href="/create?type=post" className="sidebar-sublink" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.2rem' }}>📝</span> Post
+              </Link>
+              <Link href="/create?type=project" className="sidebar-sublink" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.2rem' }}>🚀</span> Project
+              </Link>
+              <Link href="/create?type=status" className="sidebar-sublink" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.2rem' }}>💭</span> Status
+              </Link>
+              <Link href="/create?type=competition" className="sidebar-sublink" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.2rem' }}>🏆</span> Competition
+              </Link>
+              <Link href="/create?type=community" className="sidebar-sublink" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.2rem' }}>👥</span> Community
+              </Link>
+            </div>
+          )}
+        </div>
         <Link href="/profile" className={`${pathname === '/profile' ? 'active' : ''} profile-link-desktop-hidden`}>
           <span className="icon" style={{ borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {currentUser ? (

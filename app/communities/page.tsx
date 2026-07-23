@@ -40,28 +40,7 @@ export default async function CommunitiesPage() {
         <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-lg)' }}>Find your tribe. Build your network.</p>
       </div>
 
-            <div className="glass-card" style={{ flexBasis: '300px', flexGrow: 1, margin: 0 }}>
-              <h2 style={{ fontSize: '1.25rem', marginBottom: 'var(--space-4)', fontWeight: 700 }}>Create New</h2>
-              <form action={createCommunity} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                <input type="text" name="name" placeholder="Name" required className="input-field" />
-                <textarea name="description" placeholder="Description" rows={3} className="input-field" style={{ resize: 'none' }}></textarea>
-                <select name="category" className="input-field" required>
-                  <option value="">Select Category</option>
-                  <option value="Tech & AI">Tech & AI</option>
-                  <option value="Visual Arts">Visual Arts</option>
-                  <option value="Business & Startups">Business & Startups</option>
-                  <option value="Gaming">Gaming</option>
-                  <option value="General">General</option>
-                </select>
-                <select name="type" className="input-field" required>
-                  <option value="PUBLIC">Public Community</option>
-                  <option value="FRIEND_GROUP">Private Friend Group</option>
-                </select>
-                <button type="submit" className="btn" style={{ width: '100%' }}>Create Space</button>
-              </form>
-            </div>
-
-      <div className="divider" style={{ fontSize: 'var(--text-sm)' }}>EXPLORE COMMUNITIES</div>
+      <div className="divider" style={{ fontSize: 'var(--text-sm)', marginTop: 0 }}>EXPLORE COMMUNITIES</div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
         {communities.length === 0 && (
@@ -75,11 +54,20 @@ export default async function CommunitiesPage() {
 
           return (
             <div key={community.id} className="glass-card hoverable-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', margin: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700 }}>{community.name}</h3>
-                <span style={{ fontSize: '0.7rem', background: 'var(--surface-2)', color: 'var(--accent-cyan)', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-full)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', border: '1px solid var(--border-color)' }}>
-                  {community.category}
-                </span>
+              <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-start' }}>
+                <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'var(--surface-2)', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-color)' }}>
+                  {community.avatarData ? (
+                    <img src={community.avatarData} alt={community.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <Users size={24} color="var(--text-muted)" />
+                  )}
+                </div>
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700 }}>{community.name}</h3>
+                  <span style={{ fontSize: '0.7rem', background: 'var(--surface-2)', color: 'var(--accent-cyan)', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-full)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', border: '1px solid var(--border-color)' }}>
+                    {community.category}
+                  </span>
+                </div>
               </div>
               
               <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', flex: 1, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{community.description}</p>

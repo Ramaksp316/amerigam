@@ -47,6 +47,13 @@ export default async function UserProfilePage({ params, searchParams }: { params
   const isFollowing = currentUserId ? user.followers.some(f => f.followerId === currentUserId) : false;
   const authorInitial = (user.name || user.username || '?').charAt(0).toUpperCase();
 
+  const isOwner = currentUserId === targetUserId;
+
+  let activeStatus = null;
+  if (user.customStatus && user.customStatusExpiresAt && new Date(user.customStatusExpiresAt) > new Date()) {
+    activeStatus = user.customStatus;
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
       
@@ -70,6 +77,12 @@ export default async function UserProfilePage({ params, searchParams }: { params
                 {(user.masterPath || user.corePath) && (
                   <div style={{ display: 'inline-block', marginTop: 'var(--space-2)', padding: 'var(--space-1) var(--space-3)', background: 'var(--surface-2)', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-pink)', border: '1px solid var(--border-color)' }}>
                     {user.masterPath} {user.corePath ? `• ${user.corePath}` : ''}
+                  </div>
+                )}
+                {activeStatus && (
+                  <div style={{ marginTop: 'var(--space-3)', display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)', background: 'rgba(59, 130, 246, 0.15)', padding: '8px 12px', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                    <span style={{ fontSize: '1.2rem' }}>💭</span>
+                    <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: '#60a5fa' }}>{activeStatus}</span>
                   </div>
                 )}
               </div>

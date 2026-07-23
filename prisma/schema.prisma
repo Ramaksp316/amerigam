@@ -55,8 +55,10 @@ model User {
   achievements     Achievement[]
 
   // Online Status fields
-  status           String    @default("ONLINE") // "ONLINE", "OFFLINE", "DND"
-  lastSeen         DateTime  @default(now())
+  status                String    @default("ONLINE") // "ONLINE", "OFFLINE", "DND"
+  lastSeen              DateTime  @default(now())
+  customStatus          String?   // 24-hour custom status (e.g. "Working on Amerigam")
+  customStatusExpiresAt DateTime? // When this custom status expires
 }
 
 model Post {
