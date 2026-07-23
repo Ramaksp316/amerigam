@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 
 // Helper to get current user from cookies (assuming Amerigam has this setup)
 async function getCurrentUser() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const userId = cookieStore.get("userId")?.value;
   if (!userId) {
     return null;
