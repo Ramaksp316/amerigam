@@ -561,6 +561,10 @@ a {
     display: none !important;
   }
 
+  .sidebar .nav-links a.profile-link-desktop-hidden {
+    display: flex !important;
+  }
+
   .nav-links {
     flex-direction: row;
     justify-content: space-around;
@@ -596,6 +600,11 @@ a {
   border-color: rgba(0, 242, 254, 0.25) !important;
   transform: translateY(-2px);
   box-shadow: 0 8px 32px 0 rgba(0, 242, 254, 0.15) !important;
+}
+
+/* Hide profile link in sidebar list on desktop */
+.sidebar .nav-links a.profile-link-desktop-hidden {
+  display: none !important;
 }
 
 /* Bubble Pop Animation for messages */

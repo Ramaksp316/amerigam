@@ -8,6 +8,7 @@ import LocalTime from '../../components/LocalTime';
 import ChatClient from '../../components/ChatClient';
 import MessageList from '../../components/MessageList';
 import ProfilePicture from '../../components/ProfilePicture';
+import PageRefresher from '../../components/PageRefresher';
 import { sendWebPushNotification } from '../../actions/sendWebPush';
 
 async function sendMessage(formData: FormData) {
@@ -130,6 +131,7 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
       padding: '0', overflow: 'hidden', margin: '0 auto', maxWidth: '750px',
       position: 'relative'
     }}>
+      <PageRefresher intervalMs={15000} />
       
       {/* Chat Header */}
       <div style={{ 

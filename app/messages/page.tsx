@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { MessageCircle, Search, Compass } from 'lucide-react';
 import Link from 'next/link';
 import ProfilePicture from '../components/ProfilePicture';
+import PageRefresher from '../components/PageRefresher';
 
 export default async function InboxPage() {
   const cookieStore = await cookies();
@@ -45,6 +46,7 @@ export default async function InboxPage() {
 
   return (
     <div style={{ maxWidth: '650px', margin: '0 auto', padding: '0 var(--space-4)' }}>
+      <PageRefresher intervalMs={15000} />
       {/* Inbox Glassmorphic Header */}
       <div style={{ 
         display: 'flex', 

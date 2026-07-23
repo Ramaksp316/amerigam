@@ -55,24 +55,25 @@ export default function ProfilePicture({ user, size = 48, showStatus = true }: P
           right: '0px',
           width: dotSize,
           height: dotSize,
-          backgroundColor: '#1E2029', // Same as offline background
+          backgroundColor: 'var(--surface-0, #0B0C10)', // matches background
           borderRadius: '50%',
-          border: `${borderSize}px solid var(--surface-1, #15161c)`,
+          border: `${borderSize}px solid #4B5563`, // Gray ring
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          boxShadow: '0 0 4px rgba(0,0,0,0.5)'
         }} title="Do Not Disturb">
           <div style={{
-            width: '60%',
-            height: '2px',
-            backgroundColor: '#F3F4F6', // Light gray/white line in the middle
+            width: '50%',
+            height: '2.2px',
+            backgroundColor: '#4B5563', // Horizontal line inside
             borderRadius: '1px'
           }} />
         </div>
       );
     }
 
-    // OFFLINE (Dark Dot)
+    // OFFLINE (Dark Ring)
     return (
       <div style={{
         position: 'absolute',
@@ -80,9 +81,10 @@ export default function ProfilePicture({ user, size = 48, showStatus = true }: P
         right: '0px',
         width: dotSize,
         height: dotSize,
-        backgroundColor: '#1E2029', // Dark dot
+        backgroundColor: 'var(--surface-0, #0B0C10)', // matches background
         borderRadius: '50%',
-        border: `${borderSize}px solid var(--surface-1, #15161c)`,
+        border: `${borderSize}px solid #4B5563`, // Gray ring
+        boxShadow: '0 0 4px rgba(0,0,0,0.5)'
       }} title="Offline" />
     );
   };

@@ -6,6 +6,7 @@ import LocalTime from '../../components/LocalTime';
 import Link from 'next/link';
 import { Users, LayoutGrid, ArrowLeft, MessageSquare, CheckSquare, Calendar, Plus } from 'lucide-react';
 import CommunityClient from './CommunityClient';
+import PageRefresher from '../../components/PageRefresher';
 
 export default async function CommunityDetailPage({ 
   params, 
@@ -55,7 +56,7 @@ export default async function CommunityDetailPage({
 
   return (
     <div style={{ animation: 'fadeIn var(--duration-slow) var(--ease-smooth)', maxWidth: '900px', margin: '0 auto', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)' }}>
-      
+      <PageRefresher intervalMs={15000} />
       {!isMember ? (
         <div className="glass-card" style={{ textAlign: 'center', padding: 'var(--space-8)', borderRadius: '16px' }}>
           <p style={{ color: 'var(--text-primary)', marginBottom: 'var(--space-4)', fontWeight: 600 }}>You need to join this space to participate.</p>

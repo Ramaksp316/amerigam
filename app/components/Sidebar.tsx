@@ -67,7 +67,7 @@ export default function Sidebar({ unreadCount = 0, currentUser = null }: { unrea
           <span className="icon"><PlusSquare size={22} strokeWidth={pathname === '/create' ? 2.5 : 1.8} /></span> 
           <span className="text">Create</span>
         </Link>
-        <Link href="/profile" className={pathname === '/profile' ? 'active' : ''}>
+        <Link href="/profile" className={`${pathname === '/profile' ? 'active' : ''} profile-link-desktop-hidden`}>
           <span className="icon" style={{ borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {currentUser ? (
               <ProfilePicture user={currentUser} size={24} showStatus={false} />
@@ -93,11 +93,11 @@ export default function Sidebar({ unreadCount = 0, currentUser = null }: { unrea
         }} className="hoverable-card-glass sidebar-user-card">
           <ProfilePicture user={currentUser} size={36} />
           <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <strong style={{ fontSize: '13px', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {currentUser.name || currentUser.username}
+            <strong style={{ fontSize: '13px', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 700 }}>
+              @{currentUser.username || currentUser.name?.toLowerCase().replace(/\s+/g, '')}
             </strong>
-            <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
-              {currentUser.status === 'ONLINE' ? 'Online' : currentUser.status === 'DND' ? 'Do Not Disturb' : 'Offline'}
+            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {currentUser.name}
             </span>
           </div>
         </Link>
