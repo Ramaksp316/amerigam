@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
 import Link from 'next/link';
-import { Home, Search, Compass, Users, MessageCircle, User, PlusSquare, Trophy, Bell } from 'lucide-react';
+import { Home, Search, Compass, Users, MessageCircle, User, PlusSquare, Trophy, Bell, Sparkles } from 'lucide-react';
 
 export default function Sidebar({ unreadCount = 0 }: { unreadCount?: number }) {
   const pathname = usePathname();
@@ -24,7 +24,37 @@ export default function Sidebar({ unreadCount = 0 }: { unreadCount?: number }) {
 
   return (
     <nav className="sidebar">
-      <Link href="/feed" className="logo">Amerigam</Link>
+      <Link href="/feed" style={{ 
+        textDecoration: 'none', 
+        padding: 'var(--space-2) var(--space-4)', 
+        marginBottom: 'var(--space-6)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px'
+      }}>
+        <div style={{
+          background: 'var(--gradient-primary)',
+          borderRadius: '10px',
+          padding: '6px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(100, 108, 255, 0.4)'
+        }}>
+          <Sparkles size={22} color="white" />
+        </div>
+        <span style={{
+          fontSize: '24px',
+          fontWeight: 800,
+          background: 'var(--gradient-primary)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          letterSpacing: '-0.5px',
+          fontFamily: "'Poppins', sans-serif"
+        }}>
+          Amerigam
+        </span>
+      </Link>
       
       <div className="nav-links">
         <Link href="/feed" className={pathname === '/feed' ? 'active' : ''}>

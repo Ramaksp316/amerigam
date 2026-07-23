@@ -7,6 +7,7 @@ import { ArrowLeft } from 'lucide-react';
 import LocalTime from '../../components/LocalTime';
 import ChatClient from '../../components/ChatClient';
 import MessageList from '../../components/MessageList';
+import ProfilePicture from '../../components/ProfilePicture';
 import { sendWebPushNotification } from '../../actions/sendWebPush';
 
 async function sendMessage(formData: FormData) {
@@ -129,7 +130,6 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
       padding: '0', overflow: 'hidden', margin: '0 auto', maxWidth: '750px',
       position: 'relative'
     }}>
-      
       {/* Chat Header */}
       <div style={{ 
         padding: 'var(--space-3) var(--space-4)', 
@@ -141,11 +141,17 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
           <Link href="/messages" className="btn-text" style={{ padding: '4px' }} title="Back to Inbox">
             <ArrowLeft size={20} />
           </Link>
-          <h2 style={{ fontSize: 'var(--text-md)', margin: 0, fontWeight: 700 }}>
-            <Link href={`/user/${partnerId}`} style={{ color: 'var(--text-primary)' }}>
-              {partner.name || partner.username || partner.email}
-            </Link>
-          </h2>
+          <Link href={`/user/${partnerId}`} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textDecoration: 'none' }}>
+            <ProfilePicture user={partner} size={40} />
+            <div>
+              <h2 style={{ fontSize: 'var(--text-md)', margin: 0, fontWeight: 700, color: 'var(--text-primary)' }}>
+                {partner.name || partner.username || partner.email}
+              </h2>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                {partner.status === 'ONLINE' ? 'Online' : partner.status === 'DND' ? 'Do not disturb' : 'Offline'}
+              </span>
+            </div>
+          </Link>
         </div>
       </div>
       
