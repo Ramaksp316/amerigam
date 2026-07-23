@@ -156,3 +156,60 @@ export async function updateCommunityAvatar(formData: FormData) {
   revalidatePath(`/communities/${communityId}`);
   return { success: true };
 }
+
+export async function createNotebookPage(communityId: string) {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) return null;
+
+  const newPage = await prisma.communityNote.create({
+    data: {
+      communityId,
+      title: "Untitled Page",
+      content: "",
+      penColor: "#0000ff", // Default blue ink
+      updatedById: userId
+    }
+  });
+
+  revalidatePath(`/communities/${communityId}`);
+  return newPage;
+}
+
+export async function updateNotebookPage(formData: FormData) {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) return { success: false, error: 'Unauthorized' };
+
+  const id = formData.get('pageId') as string;
+  const communityId = formData.get('communityId') as string;
+  const title = formData.get('title') as string;
+  const content = formData.get('content') as string;
+  const penColor = formData.get('penColor') as string;
+
+  await prisma.communityNote.update({
+    where: { id },
+    data: {
+      title: title || 'Untitled Page',
+      content: content || '',
+      penColor: penColor || '#0000ff',
+      updatedById: userId
+    }
+  });
+
+  revalidatePath(`/communities/${communityId}`);
+  return { success: true };
+}
+
+export async function deleteNotebookPage(pageId: string, communityId: string) {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) return { success: false, error: 'Unauthorized' };
+
+  await prisma.communityNote.delete({
+    where: { id: pageId }
+  });
+
+  revalidatePath(`/communities/${communityId}`);
+  return { success: true };
+}

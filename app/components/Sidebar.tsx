@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
 import Link from 'next/link';
-import { Home, Search, Compass, Users, MessageCircle, User, PlusSquare, Trophy, Bell, Sparkles, Activity } from 'lucide-react';
+import { Home, Search, Compass, Users, MessageCircle, User, PlusSquare, Trophy, Bell, Sparkles, Activity, FileText, Briefcase, ChevronDown, ChevronUp } from 'lucide-react';
 import ProfilePicture from './ProfilePicture';
 
 export default function Sidebar({ unreadCount = 0, currentUser = null }: { unreadCount?: number, currentUser?: any }) {
@@ -69,34 +69,45 @@ export default function Sidebar({ unreadCount = 0, currentUser = null }: { unrea
           <span className="text">Notifications</span>
         </Link>
         <div style={{ position: 'relative' }}>
-          <button 
-            onClick={() => setIsCreateExpanded(!isCreateExpanded)} 
-            className={`sidebar-link ${pathname?.startsWith('/create') ? 'active' : ''}`}
-            style={{ width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}
+          <a 
+            href="#"
+            onClick={(e) => { e.preventDefault(); setIsCreateExpanded(!isCreateExpanded); }} 
+            className={pathname?.startsWith('/create') ? 'active' : ''}
+            style={{ display: 'flex', alignItems: 'center', width: '100%', cursor: 'pointer', userSelect: 'none' }}
           >
             <span className="icon"><PlusSquare size={22} strokeWidth={pathname?.startsWith('/create') ? 2.5 : 1.8} /></span> 
-            <span className="text">Create</span>
-          </button>
+            <span className="text" style={{ flexGrow: 1 }}>Create</span>
+            <span style={{ display: 'flex', alignItems: 'center', paddingRight: '12px', opacity: 0.7 }}>
+              {isCreateExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </span>
+          </a>
           
           {isCreateExpanded && (
             <div style={{ 
-              display: 'flex', flexDirection: 'column', paddingLeft: 'var(--space-10)', marginTop: 'var(--space-2)', gap: 'var(--space-2)',
-              animation: 'fadeIn 0.2s ease-out' 
+              display: 'flex', 
+              flexDirection: 'column', 
+              paddingLeft: 'var(--space-4)', 
+              marginTop: '4px', 
+              marginBottom: '8px',
+              gap: '6px',
+              borderLeft: '2px solid rgba(255, 255, 255, 0.05)',
+              marginLeft: '22px',
+              animation: 'fadeIn 0.2s ease-out'
             }}>
-              <Link href="/create?type=post" className="sidebar-sublink" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1.2rem' }}>📝</span> Post
+              <Link href="/create?type=post" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 12px', borderRadius: '8px', transition: 'all 0.2s ease' }} className="hoverable-card-glass">
+                <FileText size={15} color="var(--accent-purple)" /> <span style={{ fontWeight: 500 }}>Post</span>
               </Link>
-              <Link href="/create?type=project" className="sidebar-sublink" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1.2rem' }}>🚀</span> Project
+              <Link href="/create?type=project" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 12px', borderRadius: '8px', transition: 'all 0.2s ease' }} className="hoverable-card-glass">
+                <Briefcase size={15} color="var(--accent-pink)" /> <span style={{ fontWeight: 500 }}>Project</span>
               </Link>
-              <Link href="/create?type=status" className="sidebar-sublink" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1.2rem' }}>💭</span> Status
+              <Link href="/create?type=status" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 12px', borderRadius: '8px', transition: 'all 0.2s ease' }} className="hoverable-card-glass">
+                <Sparkles size={15} color="var(--accent-amber)" /> <span style={{ fontWeight: 500 }}>Status</span>
               </Link>
-              <Link href="/create?type=competition" className="sidebar-sublink" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1.2rem' }}>🏆</span> Competition
+              <Link href="/create?type=competition" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 12px', borderRadius: '8px', transition: 'all 0.2s ease' }} className="hoverable-card-glass">
+                <Trophy size={15} color="var(--accent-cyan)" /> <span style={{ fontWeight: 500 }}>Competition</span>
               </Link>
-              <Link href="/create?type=community" className="sidebar-sublink" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1.2rem' }}>👥</span> Community
+              <Link href="/create?type=community" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 12px', borderRadius: '8px', transition: 'all 0.2s ease' }} className="hoverable-card-glass">
+                <Users size={15} color="var(--accent-purple)" /> <span style={{ fontWeight: 500 }}>Community</span>
               </Link>
             </div>
           )}

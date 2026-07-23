@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Users, LayoutGrid, ArrowLeft, MessageSquare, CheckSquare, Calendar, Plus, Camera, X, Check, Award } from 'lucide-react';
+import { Users, LayoutGrid, ArrowLeft, MessageSquare, CheckSquare, Calendar, Plus, Camera, X, Check, Award, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '../../../utils/supabase/client';
@@ -11,6 +11,7 @@ import CustomVideoPlayer from '../../components/CustomVideoPlayer';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.min.css';
 import { updateCommunityAvatar } from './actions';
+import CommunityNotebook from './CommunityNotebook';
 
 const playSound = (type: 'send' | 'receive') => {
   if (typeof window === 'undefined') return;
@@ -268,6 +269,25 @@ export default function CommunityClient({
             }}
           >
             <CheckSquare size={14} /> Tasks
+          </Link>
+          <Link 
+            href={`/communities/${community.id}?tab=notebook`} 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              textDecoration: 'none', 
+              padding: '6px 14px', 
+              borderRadius: '8px', 
+              fontSize: '13px',
+              fontWeight: 600,
+              color: activeTab === 'notebook' ? 'white' : 'var(--text-secondary)',
+              background: activeTab === 'notebook' ? 'var(--gradient-primary)' : 'transparent',
+              transition: 'all 0.3s ease',
+              boxShadow: activeTab === 'notebook' ? '0 4px 12px rgba(139, 92, 246, 0.3)' : 'none'
+            }}
+          >
+            <BookOpen size={14} /> Notebook
           </Link>
         </div>
       </div>
@@ -551,6 +571,11 @@ export default function CommunityClient({
               )}
             </div>
           </div>
+        )}
+
+        {/* Tab: Notebook */}
+        {activeTab === 'notebook' && (
+          <CommunityNotebook community={community} userId={userId} />
         )}
       </div>
 

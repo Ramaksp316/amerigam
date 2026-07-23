@@ -39,6 +39,10 @@ export default async function CommunityDetailPage({
       posts: {
         include: { author: true },
         orderBy: { createdAt: 'asc' } // Ascending for chat view
+      },
+      notes: {
+        include: { updatedBy: true },
+        orderBy: { createdAt: 'asc' }
       }
     }
   });
