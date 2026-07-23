@@ -7,6 +7,7 @@ import { ArrowLeft } from 'lucide-react';
 import LocalTime from '../../components/LocalTime';
 import ChatClient from '../../components/ChatClient';
 import MessageList from '../../components/MessageList';
+import ProfilePicture from '../../components/ProfilePicture';
 import { sendWebPushNotification } from '../../actions/sendWebPush';
 
 async function sendMessage(formData: FormData) {
@@ -141,11 +142,12 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
           <Link href="/messages" className="btn-text" style={{ padding: '4px' }} title="Back to Inbox">
             <ArrowLeft size={20} />
           </Link>
-          <h2 style={{ fontSize: 'var(--text-md)', margin: 0, fontWeight: 700 }}>
-            <Link href={`/user/${partnerId}`} style={{ color: 'var(--text-primary)' }}>
+          <Link href={`/user/${partnerId}`} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textDecoration: 'none' }}>
+            <ProfilePicture user={partner} size={40} />
+            <h2 style={{ fontSize: 'var(--text-md)', margin: 0, fontWeight: 700, color: 'var(--text-primary)' }}>
               {partner.name || partner.username || partner.email}
-            </Link>
-          </h2>
+            </h2>
+          </Link>
         </div>
       </div>
       

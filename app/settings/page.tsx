@@ -3,19 +3,21 @@ import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Settings, LogOut, UserCircle } from 'lucide-react';
+import ProfileFormClient from './ProfileFormClient';
 
 async function updateProfile(formData: FormData) {
   'use server';
   const name = formData.get('name') as string;
   const bio = formData.get('bio') as string;
   const portfolioUrl = formData.get('portfolioUrl') as string;
+  const avatarData = formData.get('avatarData') as string;
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
   
   if (userId) {
     await prisma.user.update({
       where: { id: userId },
-      data: { name, bio, portfolioUrl },
+      data: { name, bio, portfolioUrl, avatarData },
     });
     revalidatePath('/profile');
     revalidatePath(`/user/${userId}`);
@@ -57,24 +59,7 @@ export default async function SettingsPage() {
           <UserCircle size={20} color="var(--text-secondary)" /> Edit Profile
         </h2>
         
-        <form action={updateProfile} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: 'var(--space-2)', fontWeight: 600, color: 'var(--text-secondary)' }}>Display Name</label>
-            <input type="text" name="name" className="input-field" defaultValue={user.name || ''} placeholder="Your Name" required />
-          </div>
-          
-          <div>
-            <label style={{ display: 'block', marginBottom: 'var(--space-2)', fontWeight: 600, color: 'var(--text-secondary)' }}>Bio</label>
-            <textarea name="bio" className="input-field" defaultValue={user.bio || ''} placeholder="Write a short bio..." style={{ resize: 'vertical', minHeight: '100px' }}></textarea>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: 'var(--space-2)', fontWeight: 600, color: 'var(--text-secondary)' }}>Portfolio URL</label>
-            <input type="url" name="portfolioUrl" className="input-field" defaultValue={user.portfolioUrl || ''} placeholder="https://yourwebsite.com" />
-          </div>
-
-          <button type="submit" className="btn" style={{ marginTop: 'var(--space-2)' }}>Save Profile</button>
-        </form>
+        <ProfileFormClient user={user} updateAction={updateProfile} />
       </div>
 
       <div className="glass-card" style={{ borderLeft: '4px solid var(--danger)', backgroundColor: 'rgba(239, 68, 68, 0.02)' }}>

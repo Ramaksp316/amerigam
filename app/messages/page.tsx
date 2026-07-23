@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { MessageCircle, Search, Compass } from 'lucide-react';
 import Link from 'next/link';
+import ProfilePicture from '../components/ProfilePicture';
 
 export default async function InboxPage() {
   const cookieStore = await cookies();
@@ -33,7 +34,7 @@ export default async function InboxPage() {
     if (!partnersMap.has(partnerId)) {
       partnersMap.set(partnerId, {
         id: partnerId,
-        name: partner.name || partner.email || partner.username,
+        user: partner,
         lastMessage: msg.content,
         timestamp: msg.createdAt,
       });
@@ -95,7 +96,6 @@ export default async function InboxPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           {partners.map(p => {
-            const initial = p.name ? p.name.charAt(0).toUpperCase() : 'U';
             return (
               <Link key={p.id} href={`/messages/${p.id}`} style={{ textDecoration: 'none' }}>
                 <div style={{ 
@@ -114,29 +114,14 @@ export default async function InboxPage() {
                 }}
                 className="hoverable-card-glass"
                 >
-                  {/* Glassmorphic Initial Badge */}
-                  <div style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01))',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--accent-cyan)',
-                    fontWeight: 700,
-                    fontSize: 'var(--text-lg)',
-                    textShadow: '0 0 10px rgba(0, 242, 254, 0.5)',
-                    flexShrink: 0,
-                    boxShadow: 'inset 0 0 10px rgba(255, 255, 255, 0.05)'
-                  }}>
-                    {initial}
-                  </div>
+                  {/* Reusable Profile Picture */}
+                  <ProfilePicture user={p.user} size={48} />
 
                   <div style={{ flexGrow: 1, overflow: 'hidden' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <strong style={{ fontSize: 'var(--text-md)', color: 'var(--text-primary)', fontWeight: 600 }}>{p.name}</strong>
+                      <strong style={{ fontSize: 'var(--text-md)', color: 'var(--text-primary)', fontWeight: 600 }}>
+                        {p.user.name || p.user.username || p.user.email}
+                      </strong>
                       <small style={{ color: 'var(--accent-cyan)', fontSize: '11px', fontWeight: 500, letterSpacing: '0.5px' }}>
                         {new Date(p.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       </small>
