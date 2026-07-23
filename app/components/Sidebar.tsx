@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
 import Link from 'next/link';
-import { Home, Search, Compass, Users, MessageCircle, User, PlusSquare, Trophy, Bell, Sparkles } from 'lucide-react';
+import { Home, Search, Compass, Users, MessageCircle, User, PlusSquare, Trophy, Bell, Sparkles, Activity } from 'lucide-react';
 import ProfilePicture from './ProfilePicture';
 
 export default function Sidebar({ unreadCount = 0, currentUser = null }: { unreadCount?: number, currentUser?: any }) {
@@ -39,6 +39,10 @@ export default function Sidebar({ unreadCount = 0, currentUser = null }: { unrea
         <Link href="/network" className={pathname === '/network' ? 'active' : ''}>
           <span className="icon"><Compass size={22} strokeWidth={pathname === '/network' ? 2.5 : 1.8} /></span> 
           <span className="text">Explore</span>
+        </Link>
+        <Link href="/productivity" className={pathname === '/productivity' ? 'active' : ''}>
+          <span className="icon"><Activity size={22} strokeWidth={pathname === '/productivity' ? 2.5 : 1.8} /></span> 
+          <span className="text">Productivity</span>
         </Link>
         <Link href="/competitions" className={pathname?.startsWith('/competitions') ? 'active' : ''}>
           <span className="icon"><Trophy size={22} strokeWidth={pathname?.startsWith('/competitions') ? 2.5 : 1.8} /></span> 

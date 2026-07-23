@@ -57,6 +57,12 @@ model User {
   // Online Status fields
   status           String    @default("ONLINE") // "ONLINE", "OFFLINE", "DND"
   lastSeen         DateTime  @default(now())
+
+  // Productivity Tracking
+  productivityScore Int      @default(0)
+  timeTableEntries  TimeTableEntry[]
+  taskLogs          TaskLog[]
+  distractionLogs   DistractionLog[]
 }
 
 model Post {
@@ -234,4 +240,41 @@ model PushSubscription {
   p256dh    String
   auth      String
   createdAt DateTime @default(now())
+}
+
+// =========================================
+// Productivity & Tracking (Phase 3)
+// =========================================
+
+model TimeTableEntry {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  appContext   String?  // Optional: Which app this applies to (e.g. "Instagram")
+  startTime    String   // "HH:mm" format (e.g., "14:30")
+  endTime      String   // "HH:mm" format (e.g., "15:00")
+  daysOfWeek   String   // JSON string, e.g., '["MON", "TUE", "WED"]'
+  pointsReward Int      @default(10) // Points earned for completing
+  createdAt    DateTime @default(now())
+  taskLogs     TaskLog[]
+}
+
+model TaskLog {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timeTableEntryId String
+  timeTableEntry   TimeTableEntry @relation(fields: [timeTableEntryId], references: [id], onDelete: Cascade)
+  date             DateTime @default(now()) // The exact date this was completed
+  pointsAwarded    Int
+}
+
+model DistractionLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reason     String   // e.g., "Instagram reels", "Hanging out with friends"
+  pointsLost Int
+  createdAt  DateTime @default(now())
 }
