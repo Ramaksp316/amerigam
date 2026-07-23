@@ -88,16 +88,21 @@ export default function MessageList({
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', maxWidth: '100%', flexDirection: isMe ? 'row-reverse' : 'row' }}>
                 <div style={{ 
                   maxWidth: '75vw',
-                  padding: 'var(--space-2) var(--space-4)', 
-                  background: isMe ? 'var(--gradient-primary)' : 'var(--surface-2)', 
+                  padding: msg.content.includes('giphy.com/media') ? '0' : 'var(--space-2) var(--space-4)', 
+                  background: msg.content.includes('giphy.com/media') ? 'transparent' : (isMe ? 'var(--gradient-primary)' : 'var(--surface-2)'), 
                   color: isMe ? '#FFFFFF' : 'var(--text-primary)',
-                  borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                  borderRadius: msg.content.includes('giphy.com/media') ? '8px' : (isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px'),
                   fontSize: 'var(--text-sm)',
                   lineHeight: '1.4',
-                  boxShadow: isMe ? 'var(--shadow-sm)' : 'none',
-                  wordBreak: 'break-word'
+                  boxShadow: (isMe && !msg.content.includes('giphy.com/media')) ? 'var(--shadow-sm)' : 'none',
+                  wordBreak: 'break-word',
+                  overflow: 'hidden'
                 }}>
-                  {msg.content}
+                  {msg.content.includes('giphy.com/media') ? (
+                    <img src={msg.content} alt="GIF" style={{ maxWidth: '250px', borderRadius: '8px' }} />
+                  ) : (
+                    msg.content
+                  )}
                 </div>
 
                 {canEditDelete && (

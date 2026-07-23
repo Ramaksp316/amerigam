@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '../../utils/supabase/client';
 import { useRouter } from 'next/navigation';
-import { Smile, Send } from 'lucide-react';
+import { Smile, Send, Film } from 'lucide-react';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
+import GiphyPicker from './GiphyPicker';
 
 export default function ChatClient({ 
   myId, 
@@ -19,6 +20,7 @@ export default function ChatClient({
   const [partnerTyping, setPartnerTyping] = useState(false);
   const [hasText, setHasText] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
   const [inputValue, setInputValue] = useState('');
   
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -84,6 +86,28 @@ export default function ChatClient({
     handleTyping(inputValue + emojiObject.emoji);
   };
 
+  const handleGifClick = async (gifUrl: string) => {
+    setShowGifPicker(false);
+    const formData = new FormData();
+    formData.append('receiverId', partnerId);
+    formData.append('content', gifUrl);
+    
+    await sendMessageAction(formData);
+    
+    channelRef.current?.send({
+      type: 'broadcast',
+      event: 'new_message',
+      payload: {}
+    });
+
+    router.refresh();
+    
+    setTimeout(() => {
+      const container = document.getElementById('chat-container');
+      if (container) container.scrollTop = container.scrollHeight;
+    }, 100);
+  };
+
   return (
     <div style={{ 
       padding: 'var(--space-3) var(--space-4)', 
@@ -110,10 +134,17 @@ export default function ChatClient({
         </div>
       )}
 
+      {showGifPicker && (
+        <div style={{ position: 'absolute', bottom: '100%', left: '60px', marginBottom: 'var(--space-2)', zIndex: 10 }}>
+          <GiphyPicker onGifClick={handleGifClick} />
+        </div>
+      )}
+
       <form action={async (formData) => {
         setIsTyping(false);
         setHasText(false);
         setShowPicker(false);
+        setShowGifPicker(false);
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         channelRef.current?.send({
           type: 'broadcast',
@@ -140,8 +171,12 @@ export default function ChatClient({
       }} id="chat-form" style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
         <input type="hidden" name="receiverId" value={partnerId} />
         
-        <button type="button" onClick={() => setShowPicker(!showPicker)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 'var(--space-2)' }} title="Add Emoji/Sticker">
+        <button type="button" onClick={() => { setShowPicker(!showPicker); setShowGifPicker(false); }} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 'var(--space-2)' }} title="Add Emoji">
           <Smile size={24} />
+        </button>
+
+        <button type="button" onClick={() => { setShowGifPicker(!showGifPicker); setShowPicker(false); }} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 'var(--space-2)' }} title="Add GIF">
+          <Film size={24} />
         </button>
 
         <input 
