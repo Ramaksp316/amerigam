@@ -6,10 +6,12 @@ import { createTimeTableEntry } from "./actions";
 
 export default function CreateTaskModal({ 
   onClose,
-  onCreated
+  onCreated,
+  currentDateStr
 }: { 
   onClose: () => void;
   onCreated: (entry: any) => void;
+  currentDateStr?: string;
 }) {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
@@ -18,7 +20,8 @@ export default function CreateTaskModal({
   const [endTime, setEndTime] = useState("10:00");
 
   const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-  const currentDay = dayNames[new Date().getDay()];
+  const dateObj = currentDateStr ? new Date(currentDateStr) : new Date();
+  const currentDay = dayNames[dateObj.getDay()];
   const [selectedDays, setSelectedDays] = useState<string[]>([currentDay]);
 
   const toggleDay = (day: string) => {

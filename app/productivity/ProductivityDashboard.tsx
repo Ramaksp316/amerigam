@@ -247,7 +247,11 @@ export default function ProductivityDashboard({
         <DistractionModal onClose={() => setShowDistractionModal(false)} onLogged={handleDistractionLogged} />
       )}
       {showCreateModal && (
-        <CreateTaskModal onClose={() => setShowCreateModal(false)} onCreated={() => router.refresh()} />
+        <CreateTaskModal 
+          onClose={() => setShowCreateModal(false)} 
+          onCreated={() => router.refresh()} 
+          currentDateStr={currentDateStr}
+        />
       )}
     </div>
   );
