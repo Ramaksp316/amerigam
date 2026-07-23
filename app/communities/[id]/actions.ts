@@ -130,3 +130,29 @@ export async function updateTaskStatus(formData: FormData) {
 
   revalidatePath(`/communities/${communityId}`);
 }
+
+export async function updateCommunityAvatar(formData: FormData) {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) return { success: false, error: 'Unauthorized' };
+
+  const communityId = formData.get('communityId') as string;
+  const avatarData = formData.get('avatarData') as string;
+
+  // Check if user is the creator of the community
+  const community = await prisma.community.findUnique({
+    where: { id: communityId }
+  });
+
+  if (!community || community.creatorId !== userId) {
+    return { success: false, error: 'Only the creator can change the group photo' };
+  }
+
+  await prisma.community.update({
+    where: { id: communityId },
+    data: { avatarData }
+  });
+
+  revalidatePath(`/communities/${communityId}`);
+  return { success: true };
+}

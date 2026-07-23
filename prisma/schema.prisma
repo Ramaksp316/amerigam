@@ -118,6 +118,7 @@ model Community {
   id          String   @id @default(uuid())
   name        String
   description String?
+  avatarData  String?  // Base64 string for group photo
   category    String?  // e.g. "Tech & AI", "Visual Arts"
   type        String   @default("PUBLIC") // "PUBLIC" or "FRIEND_GROUP"
   creatorId   String
