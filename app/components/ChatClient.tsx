@@ -129,13 +129,13 @@ export default function ChatClient({
       )}
 
       {showPicker && (
-        <div style={{ position: 'absolute', bottom: '100%', left: 'var(--space-4)', marginBottom: 'var(--space-2)', zIndex: 10 }}>
-          <EmojiPicker onEmojiClick={onEmojiClick} theme={Theme.DARK} />
+        <div style={{ position: 'absolute', bottom: '100%', left: 0, width: '100%', padding: '0 var(--space-4)', marginBottom: 'var(--space-2)', zIndex: 10, display: 'flex', justifyContent: 'flex-start' }}>
+          <EmojiPicker onEmojiClick={onEmojiClick} theme={Theme.DARK} style={{ maxWidth: '100%', width: '100%' }} />
         </div>
       )}
 
       {showGifPicker && (
-        <div style={{ position: 'absolute', bottom: '100%', left: '60px', marginBottom: 'var(--space-2)', zIndex: 10 }}>
+        <div style={{ position: 'absolute', bottom: '100%', left: 0, width: '100%', padding: '0 var(--space-4)', marginBottom: 'var(--space-2)', zIndex: 10, display: 'flex', justifyContent: 'flex-start' }}>
           <GiphyPicker onGifClick={handleGifClick} />
         </div>
       )}

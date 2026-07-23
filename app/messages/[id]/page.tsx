@@ -125,8 +125,9 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="card" style={{ 
       display: 'flex', flexDirection: 'column', 
-      height: 'calc(100vh - 120px)', maxHeight: '750px',
-      padding: '0', overflow: 'hidden', margin: '0 auto', maxWidth: '750px'
+      height: '100%', maxHeight: 'calc(100dvh - 80px)',
+      padding: '0', overflow: 'hidden', margin: '0 auto', maxWidth: '750px',
+      position: 'relative'
     }}>
       
       {/* Chat Header */}
