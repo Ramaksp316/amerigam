@@ -3,11 +3,24 @@
 import { useState, useRef, useEffect } from 'react';
 import { Users, LayoutGrid, ArrowLeft, MessageSquare, CheckSquare, Calendar, Plus, Camera, X, Check, Award } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createClient } from '../../../utils/supabase/client';
 import ProfilePicture from '../../components/ProfilePicture';
 import CommunityAvatar from '../../components/CommunityAvatar';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.min.css';
 import { updateCommunityAvatar } from './actions';
+
+const playSound = (type: 'send' | 'receive') => {
+  if (typeof window === 'undefined') return;
+  const audio = new Audio(
+    type === 'send' 
+      ? 'https://assets.mixkit.co/active_storage/sfx/2568/2568-84.wav' 
+      : 'https://cdn.pixabay.com/audio/2022/03/10/audio_c3508e330e.mp3'
+  );
+  audio.volume = 0.45;
+  audio.play().catch(err => console.log('Audio play error:', err));
+};
 
 export default function CommunityClient({
   community,
@@ -32,8 +45,30 @@ export default function CommunityClient({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const cropperRef = useRef<Cropper | null>(null);
+  const channelRef = useRef<any>(null);
+
+  const supabase = createClient();
+  const router = useRouter();
 
   const isCreator = community.creatorId === userId;
+
+  useEffect(() => {
+    const channelName = `community-${community.id}`;
+    const channel = supabase.channel(channelName);
+    channelRef.current = channel;
+
+    channel
+      .on('broadcast', { event: 'new_post' }, () => {
+        playSound('receive');
+        router.refresh();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      channelRef.current = null;
+    };
+  }, [community.id, supabase, router]);
 
   const handleAvatarClick = () => {
     if (isCreator) {
@@ -270,11 +305,12 @@ export default function CommunityClient({
                   <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>It's quiet here. Say hello to the group!</p>
                 </div>
               ) : (
-                community.posts.map((post: any) => {
+                community.posts.map((post: any, index: number) => {
                   const isMe = post.authorId === userId;
                   return (
                     <div 
                       key={post.id} 
+                      className={index === community.posts.length - 1 ? "message-bubble-animate" : ""}
                       style={{ 
                         display: 'flex', 
                         gap: '12px',
@@ -344,7 +380,25 @@ export default function CommunityClient({
               background: 'rgba(255, 255, 255, 0.01)',
               backdropFilter: 'blur(10px)'
             }}>
-              <form action={createPostAction} style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+              <form 
+                action={async (formData) => {
+                  playSound('send');
+                  const contentInput = (document.getElementById('group-msg-input') as HTMLInputElement);
+                  const content = contentInput?.value || '';
+                  
+                  await createPostAction(formData);
+                  
+                  channelRef.current?.send({
+                    type: 'broadcast',
+                    event: 'new_post',
+                    payload: {}
+                  });
+                  
+                  if (contentInput) contentInput.value = '';
+                  router.refresh();
+                }} 
+                style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}
+              >
                 <input type="hidden" name="communityId" value={community.id} />
                 
                 {/* Media Attachment */}
@@ -358,6 +412,7 @@ export default function CommunityClient({
                 <input 
                   type="text" 
                   name="content" 
+                  id="group-msg-input"
                   className="input-field" 
                   placeholder="Message group..." 
                   style={{ margin: 0, flexGrow: 1, borderRadius: '24px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.06)' }} 

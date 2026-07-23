@@ -46,7 +46,7 @@ export default function MessageList({
 
   return (
     <>
-      {messages.map((msg) => {
+      {messages.map((msg, index) => {
         const isMe = msg.senderId === myId;
         const msgTime = new Date(msg.createdAt).getTime();
         const canEditDelete = isMe && (now - msgTime < THREE_HOURS);
@@ -85,7 +85,10 @@ export default function MessageList({
                 </div>
               </form>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', maxWidth: '100%', flexDirection: isMe ? 'row-reverse' : 'row' }}>
+              <div 
+                className={index === messages.length - 1 ? "message-bubble-animate" : ""}
+                style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', maxWidth: '100%', flexDirection: isMe ? 'row-reverse' : 'row' }}
+              >
                 <div style={{ 
                   maxWidth: '75vw',
                   padding: msg.content.includes('giphy.com/media') ? '0' : 'var(--space-2) var(--space-4)', 

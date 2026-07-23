@@ -7,6 +7,17 @@ import { Smile, Send, Film } from 'lucide-react';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 import GiphyPicker from './GiphyPicker';
 
+const playSound = (type: 'send' | 'receive') => {
+  if (typeof window === 'undefined') return;
+  const audio = new Audio(
+    type === 'send' 
+      ? 'https://assets.mixkit.co/active_storage/sfx/2568/2568-84.wav' 
+      : 'https://cdn.pixabay.com/audio/2022/03/10/audio_c3508e330e.mp3'
+  );
+  audio.volume = 0.45;
+  audio.play().catch(err => console.log('Audio playback blocked/error:', err));
+};
+
 export default function ChatClient({ 
   myId, 
   partnerId, 
@@ -40,6 +51,7 @@ export default function ChatClient({
         }
       })
       .on('broadcast', { event: 'new_message' }, () => {
+        playSound('receive');
         router.refresh();
       })
       .subscribe();
@@ -87,6 +99,7 @@ export default function ChatClient({
   };
 
   const handleGifClick = async (gifUrl: string) => {
+    playSound('send');
     setShowGifPicker(false);
     const formData = new FormData();
     formData.append('receiverId', partnerId);
@@ -141,6 +154,7 @@ export default function ChatClient({
       )}
 
       <form action={async (formData) => {
+        playSound('send');
         setIsTyping(false);
         setHasText(false);
         setShowPicker(false);
