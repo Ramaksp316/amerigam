@@ -74,7 +74,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
         </Link>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div className="feed-snap-container">
         {posts.length === 0 && (
           <div style={{ textAlign: 'center', padding: 'var(--space-8) var(--space-4)', color: 'var(--text-secondary)' }}>
             <p style={{ fontSize: 'var(--text-md)', marginBottom: 'var(--space-2)' }}>No posts found in this feed.</p>
@@ -87,7 +87,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
           const authorInitial = (post.author.name || post.author.username || '?').charAt(0).toUpperCase();
 
           return (
-            <div key={post.id} className="post-card" style={{ width: '100%', maxWidth: '480px' }}>
+            <div key={post.id} className="post-card feed-snap-post">
               
               {/* Post Header */}
               <div className="post-header">
@@ -118,11 +118,36 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
 
               {/* Media */}
               {post.mediaUrl && (
-                <div className="media-container">
+                <div className="media-container" style={{ 
+                  aspectRatio: post.aspectRatio === 'square' ? '1/1' : post.aspectRatio === 'portrait' ? '4/5' : post.aspectRatio === 'landscape' ? '16/9' : 'auto',
+                  maxHeight: post.aspectRatio === 'original' || !post.aspectRatio ? 'none' : '450px',
+                  overflow: 'hidden',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#000'
+                }}>
                   {post.mediaType === 'image' ? (
-                    <img src={post.mediaUrl} alt="Post media" loading="lazy" />
+                    <img 
+                      src={post.mediaUrl} 
+                      alt="Post media" 
+                      loading="lazy" 
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: post.aspectRatio === 'original' || !post.aspectRatio ? 'contain' : 'cover' 
+                      }} 
+                    />
                   ) : (
-                    <CustomVideoPlayer src={post.mediaUrl} />
+                    <CustomVideoPlayer 
+                      src={post.mediaUrl} 
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        aspectRatio: post.aspectRatio === 'square' ? '1/1' : post.aspectRatio === 'portrait' ? '4/5' : post.aspectRatio === 'landscape' ? '16/9' : 'auto' 
+                      }} 
+                    />
                   )}
                 </div>
               )}

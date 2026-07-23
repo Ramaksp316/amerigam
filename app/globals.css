@@ -625,3 +625,29 @@ a {
 .message-bubble-animate {
   animation: bubblePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
+
+/* Feed Scroll Snapping */
+.feed-snap-container {
+  scroll-snap-type: y mandatory;
+  overflow-y: auto;
+  height: calc(100vh - 185px);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  scrollbar-width: none; /* Hide scrollbar */
+}
+
+.feed-snap-container::-webkit-scrollbar {
+  display: none;
+}
+
+.feed-snap-post {
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  width: 100%;
+  max-width: 480px;
+  margin-top: 10px;
+  margin-bottom: 35px;
+  flex-shrink: 0;
+}

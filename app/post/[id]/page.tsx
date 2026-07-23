@@ -113,11 +113,35 @@ export default async function SinglePostPage({ params }: { params: Promise<{ id:
 
         {/* Media */}
         {post.mediaUrl && (
-          <div className="media-container">
+          <div className="media-container" style={{ 
+            aspectRatio: post.aspectRatio === 'square' ? '1/1' : post.aspectRatio === 'portrait' ? '4/5' : post.aspectRatio === 'landscape' ? '16/9' : 'auto',
+            maxHeight: post.aspectRatio === 'original' || !post.aspectRatio ? 'none' : '500px',
+            overflow: 'hidden',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#000'
+          }}>
             {post.mediaType === 'image' ? (
-              <img src={post.mediaUrl} alt="Post media" />
+              <img 
+                src={post.mediaUrl} 
+                alt="Post media" 
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: post.aspectRatio === 'original' || !post.aspectRatio ? 'contain' : 'cover' 
+                }} 
+              />
             ) : (
-              <CustomVideoPlayer src={post.mediaUrl} />
+              <CustomVideoPlayer 
+                src={post.mediaUrl} 
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  aspectRatio: post.aspectRatio === 'square' ? '1/1' : post.aspectRatio === 'portrait' ? '4/5' : post.aspectRatio === 'landscape' ? '16/9' : 'auto' 
+                }} 
+              />
             )}
           </div>
         )}

@@ -64,6 +64,7 @@ model Post {
   content   String
   mediaUrl  String?
   mediaType String?
+  aspectRatio String?   @default("original")
   relatedMasterPath String?
   relatedCorePath   String?
   authorId  String

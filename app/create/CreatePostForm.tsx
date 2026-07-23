@@ -8,8 +8,21 @@ import { UploadCloud } from 'lucide-react';
 export default function CreatePostForm({ currentUser }: { currentUser: any }) {
   const [isUploading, setIsUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [hasMedia, setHasMedia] = useState(false);
+  const [mediaName, setMediaName] = useState('');
   
   const supabase = createClient();
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setHasMedia(true);
+      setMediaName(file.name);
+    } else {
+      setHasMedia(false);
+      setMediaName('');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -26,10 +39,10 @@ export default function CreatePostForm({ currentUser }: { currentUser: any }) {
       const fileName = `${Date.now()}-${mediaFile.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
       
       const { data, error } = await supabase.storage
-        .from('uploads')
-        .upload(fileName, mediaFile, {
-          contentType: mediaFile.type,
-        });
+          .from('uploads')
+          .upload(fileName, mediaFile, {
+            contentType: mediaFile.type,
+          });
 
       if (error) {
         console.error('Storage upload error:', error);
@@ -40,8 +53,8 @@ export default function CreatePostForm({ currentUser }: { currentUser: any }) {
 
       if (data) {
         const { data: publicUrlData } = supabase.storage
-          .from('uploads')
-          .getPublicUrl(fileName);
+            .from('uploads')
+            .getPublicUrl(fileName);
         
         mediaUrl = publicUrlData.publicUrl;
         mediaType = mediaFile.type.startsWith('video/') ? 'video' : 'image';
@@ -51,6 +64,7 @@ export default function CreatePostForm({ currentUser }: { currentUser: any }) {
     const actionData = new FormData();
     actionData.append('type', formData.get('type') as string);
     actionData.append('content', formData.get('content') as string);
+    actionData.append('aspectRatio', formData.get('aspectRatio') as string || 'original');
     actionData.append('relatedMasterPath', formData.get('relatedMasterPath') as string);
     actionData.append('relatedCorePath', formData.get('relatedCorePath') as string);
     
@@ -108,10 +122,31 @@ export default function CreatePostForm({ currentUser }: { currentUser: any }) {
         <label style={{ display: 'block', marginBottom: 'var(--space-2)', color: 'var(--text-secondary)', fontWeight: 500 }}>Upload Photo/Video</label>
         <div style={{ position: 'relative', padding: 'var(--space-8)', border: '2px dashed var(--border-color)', borderRadius: 'var(--radius-lg)', textAlign: 'center', backgroundColor: 'var(--surface-2)', transition: 'all var(--duration-fast) var(--ease-smooth)' }} onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--accent-purple)'} onMouseOut={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}>
           <UploadCloud size={32} color="var(--text-secondary)" style={{ marginBottom: 'var(--space-2)' }} />
-          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)' }}>Drag and drop or click to upload</p>
-          <input type="file" name="media" accept="image/*,video/*" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} disabled={isUploading} />
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-2)' }}>
+            {mediaName ? `Selected: ${mediaName}` : 'Drag and drop or click to upload'}
+          </p>
+          <input 
+            type="file" 
+            name="media" 
+            accept="image/*,video/*" 
+            onChange={handleFileChange}
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} 
+            disabled={isUploading} 
+          />
         </div>
       </div>
+
+      {hasMedia && (
+        <div style={{ animation: 'fadeIn var(--duration-fast) var(--ease-smooth)' }}>
+          <label style={{ display: 'block', marginBottom: 'var(--space-2)', color: 'var(--text-secondary)', fontWeight: 500 }}>Frame / Aspect Ratio</label>
+          <select name="aspectRatio" className="input-field" style={{ cursor: 'pointer' }}>
+            <option value="original">Original / Fit</option>
+            <option value="square">Square (1:1)</option>
+            <option value="portrait">Portrait (4:5)</option>
+            <option value="landscape">Landscape (16:9)</option>
+          </select>
+        </div>
+      )}
 
       <button type="submit" className="btn" disabled={isUploading} style={{ marginTop: 'var(--space-4)' }}>
         {isUploading ? 'Uploading & Sharing...' : 'Share Now'}
