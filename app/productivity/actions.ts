@@ -44,19 +44,24 @@ export async function createTimeTableEntry(data: {
   return entry;
 }
 
-export async function getTimeTableEntries() {
+export async function getTimeTableEntries(dateStr?: string) {
   const user = await getCurrentUser();
   if (!user) return [];
 
+  // Determine the target date (start and end of that specific day)
+  const targetDate = dateStr ? new Date(dateStr) : new Date();
+  const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+  const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+  
   // Fetch all entries for this user
   const entries = await prisma.timeTableEntry.findMany({
     where: { userId: user.id },
     include: {
       taskLogs: {
-        // Only fetch today's logs to see if they're completed today
         where: {
           date: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0)),
+            gte: startOfDay,
+            lte: endOfDay
           },
         },
       },
@@ -66,10 +71,45 @@ export async function getTimeTableEntries() {
     }
   });
 
+  // If we are looking at TODAY, run the missed tasks check
+  const isToday = new Date().toDateString() === targetDate.toDateString();
+  if (isToday) {
+    const currentHours = String(new Date().getHours()).padStart(2, '0');
+    const currentMinutes = String(new Date().getMinutes()).padStart(2, '0');
+    const currentTimeStr = `${currentHours}:${currentMinutes}`;
+    const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+    const currentDay = dayNames[new Date().getDay()];
+
+    for (const entry of entries) {
+      if (entry.daysOfWeek.includes(currentDay) && currentTimeStr > entry.endTime) {
+        // Time is up. Did they complete it?
+        if (entry.taskLogs.length === 0) {
+          // Missed it! Log it as MISSED and deduct 5 points
+          await prisma.$transaction([
+            prisma.taskLog.create({
+              data: {
+                userId: user.id,
+                timeTableEntryId: entry.id,
+                status: "MISSED",
+                pointsAwarded: -5,
+              }
+            }),
+            prisma.user.update({
+              where: { id: user.id },
+              data: { productivityScore: { decrement: 5 } }
+            })
+          ]);
+          // Add it to the local array to reflect the new state
+          entry.taskLogs.push({ status: "MISSED", pointsAwarded: -5 } as any);
+        }
+      }
+    }
+  }
+
   return entries;
 }
 
-export async function completeTask(entryId: string) {
+export async function completeTask(entryId: string, dateStr?: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
@@ -81,19 +121,23 @@ export async function completeTask(entryId: string) {
     throw new Error("Entry not found");
   }
 
-  // Check if already completed today
-  const today = new Date(new Date().setHours(0, 0, 0, 0));
+  // Check if already logged for this day
+  const targetDate = dateStr ? new Date(dateStr) : new Date();
+  const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+  const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+
   const existingLog = await prisma.taskLog.findFirst({
     where: {
       timeTableEntryId: entryId,
       date: {
-        gte: today,
+        gte: startOfDay,
+        lte: endOfDay
       },
     },
   });
 
   if (existingLog) {
-    return { success: false, message: "Already completed today" };
+    return { success: false, message: "Already logged for this day" };
   }
 
   // Create log and update user score
@@ -102,7 +146,9 @@ export async function completeTask(entryId: string) {
       data: {
         userId: user.id,
         timeTableEntryId: entry.id,
+        status: "COMPLETED",
         pointsAwarded: entry.pointsReward,
+        date: new Date() // Will log for right now
       },
     }),
     prisma.user.update({

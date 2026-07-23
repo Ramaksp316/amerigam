@@ -1,21 +1,25 @@
 import ProductivityDashboard from "./ProductivityDashboard";
 import { getProductivityScore, getTimeTableEntries } from "./actions";
 
-export default async function ProductivityPage() {
+export default async function ProductivityPage({ searchParams }: { searchParams: { date?: string } }) {
   const score = await getProductivityScore();
-  const entries = await getTimeTableEntries();
+  const dateStr = searchParams.date || new Date().toISOString().split('T')[0];
+  const entries = await getTimeTableEntries(dateStr);
 
   // Convert entries so they can be passed to client component easily
-  const plainEntries = entries.map(entry => ({
-    id: entry.id,
-    title: entry.title,
-    appContext: entry.appContext,
-    startTime: entry.startTime,
-    endTime: entry.endTime,
-    daysOfWeek: JSON.parse(entry.daysOfWeek),
-    pointsReward: entry.pointsReward,
-    isCompletedToday: entry.taskLogs && entry.taskLogs.length > 0
-  }));
+  const plainEntries = entries.map(entry => {
+    let currentLog = entry.taskLogs && entry.taskLogs.length > 0 ? entry.taskLogs[0] : null;
+    return {
+      id: entry.id,
+      title: entry.title,
+      appContext: entry.appContext,
+      startTime: entry.startTime,
+      endTime: entry.endTime,
+      daysOfWeek: JSON.parse(entry.daysOfWeek),
+      pointsReward: entry.pointsReward,
+      status: currentLog ? currentLog.status : "PENDING"
+    };
+  });
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white p-6 md:p-12 relative overflow-hidden">
@@ -31,7 +35,11 @@ export default async function ProductivityPage() {
           <p className="text-gray-400">Manage your time, track distractions, and earn points.</p>
         </header>
 
-        <ProductivityDashboard initialScore={score} initialEntries={plainEntries} />
+        <ProductivityDashboard 
+          initialScore={score} 
+          initialEntries={plainEntries} 
+          currentDateStr={dateStr}
+        />
       </div>
     </main>
   );

@@ -38,7 +38,8 @@ export default async function UserProfilePage({ params, searchParams }: { params
       following: true,
       posts: { include: { likes: true, comments: { include: { author: true } } }, orderBy: { createdAt: 'desc' } },
       participations: { include: { competition: true } },
-      achievements: true
+      achievements: true,
+      timeTableEntries: true
     }
   });
 
@@ -46,6 +47,24 @@ export default async function UserProfilePage({ params, searchParams }: { params
 
   const isFollowing = currentUserId ? user.followers.some(f => f.followerId === currentUserId) : false;
   const authorInitial = (user.name || user.username || '?').charAt(0).toUpperCase();
+
+  const isOwner = currentUserId === targetUserId;
+  const canSeeProductivity = isOwner || user.shareTimeTable;
+
+  // Calculate live status
+  let liveTask = null;
+  if (canSeeProductivity && user.timeTableEntries) {
+    const now = new Date();
+    const currentHours = String(now.getHours()).padStart(2, '0');
+    const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+    const timeStr = `${currentHours}:${currentMinutes}`;
+    const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+    const currentDay = dayNames[now.getDay()];
+
+    liveTask = user.timeTableEntries.find(entry => 
+      entry.daysOfWeek.includes(currentDay) && timeStr >= entry.startTime && timeStr <= entry.endTime
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
@@ -66,10 +85,23 @@ export default async function UserProfilePage({ params, searchParams }: { params
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
               <div>
                 <h1 className="heading-jakaas" style={{ margin: 0, fontSize: 'var(--text-3xl)' }}>{user.name}</h1>
-                <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-md)', fontWeight: 500 }}>@{user.username || user.name?.toLowerCase().replace(/\s+/g, '')}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-md)', fontWeight: 500 }}>@{user.username || user.name?.toLowerCase().replace(/\s+/g, '')}</p>
+                  {canSeeProductivity && (
+                    <span style={{ fontSize: 'var(--text-xs)', fontWeight: 'bold', color: 'var(--accent-amber)', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                      {user.productivityScore} pts
+                    </span>
+                  )}
+                </div>
                 {(user.masterPath || user.corePath) && (
                   <div style={{ display: 'inline-block', marginTop: 'var(--space-2)', padding: 'var(--space-1) var(--space-3)', background: 'var(--surface-2)', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-pink)', border: '1px solid var(--border-color)' }}>
                     {user.masterPath} {user.corePath ? `• ${user.corePath}` : ''}
+                  </div>
+                )}
+                {liveTask && (
+                  <div style={{ marginTop: 'var(--space-2)', display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)', background: 'rgba(59, 130, 246, 0.15)', padding: '4px 10px', borderRadius: 'var(--radius-full)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                    <span style={{ width: '8px', height: '8px', background: '#3b82f6', borderRadius: '50%', boxShadow: '0 0 8px #3b82f6', animation: 'pulse 2s infinite' }}></span>
+                    <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: '#60a5fa' }}>Live: {liveTask.title}</span>
                   </div>
                 )}
               </div>
@@ -136,7 +168,7 @@ export default async function UserProfilePage({ params, searchParams }: { params
 
       {/* Modern Tab Bar */}
       <div style={{ display: 'flex', gap: 'var(--space-2)', background: 'var(--surface-2)', padding: 'var(--space-1)', borderRadius: 'var(--radius-lg)' }}>
-        {['posts', 'competitions', 'achievements'].map((t) => (
+        {['posts', 'competitions', 'achievements', 'productivity'].map((t) => (
           <Link key={t} href={`/user/${targetUserId}?tab=${t}`} style={{
             flex: 1, textAlign: 'center', padding: 'var(--space-2) var(--space-4)', textDecoration: 'none', borderRadius: 'var(--radius-md)',
             color: activeTab === t ? 'var(--text-primary)' : 'var(--text-secondary)',
@@ -210,6 +242,40 @@ export default async function UserProfilePage({ params, searchParams }: { params
                 {ach.description && <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>{ach.description}</p>}
               </div>
             ))}
+          </div>
+        )}
+
+        {activeTab === 'productivity' && (
+          <div style={{ padding: 'var(--space-4)', background: 'var(--surface-2)', borderRadius: 'var(--radius-md)' }}>
+            {!canSeeProductivity ? (
+              <div style={{ textAlign: 'center', padding: 'var(--space-10)', color: 'var(--text-muted)' }}>
+                <span style={{ fontSize: '3rem', display: 'block', marginBottom: 'var(--space-4)' }}>🔒</span>
+                This user's routine and productivity score are private.
+              </div>
+            ) : (
+              <div>
+                <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>Daily Routine (Time Table)</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  {user.timeTableEntries.length === 0 ? (
+                    <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>No routine set.</p>
+                  ) : (
+                    user.timeTableEntries.map(entry => (
+                      <div key={entry.id} style={{ display: 'flex', justifyContent: 'space-between', padding: 'var(--space-3)', background: 'var(--surface-1)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                        <div>
+                          <strong style={{ color: 'var(--text-primary)', fontSize: 'var(--text-sm)' }}>{entry.title}</strong>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>
+                            {entry.startTime} - {entry.endTime} • Repeats: {JSON.parse(entry.daysOfWeek).join(', ')}
+                          </div>
+                        </div>
+                        <div style={{ fontWeight: 'bold', color: 'var(--accent-amber)', fontSize: 'var(--text-sm)' }}>
+                          +{entry.pointsReward} pts
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

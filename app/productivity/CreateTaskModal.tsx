@@ -17,9 +17,15 @@ export default function CreateTaskModal({
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
 
-  // Default to today for MVP
   const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   const currentDay = dayNames[new Date().getDay()];
+  const [selectedDays, setSelectedDays] = useState<string[]>([currentDay]);
+
+  const toggleDay = (day: string) => {
+    setSelectedDays(prev => 
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +37,8 @@ export default function CreateTaskModal({
         appContext: appContext || undefined,
         startTime,
         endTime,
-        daysOfWeek: [currentDay], // Just running today
+        daysOfWeek: selectedDays.length > 0 ? selectedDays : [currentDay],
+
         pointsReward: 10
       });
 
@@ -114,9 +121,29 @@ export default function CreateTaskModal({
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-2">Repeat Days</label>
+            <div className="flex flex-wrap gap-2">
+              {dayNames.map(day => (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => toggleDay(day)}
+                  className={`px-3 py-1 text-xs font-bold rounded-full border transition-all ${
+                    selectedDays.includes(day)
+                      ? "bg-blue-600 border-blue-500 text-white"
+                      : "bg-white/5 border-white/10 text-gray-400 hover:border-white/30"
+                  }`}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || selectedDays.length === 0}
             className="w-full mt-4 py-3 rounded-xl font-bold flex items-center justify-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 transition-all shadow-lg text-white disabled:opacity-50"
           >
             {loading ? "Adding..." : "Add to Schedule"}

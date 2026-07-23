@@ -60,6 +60,7 @@ model User {
 
   // Productivity Tracking
   productivityScore Int      @default(0)
+  shareTimeTable    Boolean  @default(false)
   timeTableEntries  TimeTableEntry[]
   taskLogs          TaskLog[]
   distractionLogs   DistractionLog[]
@@ -267,7 +268,8 @@ model TaskLog {
   timeTableEntryId String
   timeTableEntry   TimeTableEntry @relation(fields: [timeTableEntryId], references: [id], onDelete: Cascade)
   date             DateTime @default(now()) // The exact date this was completed
-  pointsAwarded    Int
+  status           String   @default("COMPLETED") // "COMPLETED" or "MISSED"
+  pointsAwarded    Int      // Positive for completed, Negative (-5) for missed
 }
 
 model DistractionLog {
