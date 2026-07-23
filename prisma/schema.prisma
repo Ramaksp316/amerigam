@@ -53,10 +53,6 @@ model User {
   // Competitions & Portfolios (Phase 2)
   participations   Participant[]
   achievements     Achievement[]
-
-  // Online Status
-  status           String    @default("ONLINE") // "ONLINE", "OFFLINE", "DND"
-  lastSeen         DateTime  @default(now())
 }
 
 model Post {
