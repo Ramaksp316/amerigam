@@ -1,6 +1,6 @@
 import './globals.css';
 import { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Caveat } from 'next/font/google';
 import { ThemeProvider } from './components/ThemeProvider';
 import Sidebar from './components/Sidebar';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
@@ -11,6 +11,13 @@ import { prisma } from '../lib/prisma';
 const inter = Inter({ 
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800', '900'],
+  display: 'swap',
+});
+
+const caveat = Caveat({
+  subsets: ['latin'],
+  weight: ['500', '700'],
+  variable: '--font-caveat',
   display: 'swap',
 });
 
@@ -48,7 +55,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.className} ${caveat.variable}`}>
         <ThemeProvider>
           <ActiveStatusTracker userId={userId} />
           <div className="app-layout">

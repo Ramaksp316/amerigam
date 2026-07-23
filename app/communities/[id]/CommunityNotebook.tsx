@@ -28,18 +28,41 @@ export default function CommunityNotebook({
   const [localPenColors, setLocalPenColors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Initialize local state for all notes
-    const titles: Record<string, string> = {};
-    const contents: Record<string, string> = {};
-    const colors: Record<string, string> = {};
-    notes.forEach((n: any) => {
-      titles[n.id] = n.title;
-      contents[n.id] = n.content;
-      colors[n.id] = n.penColor;
+    // Only initialize local state for notes that don't exist yet
+    // to prevent overwriting user input when the server refreshes data.
+    setLocalTitles(prev => {
+      const next = { ...prev };
+      let changed = false;
+      notes.forEach((n: any) => {
+        if (next[n.id] === undefined) {
+          next[n.id] = n.title;
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
     });
-    setLocalTitles(titles);
-    setLocalContents(contents);
-    setLocalPenColors(colors);
+    setLocalContents(prev => {
+      const next = { ...prev };
+      let changed = false;
+      notes.forEach((n: any) => {
+        if (next[n.id] === undefined) {
+          next[n.id] = n.content;
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+    setLocalPenColors(prev => {
+      const next = { ...prev };
+      let changed = false;
+      notes.forEach((n: any) => {
+        if (next[n.id] === undefined) {
+          next[n.id] = n.penColor;
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
   }, [notes]);
 
   const totalSpreads = Math.max(1, Math.ceil((notes.length + 1) / 2));
@@ -230,8 +253,6 @@ export default function CommunityNotebook({
   return (
     <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 'var(--space-4)' }}>
       <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap');
-        
         .notebook-rules {
           background-color: transparent;
           background-image: linear-gradient(rgba(30, 58, 138, 0.1) 1px, transparent 1px);
@@ -240,7 +261,7 @@ export default function CommunityNotebook({
         }
 
         .notebook-text {
-          font-family: 'Caveat', cursive;
+          font-family: var(--font-caveat), 'Caveat', cursive;
           font-size: 24px;
           border: none;
           outline: none;
@@ -252,7 +273,9 @@ export default function CommunityNotebook({
           perspective: 2000px;
           width: 100%;
           max-width: 1100px;
-          height: 700px;
+          height: calc(100dvh - 160px);
+          max-height: 700px;
+          min-height: 500px;
         }
 
         .book {
@@ -316,7 +339,7 @@ export default function CommunityNotebook({
 
       {!isOpen ? (
         <div style={{
-          maxWidth: '600px', width: '100%', height: '700px',
+          maxWidth: '500px', width: '100%', height: 'calc(100dvh - 180px)', maxHeight: '650px', minHeight: '450px',
           background: 'linear-gradient(135deg, #4A2E1B 0%, #2A190E 100%)',
           borderRadius: '16px 24px 24px 16px',
           boxShadow: '20px 20px 40px rgba(0,0,0,0.6)',
