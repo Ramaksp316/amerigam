@@ -583,3 +583,16 @@ a {
     width: 100vw;
   }
 }
+
+/* Glassmorphism Hover Effects */
+.hoverable-card-glass {
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-smooth);
+}
+
+.hoverable-card-glass:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(0, 242, 254, 0.25) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px 0 rgba(0, 242, 254, 0.15) !important;
+}
