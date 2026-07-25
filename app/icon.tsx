@@ -29,7 +29,7 @@ export default async function Icon() {
       >
         <img 
           src={logoData as any} 
-          style={{ width: '130%', height: '130%', objectFit: 'cover' }} 
+          style={{ width: '118%', height: '118%', objectFit: 'cover' }} 
         />
       </div>
     ),
