@@ -6,7 +6,6 @@ import ThemeToggle from './ThemeToggle';
 import Link from 'next/link';
 import { Home, Search, Compass, Users, MessageCircle, User, PlusSquare, Trophy, Bell, Sparkles, Activity, FileText, Briefcase, ChevronDown, ChevronUp } from 'lucide-react';
 import ProfilePicture from './ProfilePicture';
-import LogoSVG from '@/components/LogoSVG';
 
 export default function Sidebar({ unreadCount = 0, currentUser = null }: { unreadCount?: number, currentUser?: any }) {
   const pathname = usePathname();
@@ -27,10 +26,7 @@ export default function Sidebar({ unreadCount = 0, currentUser = null }: { unrea
 
   return (
     <nav className="sidebar">
-      <Link href="/feed" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <LogoSVG className="w-8 h-8 flex-shrink-0 drop-shadow-md" />
-        <span className="hidden lg:block font-light tracking-[0.1em] uppercase text-xl">Amerigam</span>
-      </Link>
+      <Link href="/feed" className="logo">Amerigam</Link>
       
       <div className="nav-links">
         <Link href="/feed" className={pathname === '/feed' ? 'active' : ''}>
