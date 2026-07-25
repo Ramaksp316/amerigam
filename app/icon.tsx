@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og';
+import LogoSVG from '../components/LogoSVG';
 
 export const runtime = 'edge';
 
@@ -8,11 +9,7 @@ export const size = {
 };
 export const contentType = 'image/png';
 
-export default async function Icon() {
-  const logoData = await fetch(
-    new URL('../public/logo.png', import.meta.url)
-  ).then((res) => res.arrayBuffer());
-
+export default function Icon() {
   return new ImageResponse(
     (
       <div
@@ -22,15 +19,11 @@ export default async function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          overflow: 'hidden',
           backgroundColor: '#ffffff',
           borderRadius: '112px',
         }}
       >
-        <img 
-          src={logoData as any} 
-          style={{ width: '118%', height: '118%', objectFit: 'cover' }} 
-        />
+        <LogoSVG style={{ width: '65%', height: '65%' }} />
       </div>
     ),
     { ...size }
