@@ -31,7 +31,6 @@ export const viewport = {
 export const metadata: Metadata = {
   title: "Amerigam - Connect, Create, Share",
   description: "A platform for creators, professionals, athletes, and explorers.",
-  manifest: "/manifest.json",
   icons: {
     icon: [
       { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
