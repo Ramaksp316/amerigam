@@ -50,40 +50,57 @@ export default function PWAInstallPrompt() {
   return (
     <div style={{
       position: 'fixed',
-      bottom: '80px', // Just above the bottom nav bar on mobile
+      bottom: '80px',
       left: '50%',
       transform: 'translateX(-50%)',
       width: '90%',
       maxWidth: '400px',
-      backgroundColor: 'var(--btn-primary-bg)',
+      background: 'rgba(21, 22, 28, 0.95)',
+      backdropFilter: 'blur(16px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
       color: '#fff',
-      padding: '12px 16px',
-      borderRadius: '8px',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+      padding: '16px',
+      borderRadius: '16px',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.05)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      zIndex: 1000
+      zIndex: 1000,
+      animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <Download size={20} />
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes slideUp {
+          from { transform: translate(-50%, 20px); opacity: 0; }
+          to { transform: translate(-50%, 0); opacity: 1; }
+        }
+      `}} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div style={{ 
+          background: 'var(--gradient-primary)', 
+          padding: '10px', 
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(236, 72, 153, 0.3)'
+        }}>
+          <Download size={22} color="white" />
+        </div>
         <div>
           <strong style={{ display: 'block', fontSize: '0.9rem' }}>Install Amerigam App</strong>
           <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>For a faster, better experience</span>
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <button 
           onClick={handleInstallClick}
           style={{
-            backgroundColor: '#fff',
-            color: 'var(--btn-primary-bg)',
+            background: 'var(--gradient-primary)',
+            color: '#fff',
             border: 'none',
-            padding: '6px 12px',
-            borderRadius: '4px',
+            padding: '8px 16px',
+            borderRadius: '8px',
             fontWeight: 'bold',
-            fontSize: '0.8rem',
-            cursor: 'pointer'
+            fontSize: '0.85rem',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
           }}
         >
           Install
@@ -91,11 +108,15 @@ export default function PWAInstallPrompt() {
         <button 
           onClick={() => setIsVisible(false)}
           style={{
-            background: 'none',
+            background: 'rgba(255,255,255,0.1)',
             border: 'none',
+            borderRadius: '50%',
             color: '#fff',
             cursor: 'pointer',
-            padding: '4px'
+            padding: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
           }}
         >
           <X size={18} />
