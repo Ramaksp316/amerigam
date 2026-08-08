@@ -37,7 +37,7 @@ export default async function UserProfilePage({ params, searchParams }: { params
       followers: true,
       following: true,
       posts: { include: { likes: true, comments: { include: { author: true } } }, orderBy: { createdAt: 'desc' } },
-      participations: { include: { competition: true } },
+      eventRegistrations: { include: { event: true } },
       achievements: true
     }
   });
@@ -189,23 +189,19 @@ export default async function UserProfilePage({ params, searchParams }: { params
 
         {activeTab === 'competitions' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {user.participations.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 'var(--space-10)', color: 'var(--text-muted)' }}>No competitions joined.</div>
-            ) : user.participations.map(part => (
-              <div key={part.id} className="card hoverable-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0 }}>
+            {user.eventRegistrations.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 'var(--space-10)', color: 'var(--text-muted)' }}>No events joined.</div>
+            ) : user.eventRegistrations.map(reg => (
+              <div key={reg.id} className="card hoverable-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0 }}>
                 <div>
-                  <strong style={{ display: 'block', fontSize: 'var(--text-md)', color: 'var(--text-primary)' }}>{part.competition.title}</strong>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>{part.competition.level} • {part.competition.category}</span>
+                  <strong style={{ display: 'block', fontSize: 'var(--text-md)', color: 'var(--text-primary)' }}>{reg.event.name}</strong>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>{reg.event.locationType} • {reg.event.category}</span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  {part.rank ? (
-                    <span style={{ display: 'block', fontSize: 'var(--text-lg)', fontWeight: 800, color: part.rank === 1 ? 'var(--accent-amber)' : 'var(--text-primary)' }}>
-                      Rank #{part.rank}
-                    </span>
-                  ) : (
-                    <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>Pending Result</span>
-                  )}
-                  {part.score && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Score: {part.score}</span>}
+                  <span style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 800, color: reg.status === 'APPROVED' ? 'var(--success)' : 'var(--accent-amber)' }}>
+                    {reg.status}
+                  </span>
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>ID: {reg.registrationId}</span>
                 </div>
               </div>
             ))}

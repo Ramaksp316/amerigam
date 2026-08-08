@@ -14,51 +14,7 @@ export default async function EventsPage() {
   }
 
   const count = await prisma.event.count();
-  if (count === 0) {
-    await prisma.event.createMany({
-      data: [
-        {
-          name: 'National AI Hackathon 2026',
-          description: 'Build an AI solution that solves a real-world problem in your community. Show off your skills on a national stage.',
-          category: 'Hackathon',
-          locationType: 'HYBRID',
-          venue: 'Ahmedabad IT Hub',
-          startDate: new Date('2026-08-01'),
-          endDate: new Date('2026-08-15'),
-          requireCheckIn: true,
-          requireApproval: false,
-          allowTeams: true,
-          requireSubmissions: true,
-          creatorId: userId
-        },
-        {
-          name: 'Gujarat State Photography Contest',
-          description: 'Capture the essence of Gujarat. Open to all amateur and professional photographers in the state.',
-          category: 'Visual Arts',
-          locationType: 'ONLINE',
-          startDate: new Date('2026-07-20'),
-          endDate: new Date('2026-08-01'),
-          requireCheckIn: false,
-          requireApproval: true,
-          creatorId: userId
-        },
-        {
-          name: 'Global Startup Pitch',
-          description: 'Pitch your business idea to international investors. Compete with founders from over 50 countries.',
-          category: 'Business',
-          locationType: 'ONLINE',
-          startDate: new Date('2026-09-01'),
-          endDate: new Date('2026-09-30'),
-          requireCheckIn: false,
-          requireApproval: true,
-          allowTeams: false,
-          requireSubmissions: true,
-          creatorId: userId
-        }
-      ]
-    });
-  }
-
+  
   const events = await prisma.event.findMany({
     include: {
       registrations: {
@@ -154,10 +110,9 @@ export default async function EventsPage() {
                     </form>
                   </div>
                 ) : (
-                  <form action={joinEvent}>
-                    <input type="hidden" name="eventId" value={event.id} />
-                    <button type="submit" className="btn btn-small" style={{ padding: 'var(--space-2) var(--space-5)' }}>Apply / Register</button>
-                  </form>
+                  <Link href={`/competitions/${event.id}/apply`} className="btn btn-small" style={{ padding: 'var(--space-2) var(--space-5)', textDecoration: 'none' }}>
+                    Apply / Register
+                  </Link>
                 )}
               </div>
             </div>

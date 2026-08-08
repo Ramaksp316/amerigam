@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import CreatePostForm from './CreatePostForm';
 import CreateStatusForm from './CreateStatusForm';
 import CreateCommunityForm from './CreateCommunityForm';
+import CreateEventForm from './CreateEventForm';
 
 export default async function CreatePage({ searchParams }: { searchParams: Promise<{ type?: string }> }) {
   const cookieStore = await cookies();
@@ -50,7 +51,7 @@ export default async function CreatePage({ searchParams }: { searchParams: Promi
       <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
         {type === 'post' && <CreatePostForm currentUser={currentUser} />}
         {type === 'project' && <div style={{textAlign: 'center', padding: '2rem'}}>Project Creation coming soon!</div>}
-        {type === 'competition' && <div style={{textAlign: 'center', padding: '2rem'}}>Competition Creation coming soon!</div>}
+        {type === 'competition' && <CreateEventForm />}
         {type === 'status' && <CreateStatusForm />}
         {type === 'community' && <CreateCommunityForm />}
       </div>
