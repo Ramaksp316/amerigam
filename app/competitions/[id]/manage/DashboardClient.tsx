@@ -7,7 +7,7 @@ export default function DashboardClient({ registrations, eventId, requireApprova
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  async function handleAction(registrationId: string, action: 'approve' | 'reject') {
+  async function handleAction(registrationId: string, action: 'approve' | 'reject' | 'winner') {
     setLoadingId(registrationId);
     try {
       const res = await fetch(`/api/events/${eventId}/manage/${action}`, {
@@ -59,8 +59,8 @@ export default function DashboardClient({ registrations, eventId, requireApprova
               <td style={{ padding: 'var(--space-3)' }}>
                 <span style={{
                   padding: '2px 8px', borderRadius: 'var(--radius-full)', fontSize: '0.75rem', fontWeight: 700,
-                  background: reg.status === 'APPROVED' ? 'rgba(34, 197, 94, 0.1)' : reg.status === 'REJECTED' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                  color: reg.status === 'APPROVED' ? 'var(--success)' : reg.status === 'REJECTED' ? 'var(--danger)' : 'var(--accent-amber)'
+                  background: reg.status === 'WINNER' ? 'rgba(168, 85, 247, 0.15)' : reg.status === 'APPROVED' ? 'rgba(34, 197, 94, 0.1)' : reg.status === 'REJECTED' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                  color: reg.status === 'WINNER' ? 'var(--accent-purple)' : reg.status === 'APPROVED' ? 'var(--success)' : reg.status === 'REJECTED' ? 'var(--danger)' : 'var(--accent-amber)'
                 }}>
                   {reg.status}
                 </span>
@@ -86,8 +86,20 @@ export default function DashboardClient({ registrations, eventId, requireApprova
                     </button>
                   </div>
                 )}
-                {reg.status !== 'PENDING' && (
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Resolved</span>
+                {reg.status === 'APPROVED' && (
+                  <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
+                    <button 
+                      className="btn btn-small btn-outline" 
+                      style={{ padding: 'var(--space-1) var(--space-3)', color: 'var(--accent-purple)', borderColor: 'var(--accent-purple)' }}
+                      onClick={() => handleAction(reg.id, 'winner')}
+                      disabled={loadingId === reg.id}
+                    >
+                      {loadingId === reg.id ? '...' : 'Mark as Winner'}
+                    </button>
+                  </div>
+                )}
+                {(reg.status === 'REJECTED' || reg.status === 'WINNER') && (
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{reg.status === 'WINNER' ? 'Certificate Issued' : 'Resolved'}</span>
                 )}
               </td>
             </tr>

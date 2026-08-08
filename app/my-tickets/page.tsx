@@ -14,8 +14,14 @@ export default async function MyTicketsPage() {
   }
 
   const registrations = await prisma.eventRegistration.findMany({
-    where: { userId, status: 'APPROVED' },
-    include: { event: true },
+    where: { 
+      userId, 
+      status: { in: ['APPROVED', 'WINNER'] } 
+    },
+    include: { 
+      event: true,
+      certificates: true
+    },
     orderBy: { joinedAt: 'desc' }
   });
 
@@ -64,9 +70,34 @@ export default async function MyTicketsPage() {
                   </span>
                 </div>
 
-                <div style={{ marginTop: 'auto', paddingTop: 'var(--space-4)', borderTop: '1px dashed var(--border-color)', display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-3)' }}>
+                  {reg.event.allowTeams && (
+                    <Link href={`/competitions/${reg.event.id}/team`} className="btn btn-small btn-outline" style={{ fontSize: '0.75rem', padding: '4px 8px' }}>
+                      Manage Team
+                    </Link>
+                  )}
+                  {reg.event.requireSubmissions && (
+                    <Link href={`/competitions/${reg.event.id}/submit`} className="btn btn-small btn-outline" style={{ fontSize: '0.75rem', padding: '4px 8px' }}>
+                      Submit Project
+                    </Link>
+                  )}
+                </div>
+
+                <div style={{ marginTop: 'auto', paddingTop: 'var(--space-4)', borderTop: '1px dashed var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Type: <strong style={{ color: 'var(--text-primary)' }}>{reg.participantType}</strong></span>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--success)', fontWeight: 800 }}>APPROVED</span>
+                  
+                  {reg.status === 'WINNER' ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--accent-purple)', fontWeight: 800 }}>WINNER</span>
+                      {reg.certificates[0] && (
+                        <Link href={`/verify/${reg.certificates[0].certificateId}`} className="btn btn-small" style={{ background: 'var(--accent-purple)', color: '#fff', fontSize: '0.75rem', padding: 'var(--space-1) var(--space-3)' }}>
+                          View Certificate
+                        </Link>
+                      )}
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: '0.8rem', color: 'var(--success)', fontWeight: 800 }}>APPROVED</span>
+                  )}
                 </div>
               </div>
             </div>
