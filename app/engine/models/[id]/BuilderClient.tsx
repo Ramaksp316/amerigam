@@ -92,6 +92,48 @@ export default function BuilderClient({ initialModel }: { initialModel: any }) {
     }
   };
 
+  const handlePublish = async () => {
+    if (!confirm('Are you sure you want to publish? You cannot modify structural nodes after publishing. (You can clone it later)')) return;
+    setSaving(true);
+    
+    // First save
+    const backendNodes = nodes.map(n => ({
+      id: n.id,
+      type: n.backendData?.type || 'STAGE',
+      name: n.backendData?.name || 'New Stage',
+      config: n.backendData?.config || {},
+      positionX: n.position.x,
+      positionY: n.position.y
+    }));
+
+    const backendConnections = edges.map(e => ({
+      id: e.id,
+      sourceId: e.source,
+      targetId: e.target,
+      condition: e.label || null
+    }));
+
+    try {
+      const res = await fetch(`/api/engine/models/${initialModel.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          nodes: backendNodes,
+          connections: backendConnections,
+          isPublished: true
+        })
+      });
+      if (!res.ok) throw new Error('Failed to publish');
+      alert('Model Published successfully!');
+      router.refresh(); // Refresh to show Published badge
+    } catch (err) {
+      alert('Error publishing model');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleAddNode = () => {
     const newNode = {
       id: `node-${Date.now()}`,
@@ -128,10 +170,15 @@ export default function BuilderClient({ initialModel }: { initialModel: any }) {
         </div>
 
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          <button onClick={handleAddNode} className="btn btn-small btn-outline" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          {!initialModel.isPublished && (
+            <button onClick={handlePublish} disabled={saving} className="btn btn-small btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', background: 'var(--success)', color: '#000' }}>
+              Publish
+            </button>
+          )}
+          <button onClick={handleAddNode} disabled={initialModel.isPublished} className="btn btn-small btn-outline" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
             <Plus size={16} /> Add Stage
           </button>
-          <button onClick={handleSave} disabled={saving} className="btn btn-small btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <button onClick={handleSave} disabled={saving || initialModel.isPublished} className="btn btn-small btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
             <Save size={16} /> {saving ? 'Saving...' : 'Save Layout'}
           </button>
         </div>
