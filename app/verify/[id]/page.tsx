@@ -1,7 +1,8 @@
 import { prisma } from '../../../lib/prisma';
 import { notFound } from 'next/navigation';
-import { ShieldCheck, Award, Calendar, User } from 'lucide-react';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import CertificateActions from './CertificateActions';
 
 export default async function VerifyCertificatePage({ params }: { params: Promise<{ id: string }> }) {
   const { id: certificateId } = await params;
@@ -26,56 +27,149 @@ export default async function VerifyCertificatePage({ params }: { params: Promis
   const { user, event } = registration;
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-4)', background: 'var(--background)' }}>
-      <div className="glass-card" style={{ maxWidth: '600px', width: '100%', textAlign: 'center', padding: 'var(--space-8)', border: '2px solid var(--accent-amber)', position: 'relative', overflow: 'hidden' }}>
-        
-        {/* Verification Banner */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: 'var(--success)', color: '#fff', padding: 'var(--space-2)', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <ShieldCheck size={20} /> OFFICIALLY VERIFIED
-        </div>
+    <div style={{ minHeight: '100vh', padding: 'var(--space-8) var(--space-4)', background: 'var(--background)' }}>
+      
+      <div style={{ maxWidth: '1000px', margin: '0 auto', marginBottom: 'var(--space-6)' }}>
+        <Link href="/my-tickets" className="btn btn-small btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <ArrowLeft size={16} /> Back to My Passes
+        </Link>
+      </div>
 
-        <div style={{ marginTop: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
-          <Award size={80} color="var(--accent-amber)" style={{ filter: 'drop-shadow(0 0 15px rgba(245, 158, 11, 0.4))' }} />
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        {/* Certificate Container - Fixed A4 Landscape aspect ratio */}
+        <div 
+          id="certificate-container"
+          style={{
+            width: '100%',
+            maxWidth: '1000px',
+            aspectRatio: '1.414 / 1', // A4 Landscape ratio
+            background: '#ffffff',
+            position: 'relative',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
+            overflow: 'hidden',
+            color: '#1a1a1a', // Ensure text is dark on white background
+          }}
+        >
+          {/* Inner Border */}
+          <div style={{
+            position: 'absolute',
+            top: '20px', left: '20px', right: '20px', bottom: '20px',
+            border: '2px solid #b89345',
+            pointerEvents: 'none',
+            zIndex: 10
+          }}></div>
 
-        <h1 style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 'var(--space-2)' }}>
-          Certificate of {certificate.type.toLowerCase()}
-        </h1>
-        
-        <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 var(--space-6) 0' }}>
-          {user.name}
-        </h2>
+          <div style={{
+            position: 'absolute',
+            top: '24px', left: '24px', right: '24px', bottom: '24px',
+            border: '1px solid #b89345',
+            pointerEvents: 'none',
+            zIndex: 10
+          }}></div>
 
-        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: 'var(--space-6)' }}>
-          is hereby awarded this certificate in recognition of their participation and efforts in
-        </p>
+          {/* Decorative Corner Elements (Top Left / Bottom Right) */}
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '250px', height: '250px', background: 'linear-gradient(135deg, #df2a35 0%, #a01a24 100%)', clipPath: 'polygon(0 0, 100% 0, 0 100%)', zIndex: 1 }}></div>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '300px', height: '300px', background: 'rgba(223, 42, 53, 0.2)', clipPath: 'polygon(0 0, 100% 0, 0 100%)', zIndex: 0 }}></div>
+          
+          <div style={{ position: 'absolute', bottom: 0, right: 0, width: '350px', height: '350px', background: '#1c1e26', clipPath: 'polygon(100% 100%, 0 100%, 100% 0)', zIndex: 1 }}></div>
+          <div style={{ position: 'absolute', bottom: 0, right: 0, width: '400px', height: '400px', background: 'linear-gradient(135deg, #df2a35 0%, #a01a24 100%)', clipPath: 'polygon(100% 100%, 0 100%, 100% 0)', zIndex: 0 }}></div>
+          
+          {/* Top Right Ribbon Element */}
+          <div style={{ position: 'absolute', top: '-10px', right: '100px', width: '50px', height: '150px', background: '#b89345', clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)', zIndex: 2 }}></div>
 
-        <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--accent-purple)', margin: '0 0 var(--space-8) 0' }}>
-          {event.name}
-        </h3>
+          {/* Content Area */}
+          <div style={{ 
+            position: 'relative', 
+            zIndex: 5, 
+            height: '100%', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            padding: '40px 80px',
+            textAlign: 'center'
+          }}>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '30px' }}>
+              <div style={{ width: '40px', height: '40px', background: 'linear-gradient(135deg, #df2a35, #a01a24)', clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '20px', fontFamily: 'serif' }}>A</span>
+              </div>
+              <h2 style={{ fontSize: '20px', letterSpacing: '4px', color: '#1c1e26', margin: 0, fontWeight: 800 }}>AMERIGAM</h2>
+            </div>
 
-        {/* Info Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', textAlign: 'left', padding: 'var(--space-4)', background: 'var(--surface-1)', borderRadius: 'var(--radius-md)' }}>
-          <div>
-            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase' }}>Participant ID</p>
-            <p style={{ margin: 0, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}><User size={14}/> {user.amerigamId}</p>
+            <h1 style={{ fontSize: '48px', color: '#df2a35', margin: '0 0 10px 0', fontWeight: 900, letterSpacing: '8px' }}>
+              CERTIFICATE
+            </h1>
+            <p style={{ fontSize: '18px', letterSpacing: '6px', color: '#666', textTransform: 'uppercase', margin: '0 0 50px 0' }}>
+              OF {certificate.type === 'WINNER' ? 'EXCELLENCE & ACHIEVEMENT' : 'PARTICIPATION'}
+            </p>
+
+            <p style={{ fontSize: '16px', color: '#444', margin: '0 0 20px 0', fontStyle: 'italic' }}>
+              Proudly presented to
+            </p>
+
+            {/* Name Field */}
+            <h2 style={{ 
+              fontSize: '56px', 
+              color: '#1c1e26', 
+              margin: '0 0 10px 0', 
+              fontFamily: '"Playfair Display", "Times New Roman", serif',
+              fontStyle: 'italic',
+              fontWeight: 700,
+              borderBottom: '2px solid #df2a35',
+              paddingBottom: '10px',
+              width: '80%',
+              maxWidth: '600px'
+            }}>
+              {user.name}
+            </h2>
+
+            <p style={{ fontSize: '16px', color: '#444', margin: '30px 0 10px 0', maxWidth: '600px', lineHeight: 1.6 }}>
+              For outstanding performance and securing the <strong>{certificate.type}</strong> title at the <br/>
+              <strong style={{ color: '#1c1e26', fontSize: '18px' }}>{event.name}</strong> event.
+            </p>
+
+            {/* Signatures & Badges Area */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '80%', maxWidth: '700px', marginTop: 'auto' }}>
+              
+              <div style={{ textAlign: 'center', width: '200px' }}>
+                <p style={{ fontSize: '16px', margin: '0 0 5px 0', color: '#444' }}>{new Date(certificate.issueDate).toLocaleDateString()}</p>
+                <div style={{ borderTop: '1px solid #999', paddingTop: '5px', fontSize: '14px', color: '#666' }}>Date</div>
+              </div>
+
+              {/* Center Seal */}
+              <div style={{ 
+                width: '120px', height: '120px', 
+                background: '#df2a35', 
+                borderRadius: '50%', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexDirection: 'column',
+                color: '#fff',
+                boxShadow: '0 10px 20px rgba(223, 42, 53, 0.3)',
+                border: '5px solid #b89345',
+                transform: 'translateY(20px)'
+              }}>
+                <span style={{ fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase' }}>Verified</span>
+                <span style={{ fontSize: '24px', fontWeight: 'bold', margin: '5px 0' }}>{certificate.type === 'WINNER' ? '🏆' : '⭐'}</span>
+                <span style={{ fontSize: '10px', opacity: 0.8 }}>ID: {certificate.certificateId.substring(0,8)}</span>
+              </div>
+
+              <div style={{ textAlign: 'center', width: '200px' }}>
+                <div style={{ fontFamily: '"Great Vibes", "Playfair Display", cursive', fontSize: '32px', color: '#1c1e26', marginBottom: '5px', lineHeight: 1 }}>
+                  Ramaks
+                </div>
+                <div style={{ borderTop: '1px solid #999', paddingTop: '5px', fontSize: '14px', color: '#666' }}>
+                  <strong>Ramaks</strong><br/>Founder, Amerigam
+                </div>
+              </div>
+
+            </div>
           </div>
-          <div>
-            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase' }}>Date of Issue</p>
-            <p style={{ margin: 0, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={14}/> {new Date(certificate.issueDate).toLocaleDateString()}</p>
-          </div>
-          <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-color)', paddingTop: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
-            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase' }}>Certificate ID</p>
-            <p style={{ margin: 0, fontFamily: 'monospace', fontWeight: 'bold' }}>{certificate.certificateId}</p>
-          </div>
-        </div>
-
-        <div style={{ marginTop: 'var(--space-8)' }}>
-          <Link href="/" className="btn btn-outline" style={{ display: 'inline-block' }}>
-            Go to Amerigam
-          </Link>
         </div>
       </div>
+
+      <CertificateActions targetId="certificate-container" fileName={`Amerigam_Certificate_${user.name.replace(/\s+/g, '_')}`} />
+      
     </div>
   );
 }
