@@ -2,8 +2,24 @@
 
 import Link from 'next/link';
 import { ArrowLeft, Play, Users, GitBranch, CheckCircle, Activity, Award } from 'lucide-react';
+import { advanceStage } from './actions';
+import { useState, useTransition } from 'react';
 
 export default function DashboardClient({ competition }: { competition: any }) {
+  const [isPending, startTransition] = useTransition();
+
+  const handleAdvance = async (stageId: string) => {
+    if (!confirm('Are you sure you want to advance this stage? Participants will be moved to the next connected stage based on the model rules.')) return;
+    
+    startTransition(async () => {
+      const res = await advanceStage(competition.id, stageId);
+      if (res.success) {
+        alert(res.message);
+      } else {
+        alert(res.error);
+      }
+    });
+  };
   
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
@@ -49,7 +65,19 @@ export default function DashboardClient({ competition }: { competition: any }) {
             <div key={stage.id} className="glass-card" style={{ padding: 'var(--space-4)', borderLeft: stage.state === 'ACTIVE' || stage.state === 'IN_PROGRESS' ? '4px solid var(--success)' : '4px solid var(--border-color)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
                 <h3 style={{ margin: 0, fontSize: '1.2rem' }}>{stage.node.name}</h3>
-                <span style={{ fontSize: '0.8rem', padding: '4px 8px', borderRadius: '4px', background: 'var(--surface-2)' }}>{stage.state}</span>
+                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                  <span style={{ fontSize: '0.8rem', padding: '4px 8px', borderRadius: '4px', background: 'var(--surface-2)' }}>{stage.state}</span>
+                  {(stage.state === 'READY' || stage.state === 'ACTIVE' || stage.state === 'WAITING_FOR_INPUTS') && (
+                    <button 
+                      onClick={() => handleAdvance(stage.id)} 
+                      disabled={isPending}
+                      className="btn btn-small btn-primary" 
+                      style={{ padding: '4px 8px', fontSize: '0.8rem' }}
+                    >
+                      {isPending ? 'Advancing...' : 'Advance Stage'}
+                    </button>
+                  )}
+                </div>
               </div>
               <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-4)' }}>Type: {stage.node.type}</p>
               
@@ -91,10 +119,10 @@ export default function DashboardClient({ competition }: { competition: any }) {
 
           <div className="glass-card" style={{ padding: 'var(--space-4)' }}>
             <h3 style={{ margin: '0 0 var(--space-3) 0', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <Play size={18} /> Actions
+              <Play size={18} /> Global Actions
             </h3>
             <button className="btn btn-outline" style={{ width: '100%', marginBottom: 'var(--space-2)' }}>Add Participant (Override)</button>
-            <button className="btn btn-primary" style={{ width: '100%' }}>Advance Stage</button>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>To advance stages, use the buttons inside each Stage card.</p>
           </div>
 
         </div>
