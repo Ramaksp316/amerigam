@@ -3,8 +3,8 @@ import { notFound } from 'next/navigation';
 import { ShieldCheck, Award, Calendar, User } from 'lucide-react';
 import Link from 'next/link';
 
-export default async function VerifyCertificatePage({ params }: { params: { id: string } }) {
-  const certificateId = params.id;
+export default async function VerifyCertificatePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: certificateId } = await params;
 
   const certificate = await prisma.eventCertificate.findUnique({
     where: { certificateId },

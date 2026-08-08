@@ -2,10 +2,10 @@ import { prisma } from '../../../../lib/prisma';
 import { notFound, redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
-import { ArrowLeft, Trophy } from 'lucide-react';
-import ApplyForm from './ApplyForm';
+import { ArrowLeft, Edit3 } from 'lucide-react';
+import EditEventForm from './EditEventForm';
 
-export default async function ApplyPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: eventId } = await params;
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
@@ -22,6 +22,10 @@ export default async function ApplyPage({ params }: { params: Promise<{ id: stri
     notFound();
   }
 
+  if (event.creatorId !== userId) {
+    redirect('/competitions');
+  }
+
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: 'var(--space-4)', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
       <Link href="/competitions" style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)', color: 'var(--text-secondary)', textDecoration: 'none', marginBottom: 'var(--space-6)' }}>
@@ -30,12 +34,12 @@ export default async function ApplyPage({ params }: { params: Promise<{ id: stri
 
       <div className="glass-card" style={{ padding: 'var(--space-8)' }}>
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
-          <Trophy size={48} color="var(--accent-amber)" style={{ filter: 'drop-shadow(0 0 10px rgba(245, 158, 11, 0.3))', marginBottom: 'var(--space-4)' }} />
-          <h1 className="heading-jakaas" style={{ fontSize: '2rem', margin: '0 0 var(--space-2) 0' }}>Register for {event.name}</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Fill out the application details to secure your spot.</p>
+          <Edit3 size={48} color="var(--accent-purple)" style={{ filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.3))', marginBottom: 'var(--space-4)' }} />
+          <h1 className="heading-jakaas" style={{ fontSize: '2rem', margin: '0 0 var(--space-2) 0' }}>Edit Event</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>Update the details for {event.name}.</p>
         </div>
 
-        <ApplyForm event={event} />
+        <EditEventForm event={event} />
       </div>
     </div>
   );

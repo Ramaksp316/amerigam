@@ -4,8 +4,9 @@ import { cookies } from 'next/headers';
 import { generateRegistrationId } from '@/lib/idGenerator';
 import crypto from 'crypto';
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id: eventId } = await params;
     const cookieStore = await cookies();
     const userId = cookieStore.get('userId')?.value;
 
@@ -13,7 +14,6 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const eventId = params.id;
     const body = await req.json();
     const { participantType = 'PARTICIPANT' } = body;
 

@@ -192,6 +192,7 @@ model Event {
   name              String
   description       String
   category          String   // e.g., "Tech & AI", "Hackathon", "Sports"
+  eventLevel        String   @default("Local") // Local, District, State, National, International
   locationType      String   // "ONLINE", "OFFLINE", "HYBRID"
   venue             String?
   startDate         DateTime

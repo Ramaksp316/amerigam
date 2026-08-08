@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function CreateEventForm() {
+export default function EditEventForm({ event }: { event: any }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -27,7 +27,7 @@ export default function CreateEventForm() {
     };
 
     try {
-      const res = await fetch('/api/events/create', {
+      const res = await fetch(`/api/events/${event.id}/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -36,23 +36,30 @@ export default function CreateEventForm() {
         router.push('/competitions');
         router.refresh();
       } else {
-        alert('Failed to create event');
+        alert('Failed to update event');
       }
     } catch (err) {
       console.error(err);
-      alert('Error creating event');
+      alert('Error updating event');
     } finally {
       setLoading(false);
     }
   }
 
+  // Helper to format Date for datetime-local input
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toISOString().slice(0, 16);
+  };
+
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-      <input type="text" name="name" placeholder="Event/Competition Name" required className="input-field" />
-      <textarea name="description" placeholder="Description" rows={4} className="input-field" style={{ resize: 'none' }}></textarea>
+      <input type="text" name="name" defaultValue={event.name} placeholder="Event/Competition Name" required className="input-field" />
+      <textarea name="description" defaultValue={event.description} placeholder="Description" rows={4} className="input-field" style={{ resize: 'none' }}></textarea>
       
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-4)' }}>
-        <select name="category" className="input-field" required>
+        <select name="category" defaultValue={event.category} className="input-field" required>
           <option value="">Select Category</option>
           <option value="Hackathon">Hackathon</option>
           <option value="Sports">Sports</option>
@@ -61,7 +68,7 @@ export default function CreateEventForm() {
           <option value="Other">Other</option>
         </select>
 
-        <select name="eventLevel" className="input-field" required>
+        <select name="eventLevel" defaultValue={event.eventLevel} className="input-field" required>
           <option value="">Event Level</option>
           <option value="Local">Local</option>
           <option value="District">District</option>
@@ -70,7 +77,7 @@ export default function CreateEventForm() {
           <option value="International">International</option>
         </select>
 
-        <select name="locationType" className="input-field" required>
+        <select name="locationType" defaultValue={event.locationType} className="input-field" required>
           <option value="">Location Type</option>
           <option value="ONLINE">Online</option>
           <option value="OFFLINE">Offline</option>
@@ -78,36 +85,36 @@ export default function CreateEventForm() {
         </select>
       </div>
 
-      <input type="text" name="venue" placeholder="Venue Location (Optional)" className="input-field" />
+      <input type="text" name="venue" defaultValue={event.venue || ''} placeholder="Venue Location (Optional)" className="input-field" />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
         <div>
           <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Start Date</label>
-          <input type="datetime-local" name="startDate" required className="input-field" />
+          <input type="datetime-local" name="startDate" defaultValue={formatDate(event.startDate)} required className="input-field" />
         </div>
         <div>
           <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>End Date</label>
-          <input type="datetime-local" name="endDate" required className="input-field" />
+          <input type="datetime-local" name="endDate" defaultValue={formatDate(event.endDate)} required className="input-field" />
         </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', color: 'var(--text-primary)' }}>
-          <input type="checkbox" name="requireApproval" />
+          <input type="checkbox" name="requireApproval" defaultChecked={event.requireApproval} />
           Require manual approval for registrations
         </label>
         <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', color: 'var(--text-primary)' }}>
-          <input type="checkbox" name="allowTeams" />
+          <input type="checkbox" name="allowTeams" defaultChecked={event.allowTeams} />
           Allow participants to form teams
         </label>
         <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', color: 'var(--text-primary)' }}>
-          <input type="checkbox" name="requireSubmissions" />
+          <input type="checkbox" name="requireSubmissions" defaultChecked={event.requireSubmissions} />
           Require project/URL submission
         </label>
       </div>
 
       <button type="submit" className="btn btn-primary" disabled={loading} style={{ marginTop: 'var(--space-4)' }}>
-        {loading ? 'Creating...' : 'Create Event'}
+        {loading ? 'Saving...' : 'Save Changes'}
       </button>
     </form>
   );

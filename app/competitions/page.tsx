@@ -57,10 +57,13 @@ export default async function EventsPage() {
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
                 <div>
-                  <h3 style={{ margin: '0 0 var(--space-2) 0', fontSize: '1.5rem', fontWeight: 800 }}>{event.name}</h3>
-                  <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                  <h2 className="heading-jakaas" style={{ fontSize: '1.5rem', margin: 0 }}>{event.name}</h2>
+                  <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
                     <span style={{ fontSize: '0.75rem', background: 'var(--surface-2)', color: 'var(--text-primary)', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-full)', fontWeight: 700, border: '1px solid var(--border-color)' }}>
                       {event.category}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', background: 'var(--accent-purple)', color: '#fff', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-full)', fontWeight: 700 }}>
+                      {event.eventLevel}
                     </span>
                     <span style={{ fontSize: '0.75rem', background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-full)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid currentColor' }}>
                       <MapPin size={12}/> {event.locationType} {event.venue ? `· ${event.venue}` : ''}
@@ -113,6 +116,18 @@ export default async function EventsPage() {
                   <Link href={`/competitions/${event.id}/apply`} className="btn btn-small" style={{ padding: 'var(--space-2) var(--space-5)', textDecoration: 'none' }}>
                     Apply / Register
                   </Link>
+                )}
+                
+                {event.creatorId === userId && (
+                  <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                    <Link href={`/competitions/${event.id}/edit`} className="btn btn-small btn-outline" style={{ padding: 'var(--space-2)' }}>Edit</Link>
+                    <form action={async (formData) => {
+                      'use server';
+                      await prisma.event.delete({ where: { id: event.id } });
+                    }}>
+                      <button type="submit" className="btn btn-small btn-outline" style={{ color: 'var(--danger)', borderColor: 'var(--danger)', padding: 'var(--space-2)' }}>Delete</button>
+                    </form>
+                  </div>
                 )}
               </div>
             </div>
