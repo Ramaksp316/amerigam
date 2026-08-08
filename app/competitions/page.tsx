@@ -120,6 +120,7 @@ export default async function EventsPage() {
                 
                 {event.creatorId === userId && (
                   <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                    <Link href={`/competitions/${event.id}/manage`} className="btn btn-small btn-primary" style={{ padding: 'var(--space-2)' }}>Manage</Link>
                     <Link href={`/competitions/${event.id}/edit`} className="btn btn-small btn-outline" style={{ padding: 'var(--space-2)' }}>Edit</Link>
                     <form action={async (formData) => {
                       'use server';

@@ -25,7 +25,7 @@ export default function ApplyForm({ event }: { event: any }) {
       });
 
       if (res.ok) {
-        router.push('/competitions');
+        router.push('/my-tickets');
         router.refresh();
       } else {
         const errorData = await res.json();
