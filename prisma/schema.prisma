@@ -52,10 +52,13 @@ model User {
   communityPosts   CommunityPost[]
 
   // Competitions & Portfolios (Phase 2)
+  // Competitions & Portfolios (Phase 2)
   eventRegistrations EventRegistration[]
   createdEvents      Event[]
   scannedCheckIns    EventCheckIn[]
-  achievements     Achievement[]
+  captainedTeams     EventTeam[]
+  evaluations        EventEvaluation[]
+  achievements       Achievement[]
 
   // Online Status fields
   status                String    @default("ONLINE") // "ONLINE", "OFFLINE", "DND"
@@ -199,6 +202,11 @@ model Event {
   // Toggles
   requireApproval   Boolean  @default(false)
   requireCheckIn    Boolean  @default(false)
+  requireBadge      Boolean  @default(false)
+  enableDigitalPass Boolean  @default(true)
+  enableCertificates Boolean @default(false)
+  allowTeams        Boolean  @default(false)
+  requireSubmissions Boolean @default(false)
   
   // Limits & Config
   participantLimit  Int?
@@ -218,11 +226,16 @@ model EventRegistration {
   status          String   @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
   participantType String   @default("PARTICIPANT")
   qrToken         String   @unique @default(uuid()) // Secure opaque token for QR
+  teamId          String?
 
-  user            User     @relation(fields: [userId], references: [id])
-  event           Event    @relation(fields: [eventId], references: [id])
+  user            User       @relation(fields: [userId], references: [id])
+  event           Event      @relation(fields: [eventId], references: [id])
+  team            EventTeam? @relation(fields: [teamId], references: [id])
   checkIns        EventCheckIn[]
-  joinedAt        DateTime @default(now())
+  submissions     EventSubmission[]
+  evaluations     EventEvaluation[]
+  certificates    EventCertificate[]
+  joinedAt        DateTime   @default(now())
 
   @@unique([userId, eventId])
 }
@@ -236,6 +249,52 @@ model EventCheckIn {
 
   registration    EventRegistration @relation(fields: [registrationId], references: [id])
   scannedBy       User              @relation(fields: [scannedById], references: [id])
+}
+
+model EventTeam {
+  id          String   @id @default(uuid())
+  name        String
+  captainId   String
+  eventId     String
+  teamCode    String   @unique @default(uuid()) // Shareable code to join
+
+  captain     User     @relation(fields: [captainId], references: [id])
+  members     EventRegistration[]
+  createdAt   DateTime @default(now())
+}
+
+model EventSubmission {
+  id             String   @id @default(uuid())
+  registrationId String
+  projectTitle   String
+  description    String?
+  contentUrl     String?
+  status         String   @default("SUBMITTED")
+
+  registration   EventRegistration @relation(fields: [registrationId], references: [id])
+  createdAt      DateTime @default(now())
+}
+
+model EventEvaluation {
+  id             String   @id @default(uuid())
+  registrationId String
+  judgeId        String
+  score          Float
+  feedback       String?
+
+  registration   EventRegistration @relation(fields: [registrationId], references: [id])
+  judge          User              @relation(fields: [judgeId], references: [id])
+  evaluatedAt    DateTime          @default(now())
+}
+
+model EventCertificate {
+  id             String   @id @default(uuid())
+  certificateId  String   @unique // AMG-C-2026-XXXX
+  registrationId String
+  type           String   @default("PARTICIPATION") // PARTICIPATION, WINNER, MERIT
+  issueDate      DateTime @default(now())
+
+  registration   EventRegistration @relation(fields: [registrationId], references: [id])
 }
 
 model Achievement {

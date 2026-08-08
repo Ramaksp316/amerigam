@@ -27,6 +27,8 @@ export default async function EventsPage() {
           endDate: new Date('2026-08-15'),
           requireCheckIn: true,
           requireApproval: false,
+          allowTeams: true,
+          requireSubmissions: true,
           creatorId: userId
         },
         {
@@ -49,6 +51,8 @@ export default async function EventsPage() {
           endDate: new Date('2026-09-30'),
           requireCheckIn: false,
           requireApproval: true,
+          allowTeams: false,
+          requireSubmissions: true,
           creatorId: userId
         }
       ]
@@ -105,6 +109,16 @@ export default async function EventsPage() {
                     <span style={{ fontSize: '0.75rem', background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-full)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid currentColor' }}>
                       <MapPin size={12}/> {event.locationType} {event.venue ? `· ${event.venue}` : ''}
                     </span>
+                    {event.allowTeams && (
+                      <span style={{ fontSize: '0.75rem', background: 'rgba(236, 72, 153, 0.15)', color: '#ec4899', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-full)', fontWeight: 700, border: '1px solid currentColor', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Users size={12}/> Team Event
+                      </span>
+                    )}
+                    {event.requireSubmissions && (
+                      <span style={{ fontSize: '0.75rem', background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-full)', fontWeight: 700, border: '1px solid currentColor' }}>
+                        Project Submission Required
+                      </span>
+                    )}
                   </div>
                 </div>
                 
