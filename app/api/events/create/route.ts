@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       name,
       description,
       category,
-      eventLevel: body.eventLevel || 'Local',
+      eventLevel = 'Local',
       locationType,
       venue,
       startDate,
