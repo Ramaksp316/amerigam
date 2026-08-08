@@ -42,6 +42,28 @@ export default function CompetitionModelsPage() {
     }
   };
 
+  const handleLaunch = async (modelId: string, modelName: string) => {
+    const compName = prompt(`Enter a name for your new competition based on "${modelName}":`, `${modelName} - Season 1`);
+    if (!compName) return;
+
+    try {
+      const res = await fetch('/api/engine/competitions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ modelId, name: compName, description: 'Launched from ' + modelName })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        router.push(`/engine/competitions/${data.id}`);
+      } else {
+        alert(data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error launching competition');
+    }
+  };
+
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: 'var(--space-8) var(--space-4)', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-6)' }}>
@@ -96,7 +118,12 @@ export default function CompetitionModelsPage() {
                   <Settings size={14} /> Builder
                 </Link>
                 {model.isPublished && (
-                  <button className="btn btn-small btn-primary" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-2)' }} title="Launch a competition using this model">
+                  <button 
+                    onClick={() => handleLaunch(model.id, model.name)}
+                    className="btn btn-small btn-primary" 
+                    style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-2)' }} 
+                    title="Launch a competition using this model"
+                  >
                     <Play size={14} /> Launch
                   </button>
                 )}
