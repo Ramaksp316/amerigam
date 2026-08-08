@@ -221,6 +221,10 @@ model Event {
   creatorId         String
   creator           User     @relation(fields: [creatorId], references: [id])
   registrations     EventRegistration[]
+  
+  competitionId     String?
+  competition       Competition? @relation(fields: [competitionId], references: [id])
+  
   createdAt         DateTime @default(now())
 }
 
@@ -412,6 +416,7 @@ model Competition {
   creator       User     @relation("createdCompetitions", fields: [creatorId], references: [id])
   stages        Stage[]
   entities      CompetitionEntity[]
+  events        Event[]
 }
 
 model Stage {

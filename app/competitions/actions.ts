@@ -17,15 +17,29 @@ export async function joinEvent(formData: FormData) {
     const event = await prisma.event.findUnique({ where: { id: eventId } });
     if (!event) return;
 
-    await prisma.eventRegistration.create({
+    const regStatus = event.requireApproval ? 'PENDING' : 'APPROVED';
+
+    const registration = await prisma.eventRegistration.create({
       data: {
         registrationId: generateRegistrationId(),
         userId,
         eventId,
-        status: event.requireApproval ? 'PENDING' : 'APPROVED',
+        status: regStatus,
         qrToken: crypto.randomUUID()
       }
     });
+
+    if (event.competitionId && regStatus === 'APPROVED') {
+      await prisma.competitionEntity.create({
+        data: {
+          entityId: `AMG-E-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
+          competitionId: event.competitionId,
+          type: 'USER',
+          userId: userId,
+          status: 'ACTIVE'
+        }
+      });
+    }
   } catch (e) {
     console.error('Failed to join event', e);
   }
@@ -41,6 +55,8 @@ export async function cancelRegistration(formData: FormData) {
   const eventId = formData.get('eventId') as string;
 
   try {
+    const event = await prisma.event.findUnique({ where: { id: eventId } });
+
     await prisma.eventRegistration.delete({
       where: {
         userId_eventId: {
@@ -49,6 +65,16 @@ export async function cancelRegistration(formData: FormData) {
         }
       }
     });
+
+    if (event?.competitionId) {
+      // Find and delete the competition entity if it exists
+      await prisma.competitionEntity.deleteMany({
+        where: {
+          competitionId: event.competitionId,
+          userId: userId
+        }
+      });
+    }
   } catch (e) {
     console.error('Failed to cancel event registration', e);
   }

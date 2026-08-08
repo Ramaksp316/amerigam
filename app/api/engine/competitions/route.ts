@@ -45,6 +45,22 @@ export async function POST(req: Request) {
             nodeId: node.id,
             state: node.type === 'START' || node.type === 'REGISTRATION' ? 'READY' : 'WAITING_FOR_INPUTS'
           }))
+        },
+        // Automatically create a linked Event for the public feed
+        events: {
+          create: [{
+            name: name,
+            description: description || 'No description provided.',
+            category: 'Sports',
+            eventLevel: 'Local',
+            locationType: 'ONLINE',
+            startDate: new Date(), // Default to today
+            endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default to +30 days
+            registrationStart: new Date(),
+            creatorId: userId,
+            enableDigitalPass: true,
+            enableCertificates: true
+          }]
         }
       }
     });
