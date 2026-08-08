@@ -35,12 +35,15 @@ export default async function EventsPage() {
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-lg)', marginBottom: 'var(--space-4)' }}>Discover, apply, and check-in to global events.</p>
         
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-4)' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
           <Link href="/my-tickets" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
             <QrCode size={18} /> My Event Tickets
           </Link>
           <Link href="/events/scanner" className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
             <CalendarCheck size={18} /> Staff Scanner Mode
+          </Link>
+          <Link href="/engine/competitions" className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', borderColor: 'var(--accent-purple)', color: 'var(--accent-purple)' }}>
+            <Users size={18} /> Manage Live Competitions
           </Link>
         </div>
       </div>

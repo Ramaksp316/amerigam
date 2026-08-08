@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowLeft, Play, Users, GitBranch, CheckCircle, Activity, Award } from 'lucide-react';
-import { advanceStage } from './actions';
+import { advanceStage } from '../actions';
 import { useState, useTransition } from 'react';
 
 export default function DashboardClient({ competition }: { competition: any }) {
