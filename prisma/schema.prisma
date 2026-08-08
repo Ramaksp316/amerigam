@@ -60,6 +60,11 @@ model User {
   evaluations        EventEvaluation[]
   achievements       Achievement[]
 
+  // Universal Competition Engine (Phase 3)
+  createdModels         CompetitionModel[] @relation("createdModels")
+  createdCompetitions   Competition[] @relation("createdCompetitions")
+  competitionEntities   CompetitionEntity[] @relation("userEntities")
+
   // Online Status fields
   status                String    @default("ONLINE") // "ONLINE", "OFFLINE", "DND"
   lastSeen              DateTime  @default(now())
@@ -261,6 +266,7 @@ model EventTeam {
 
   captain     User     @relation(fields: [captainId], references: [id])
   members     EventRegistration[]
+  competitionEntities CompetitionEntity[] @relation("teamEntities")
   createdAt   DateTime @default(now())
 }
 
@@ -342,4 +348,123 @@ model CommunityNote {
   updatedBy   User?     @relation("updatedNotes", fields: [updatedById], references: [id], onDelete: SetNull)
   updatedAt   DateTime @updatedAt
   createdAt   DateTime @default(now())
+}
+
+// =========================================
+// Universal Competition Engine (Phase 3)
+// =========================================
+
+model CompetitionModel {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  creatorId   String
+  version     Int      @default(1)
+  isPublished Boolean  @default(false)
+  nodes       ModelNode[]
+  connections ModelConnection[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator     User     @relation("createdModels", fields: [creatorId], references: [id])
+  competitions Competition[]
+}
+
+model ModelNode {
+  id          String   @id @default(uuid())
+  modelId     String
+  type        String   // "START", "REGISTRATION", "GROUP", "MATCH", "EVALUATION", "RESULT", "END"
+  name        String
+  config      String   // JSON string defining rules, scoring logic, limits
+  positionX   Float    @default(0) // For UI Builder
+  positionY   Float    @default(0) // For UI Builder
+
+  model       CompetitionModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  sourceConnections ModelConnection[] @relation("sourceNode")
+  targetConnections ModelConnection[] @relation("targetNode")
+  stages      Stage[]
+}
+
+model ModelConnection {
+  id          String   @id @default(uuid())
+  modelId     String
+  sourceId    String
+  targetId    String
+  condition   String?  // e.g. "WINNER", "TOP_2", "LOSER", "DEFAULT"
+
+  model       CompetitionModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  source      ModelNode @relation("sourceNode", fields: [sourceId], references: [id], onDelete: Cascade)
+  target      ModelNode @relation("targetNode", fields: [targetId], references: [id], onDelete: Cascade)
+}
+
+model Competition {
+  id            String   @id @default(uuid())
+  competitionId String   @unique // AMG-C-XXXX
+  name          String
+  description   String?
+  modelId       String
+  creatorId     String
+  state         String   @default("DRAFT") // "DRAFT", "REGISTRATION_OPEN", "ACTIVE", "PAUSED", "COMPLETED"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  model         CompetitionModel @relation(fields: [modelId], references: [id])
+  creator       User     @relation("createdCompetitions", fields: [creatorId], references: [id])
+  stages        Stage[]
+  entities      CompetitionEntity[]
+}
+
+model Stage {
+  id            String   @id @default(uuid())
+  competitionId String
+  nodeId        String
+  state         String   @default("WAITING_FOR_INPUTS") // "WAITING_FOR_INPUTS", "READY", "IN_PROGRESS", "EVALUATING", "COMPLETED"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  node          ModelNode   @relation(fields: [nodeId], references: [id])
+  matchups      Matchup[]
+}
+
+model CompetitionEntity {
+  id            String   @id @default(uuid())
+  entityId      String   @unique // AMG-E-XXXX
+  competitionId String
+  type          String   // "USER", "TEAM"
+  userId        String?
+  teamId        String?
+  status        String   @default("ACTIVE") // "ACTIVE", "ELIMINATED", "QUALIFIED", "WINNER"
+  joinedAt      DateTime @default(now())
+
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  user          User?       @relation("userEntities", fields: [userId], references: [id])
+  team          EventTeam?  @relation("teamEntities", fields: [teamId], references: [id])
+  matchupParticipants MatchupParticipant[]
+}
+
+model Matchup {
+  id            String   @id @default(uuid())
+  matchupId     String   @unique // AMG-M-XXXX
+  stageId       String
+  state         String   @default("SCHEDULED") // "SCHEDULED", "ONGOING", "FINISHED"
+  scheduledFor  DateTime?
+  resultData    String?  // JSON string storing scores and outcome
+  createdAt     DateTime @default(now())
+
+  stage         Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  participants  MatchupParticipant[]
+}
+
+model MatchupParticipant {
+  id            String   @id @default(uuid())
+  matchupId     String
+  entityId      String
+  score         Float?
+  result        String?  // "WINNER", "LOSER", "DRAW"
+  
+  matchup       Matchup  @relation(fields: [matchupId], references: [id], onDelete: Cascade)
+  entity        CompetitionEntity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  @@unique([matchupId, entityId])
 }
