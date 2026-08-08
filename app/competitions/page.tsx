@@ -1,10 +1,11 @@
 import { prisma } from '../../lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { joinCompetition, cancelRegistration } from './actions';
-import { Trophy, MapPin, Globe, Star, Clock, Users } from 'lucide-react';
+import { joinEvent, cancelRegistration } from './actions';
+import { Trophy, MapPin, Globe, Star, Clock, Users, CalendarCheck, QrCode } from 'lucide-react';
+import Link from 'next/link';
 
-export default async function CompetitionsPage() {
+export default async function EventsPage() {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
 
@@ -12,48 +13,55 @@ export default async function CompetitionsPage() {
     redirect('/login');
   }
 
-  const count = await prisma.competition.count();
+  const count = await prisma.event.count();
   if (count === 0) {
-    await prisma.competition.createMany({
+    await prisma.event.createMany({
       data: [
         {
-          title: 'National AI Hackathon 2026',
+          name: 'National AI Hackathon 2026',
           description: 'Build an AI solution that solves a real-world problem in your community. Show off your skills on a national stage.',
-          category: 'Tech & AI',
-          level: 'National',
-          reward: 'National AI Champion Badge + 1000 Pts',
+          category: 'Hackathon',
+          locationType: 'HYBRID',
+          venue: 'Ahmedabad IT Hub',
           startDate: new Date('2026-08-01'),
           endDate: new Date('2026-08-15'),
+          requireCheckIn: true,
+          requireApproval: false,
+          creatorId: userId
         },
         {
-          title: 'Gujarat State Photography Contest',
+          name: 'Gujarat State Photography Contest',
           description: 'Capture the essence of Gujarat. Open to all amateur and professional photographers in the state.',
           category: 'Visual Arts',
-          level: 'State',
-          reward: 'State Top Photographer Badge + 500 Pts',
+          locationType: 'ONLINE',
           startDate: new Date('2026-07-20'),
           endDate: new Date('2026-08-01'),
+          requireCheckIn: false,
+          requireApproval: true,
+          creatorId: userId
         },
         {
-          title: 'Global Startup Pitch',
+          name: 'Global Startup Pitch',
           description: 'Pitch your business idea to international investors. Compete with founders from over 50 countries.',
-          category: 'Business & Startups',
-          level: 'International',
-          reward: 'Global Founder Badge + 5000 Pts',
+          category: 'Business',
+          locationType: 'ONLINE',
           startDate: new Date('2026-09-01'),
           endDate: new Date('2026-09-30'),
+          requireCheckIn: false,
+          requireApproval: true,
+          creatorId: userId
         }
       ]
     });
   }
 
-  const competitions = await prisma.competition.findMany({
+  const events = await prisma.event.findMany({
     include: {
-      participants: {
+      registrations: {
         where: { userId }
       },
       _count: {
-        select: { participants: true }
+        select: { registrations: true }
       }
     },
     orderBy: { startDate: 'asc' }
@@ -63,34 +71,39 @@ export default async function CompetitionsPage() {
     <div style={{ maxWidth: '800px', margin: '0 auto', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
       <div style={{ textAlign: 'center', marginBottom: 'var(--space-10)' }}>
         <h1 className="heading-jakaas" style={{ fontSize: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-3)', margin: '0 0 var(--space-2) 0' }}>
-          <Trophy size={40} color="var(--accent-amber)" style={{ filter: 'drop-shadow(0 0 10px rgba(245, 158, 11, 0.5))' }} /> COMPETITIONS
+          <Trophy size={40} color="var(--accent-amber)" style={{ filter: 'drop-shadow(0 0 10px rgba(245, 158, 11, 0.5))' }} /> EVENTS & COMPETITIONS
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-lg)' }}>Compete at the State, National, or International level. Build your portfolio.</p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-lg)', marginBottom: 'var(--space-4)' }}>Discover, apply, and check-in to global events.</p>
+        
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-4)' }}>
+          <Link href="/my-tickets" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <QrCode size={18} /> My Event Tickets
+          </Link>
+          <Link href="/events/scanner" className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <CalendarCheck size={18} /> Staff Scanner Mode
+          </Link>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gap: 'var(--space-6)' }}>
-        {competitions.map(comp => {
-          const isParticipating = comp.participants.length > 0;
-          const isOngoing = new Date() >= new Date(comp.startDate) && new Date() <= new Date(comp.endDate);
-          const isUpcoming = new Date() < new Date(comp.startDate);
+        {events.map(event => {
+          const registration = event.registrations[0];
+          const isParticipating = !!registration;
+          const isOngoing = new Date() >= new Date(event.startDate) && new Date() <= new Date(event.endDate);
+          const isUpcoming = new Date() < new Date(event.startDate);
 
           return (
-            <div key={comp.id} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', margin: 0, position: 'relative', overflow: 'hidden', borderLeft: isOngoing ? '4px solid var(--success)' : isUpcoming ? '4px solid var(--accent-purple)' : '4px solid var(--border-color)' }}>
+            <div key={event.id} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', margin: 0, position: 'relative', overflow: 'hidden', borderLeft: isOngoing ? '4px solid var(--success)' : isUpcoming ? '4px solid var(--accent-purple)' : '4px solid var(--border-color)' }}>
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
                 <div>
-                  <h3 style={{ margin: '0 0 var(--space-2) 0', fontSize: '1.5rem', fontWeight: 800 }}>{comp.title}</h3>
+                  <h3 style={{ margin: '0 0 var(--space-2) 0', fontSize: '1.5rem', fontWeight: 800 }}>{event.name}</h3>
                   <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '0.75rem', background: 'var(--surface-2)', color: 'var(--text-primary)', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-full)', fontWeight: 700, border: '1px solid var(--border-color)' }}>
-                      {comp.category}
+                      {event.category}
                     </span>
-                    <span style={{ fontSize: '0.75rem', background: 
-                      comp.level === 'State' ? 'rgba(59, 130, 246, 0.15)' : 
-                      comp.level === 'National' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)', 
-                      color: comp.level === 'State' ? '#60a5fa' : comp.level === 'National' ? '#34d399' : '#fbbf24', 
-                      padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-full)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid currentColor' }}>
-                      {comp.level === 'State' ? <MapPin size={12}/> : comp.level === 'National' ? <Star size={12}/> : <Globe size={12}/>}
-                      {comp.level}
+                    <span style={{ fontSize: '0.75rem', background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-full)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid currentColor' }}>
+                      <MapPin size={12}/> {event.locationType} {event.venue ? `· ${event.venue}` : ''}
                     </span>
                   </div>
                 </div>
@@ -106,32 +119,30 @@ export default async function CompetitionsPage() {
                 </div>
               </div>
               
-              <p style={{ fontSize: 'var(--text-md)', color: 'var(--text-primary)', lineHeight: 1.6 }}>{comp.description}</p>
+              <p style={{ fontSize: 'var(--text-md)', color: 'var(--text-primary)', lineHeight: 1.6 }}>{event.description}</p>
               
-              <div style={{ background: 'var(--gradient-primary)', padding: '2px', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ background: 'var(--surface-1)', padding: 'var(--space-3)', borderRadius: 'calc(var(--radius-md) - 2px)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                  <Trophy size={16} color="var(--accent-amber)" />
-                  <strong>Reward:</strong> <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{comp.reward}</span>
-                </div>
-              </div>
-
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'var(--space-2)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
                 <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', fontWeight: 500 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}><Users size={14} /> {comp._count.participants} Participants</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}><Clock size={14} /> Starts: {new Date(comp.startDate).toLocaleDateString()}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}><Users size={14} /> {event._count.registrations} Registrations</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}><Clock size={14} /> Starts: {new Date(event.startDate).toLocaleDateString()}</span>
                 </span>
                 
                 {isParticipating ? (
-                  <form action={cancelRegistration}>
-                    <input type="hidden" name="competitionId" value={comp.id} />
-                    <button type="submit" className="btn btn-small btn-outline" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}>
-                      Cancel Registration
-                    </button>
-                  </form>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: registration.status === 'APPROVED' ? 'var(--success)' : 'var(--accent-amber)' }}>
+                      Status: {registration.status}
+                    </span>
+                    <form action={cancelRegistration}>
+                      <input type="hidden" name="eventId" value={event.id} />
+                      <button type="submit" className="btn btn-small btn-outline" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}>
+                        Cancel Registration
+                      </button>
+                    </form>
+                  </div>
                 ) : (
-                  <form action={joinCompetition}>
-                    <input type="hidden" name="competitionId" value={comp.id} />
-                    <button type="submit" className="btn btn-small" style={{ padding: 'var(--space-2) var(--space-5)' }}>Participate Now</button>
+                  <form action={joinEvent}>
+                    <input type="hidden" name="eventId" value={event.id} />
+                    <button type="submit" className="btn btn-small" style={{ padding: 'var(--space-2) var(--space-5)' }}>Apply / Register</button>
                   </form>
                 )}
               </div>
