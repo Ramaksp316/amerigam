@@ -36,8 +36,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       data: {
         certificateId,
         registrationId: registration.id,
-        certificateType: 'WINNER',
-        issuedBy: userId
+        type: 'WINNER'
+      }
+    });
+
+    // 3. Add to Achievements
+    await prisma.achievement.create({
+      data: {
+        userId: registration.userId,
+        title: `Winner of ${event.name}`,
+        description: `Awarded for winning the competition.`,
+        badgeIcon: '🏆'
       }
     });
 

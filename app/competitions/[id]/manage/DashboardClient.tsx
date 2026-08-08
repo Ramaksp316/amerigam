@@ -28,6 +28,8 @@ export default function DashboardClient({ registrations, eventId, requireApprova
     }
   }
 
+  const hasWinner = registrations.some(r => r.status === 'WINNER');
+
   if (registrations.length === 0) {
     return <p style={{ color: 'var(--text-muted)' }}>No applications yet.</p>;
   }
@@ -90,16 +92,29 @@ export default function DashboardClient({ registrations, eventId, requireApprova
                   <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
                     <button 
                       className="btn btn-small btn-outline" 
-                      style={{ padding: 'var(--space-1) var(--space-3)', color: 'var(--accent-purple)', borderColor: 'var(--accent-purple)' }}
+                      style={{ padding: 'var(--space-1) var(--space-3)', color: 'var(--accent-purple)', borderColor: 'var(--accent-purple)', opacity: hasWinner ? 0.5 : 1 }}
                       onClick={() => handleAction(reg.id, 'winner')}
-                      disabled={loadingId === reg.id}
+                      disabled={loadingId === reg.id || hasWinner}
+                      title={hasWinner ? "A winner is already selected" : ""}
                     >
                       {loadingId === reg.id ? '...' : 'Mark as Winner'}
                     </button>
                   </div>
                 )}
-                {(reg.status === 'REJECTED' || reg.status === 'WINNER') && (
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{reg.status === 'WINNER' ? 'Certificate Issued' : 'Resolved'}</span>
+                {reg.status === 'WINNER' && (
+                  <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
+                    <button 
+                      className="btn btn-small btn-outline" 
+                      style={{ padding: 'var(--space-1) var(--space-3)' }}
+                      onClick={() => handleAction(reg.id, 'approve')}
+                      disabled={loadingId === reg.id}
+                    >
+                      {loadingId === reg.id ? '...' : 'Revoke Winner'}
+                    </button>
+                  </div>
+                )}
+                {reg.status === 'REJECTED' && (
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Resolved</span>
                 )}
               </td>
             </tr>

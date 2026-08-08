@@ -22,6 +22,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     const { registrationId } = await req.json();
 
+    // Clean up any certificates if they were previously marked as winner
+    await prisma.eventCertificate.deleteMany({
+      where: { registrationId }
+    });
+
+
+    // Let's just delete by title
+    const reg = await prisma.eventRegistration.findUnique({ where: { id: registrationId }});
+    if (reg) {
+      await prisma.achievement.deleteMany({
+        where: { userId: reg.userId, title: `Winner of ${event.name}` }
+      });
+    }
+
     const registration = await prisma.eventRegistration.update({
       where: { id: registrationId },
       data: { status: 'APPROVED' }
