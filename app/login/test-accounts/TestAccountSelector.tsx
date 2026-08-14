@@ -133,10 +133,11 @@ export default function TestAccountSelector({ accounts }: { accounts: TestAccoun
 
       <style jsx>{`
         .test-selector-container {
-          min-height: 100vh;
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          z-index: 100;
           background-color: #000000;
           color: #ffffff;
-          position: relative;
           overflow: hidden;
           display: flex;
           justify-content: center;

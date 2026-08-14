@@ -20,7 +20,7 @@ export default function Sidebar({ unreadCount = 0, currentUser = null }: { unrea
     }
   }, [pathname, unreadCount]);
 
-  if (pathname === '/login') {
+  if (pathname?.startsWith('/login')) {
     return null;
   }
 
