@@ -20,13 +20,12 @@ export default async function LoginPage() {
       <div className="login-content">
         {/* Logo Section */}
         <div className="login-logo-section">
-          {/* Using amerigam-logo-2.png which is likely the transparent white logo as per instructions */}
           <div className="logo-symbol">
             <Image 
-              src="/amerigam-logo-2.png" 
+              src="/amerigam-logo-transparent.png" 
               alt="Amerigam Logo" 
-              width={70} 
-              height={70} 
+              width={100} 
+              height={45} 
               style={{ objectFit: 'contain' }}
               priority
             />
