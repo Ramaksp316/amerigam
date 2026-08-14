@@ -8,21 +8,29 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum AccountType {
+  PERSONAL
+  BUSINESS
+  CREATOR
+  INFLUENCER
+  ORGANIZATION
+}
+
 model User {
-  id        String    @id @default(uuid())
-  amerigamId String?  @unique
-  email     String    @unique
-  password  String
-  name             String?
+  id              String      @id @default(uuid())
+  accountType     AccountType @default(PERSONAL)
+  amerigamId      String?     @unique
+  email           String      @unique
+  password        String
+  name            String?
+  username        String?     @unique
+  bio             String?
 
   // Onboarding Fields
   masterPath    String?
   corePath      String?
-  hobbies       String?  // Store as stringified JSON array
   mindset       String?
   vision        String?
-  username      String?  @unique
-  bio           String?
   location      String?
   portfolioUrl  String?
   avatarData    String?  // Base64 string for cropped image
@@ -71,6 +79,93 @@ model User {
   customStatus          String?   // 24-hour custom status (e.g. "Working on Amerigam")
   customStatusExpiresAt DateTime? // When this custom status expires
   updatedNotes          CommunityNote[] @relation("updatedNotes")
+
+  // Connected Account Extensions
+  personalProfile   PersonalProfile?
+  businessProfile   BusinessProfile?
+  creatorProfile    CreatorProfile?
+  influencerProfile InfluencerProfile?
+  orgProfile        OrganizationProfile?
+
+  // Bidirectional Entity Connections
+  outgoingConnections EntityConnection[] @relation("SourceConnections")
+  incomingConnections EntityConnection[] @relation("TargetConnections")
+}
+
+// =========================================
+// Connected Account Profiles
+// =========================================
+
+model PersonalProfile {
+  id           String @id @default(uuid())
+  userId       String @unique
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  mainIdentity String?  // e.g., "Aspiring Founder"
+  interests    String?  // JSON array
+  skills       String?  // JSON array
+  hobbies      String?  // JSON array
+}
+
+model BusinessProfile {
+  id           String @id @default(uuid())
+  userId       String @unique
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  industry     String?
+  stage        String?  // e.g., "Early Startup"
+  mainFocus    String?
+}
+
+model CreatorProfile {
+  id           String @id @default(uuid())
+  userId       String @unique
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  creatorType  String?  // e.g., "Tech Creator"
+  niche        String?
+  audienceLevel String?
+}
+
+model InfluencerProfile {
+  id           String @id @default(uuid())
+  userId       String @unique
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  influencerType String? // e.g., "Lifestyle Influencer"
+  mainNiche      String?
+  audienceSize   String?
+}
+
+model OrganizationProfile {
+  id           String @id @default(uuid())
+  userId       String @unique
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  orgType      String? // e.g., "Hackathons / coding"
+  mainAudience String?
+}
+
+model EntityConnection {
+  id               String   @id @default(uuid())
+  sourceId         String   // e.g., The Personal Account (Kunal Shah)
+  targetId         String   // e.g., The Business Account (NovaNest AI)
+  
+  source           User     @relation("SourceConnections", fields: [sourceId], references: [id], onDelete: Cascade)
+  target           User     @relation("TargetConnections", fields: [targetId], references: [id], onDelete: Cascade)
+  
+  role             String   // e.g., "Founder", "Video Editor"
+  relationshipType String   @default("TEAM_MEMBER") // FOUNDER, EMPLOYEE, CONTRIBUTOR
+  isFounder        Boolean  @default(false)
+  isCoFounder      Boolean  @default(false)
+  
+  status           String   @default("CURRENT") // CURRENT, PAST
+  startDate        DateTime?
+  endDate          DateTime?
+
+  createdAt        DateTime @default(now())
+
+  @@unique([sourceId, targetId, role])
 }
 
 model Post {
