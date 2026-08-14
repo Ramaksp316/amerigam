@@ -176,102 +176,161 @@ a {
 .app-layout {
   display: flex;
   min-height: 100vh;
+  justify-content: center;
 }
 
 .sidebar {
   width: 260px;
   border-right: 1px solid var(--border-color);
-  padding: var(--space-6) var(--space-4);
+  padding: var(--space-4);
   position: sticky;
   top: 0;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: var(--surface-1);
-  transition: background-color var(--duration-slow) var(--ease-smooth),
-              border-color var(--duration-slow) var(--ease-smooth);
+  background-color: var(--surface-0);
   z-index: 100;
 }
 
-.sidebar .logo {
-  font-family: var(--font-family);
-  font-weight: 900;
-  font-size: var(--text-2xl);
-  letter-spacing: -0.5px;
-  text-decoration: none;
-  margin-bottom: var(--space-8);
+/* Minimal styling for new sidebar */
+.sidebar .logo-container {
+  margin-bottom: var(--space-6);
   padding: 0 var(--space-3);
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  display: inline-block;
-  transition: transform var(--duration-normal) var(--ease-spring);
-}
-
-.sidebar .logo:hover {
-  transform: scale(1.03);
+  display: flex;
+  align-items: center;
 }
 
 .nav-links {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 2px;
   flex-grow: 1;
 }
 
 .nav-links a {
   display: flex;
   align-items: center;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   text-decoration: none;
-  font-size: var(--text-base);
-  font-weight: 500;
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
+  font-size: 19px;
+  font-weight: 400;
+  padding: 12px var(--space-3);
+  border-radius: var(--radius-full);
   gap: var(--space-4);
-  transition: all var(--duration-normal) var(--ease-smooth);
-  position: relative;
+  transition: background-color var(--duration-fast) var(--ease-smooth);
 }
 
 .nav-links a:hover {
   background-color: var(--surface-2);
-  color: var(--text-primary);
 }
 
 .nav-links a.active {
   font-weight: 700;
-  color: var(--text-primary);
-  background-color: var(--surface-2);
-}
-
-/* Vibrant glowing icon indicator on active */
-.nav-links a.active span.icon {
-  color: var(--accent-pink);
-  filter: drop-shadow(0 0 8px var(--accent-glow-strong));
 }
 
 .nav-links a span.icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  transition: transform var(--duration-fast) var(--ease-spring), color var(--duration-fast) var(--ease-smooth);
-}
-
-.nav-links a:hover span.icon {
-  transform: scale(1.15);
-  color: var(--accent-purple);
+  width: 26px;
+  height: 26px;
 }
 
 .main-content {
   flex: 1;
-  padding: var(--space-8);
-  max-width: 1400px;
-  margin: 0 auto;
-  animation: fadeIn var(--duration-slow) var(--ease-smooth);
+  max-width: 1050px; /* ~680px center + ~350px right + gap */
   width: 100%;
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* ─── DYNAMIC PAGE LAYOUTS ─── */
+.layout-3-col {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.layout-center {
+  flex: 1;
+  max-width: 650px;
+  border-right: 1px solid var(--border-color);
+  min-height: 100vh;
+}
+
+.layout-right {
+  width: 350px;
+  padding: var(--space-4) var(--space-6);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .layout-right {
+    display: block;
+  }
+}
+
+/* ─── DYNAMIC COMPONENTS ─── */
+.hover-underline:hover {
+  text-decoration: underline;
+}
+
+.right-card {
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+}
+.right-card-title {
+  font-size: 18px;
+  font-weight: 800;
+  padding: 16px;
+  margin: 0;
+}
+.right-card-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 12px;
+  text-decoration: none;
+  color: white;
+  transition: background 0.2s;
+}
+.right-card-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.right-card-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.right-card-info strong {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.right-card-info span {
+  font-size: 13px;
+  color: #A1A1AA;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 70px;
+    padding: var(--space-4) 8px;
+  }
+  .sidebar .text {
+    display: none;
+  }
 }
 
 /* ─── TYPOGRAPHY & HEADINGS ─── */
