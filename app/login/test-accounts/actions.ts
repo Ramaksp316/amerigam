@@ -16,20 +16,12 @@ export async function directTestLogin(userId: string) {
     throw new Error('User not found');
   }
 
-  // 2. Perform actual Supabase login using the known seeded password
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: user.email,
-    password: 'password123'
-  });
-
-  if (error) {
-    throw new Error('Failed to login via Supabase: ' + error.message);
-  }
-
-  // 3. Set the application session cookie
+  // 2. We bypass Supabase Auth entirely for seeded test accounts 
+  // because these accounts were created directly in the database 
+  // and do not exist in Supabase's auth.users table.
+  // We simply establish the session by setting the cookie manually.
   const cookieStore = await cookies();
-  cookieStore.set('userId', data.user.user.id, {
+  cookieStore.set('userId', user.id, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60 * 24 * 7,

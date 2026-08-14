@@ -17,6 +17,7 @@ export default function TestAccountSelector({ accounts }: { accounts: TestAccoun
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('All');
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const tabs = ['All', 'Personal', 'Business', 'Creator', 'Influencer', 'Organization'];
 
@@ -43,10 +44,11 @@ export default function TestAccountSelector({ accounts }: { accounts: TestAccoun
   const handleLogin = async (id: string) => {
     setLoadingId(id);
     try {
+      setErrorMsg(null);
       await directTestLogin(id);
-    } catch (err) {
-      console.error(err);
-      alert('Failed to login. See console.');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setErrorMsg(error.message || 'Failed to login. Please try again.');
       setLoadingId(null);
     }
   };
@@ -67,6 +69,20 @@ export default function TestAccountSelector({ accounts }: { accounts: TestAccoun
           />
           <h1 className="login-headline" style={{ fontSize: '28px', marginBottom: '8px' }}>Choose an account</h1>
           <p className="login-subtext" style={{ marginBottom: '24px' }}>Select a testing account to continue as.</p>
+          {errorMsg && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              color: '#ef4444',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '24px',
+              fontSize: '14px',
+              textAlign: 'center'
+            }}>
+              {errorMsg}
+            </div>
+          )}
         </div>
 
         <div className="test-selector-controls">
