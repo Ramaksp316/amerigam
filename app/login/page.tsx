@@ -61,7 +61,7 @@ export default async function LoginPage() {
 
           {/* Log In - Secondary Outlined Button */}
           <form action={login}>
-            <button type="button" className="login-btn-secondary" onClick={() => alert('Log In clicked - redirecting to form...')}>
+            <button type="button" className="login-btn-secondary">
               Log in
             </button>
           </form>
