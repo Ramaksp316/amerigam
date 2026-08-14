@@ -1,12 +1,15 @@
 import { prisma } from '../../../lib/prisma';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import ShareButton from '../../feed/ShareButton';
 import Link from 'next/link';
-import FollowButton from '../../components/FollowButton';
 import { Metadata } from 'next';
-import { MessageCircle, Settings, Play, MapPin, Link as LinkIcon, Calendar } from 'lucide-react';
+import { MessageCircle, Settings, Play, MapPin, Calendar, CheckCircle2, Bookmark, MoreHorizontal, Repeat2, Send } from 'lucide-react';
 import ProfilePicture from '../../components/ProfilePicture';
+import ProfileRightSidebar from '../../components/ProfileRightSidebar';
+import ShareButton from '../../feed/ShareButton';
+import LocalTime from '../../components/LocalTime';
+import LikeButton from '../../components/LikeButton';
+import CustomVideoPlayer from '../../components/CustomVideoPlayer';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,191 +41,328 @@ export default async function UserProfilePage({ params, searchParams }: { params
       following: true,
       posts: { include: { likes: true, comments: { include: { author: true } } }, orderBy: { createdAt: 'desc' } },
       eventRegistrations: { include: { event: true } },
-      achievements: true
+      achievements: true,
+      personalProfile: true,
+      outgoingConnections: { include: { target: true } }
     }
   });
 
   if (!user) notFound();
 
-  const isFollowing = currentUserId ? user.followers.some(f => f.followerId === currentUserId) : false;
-  const authorInitial = (user.name || user.username || '?').charAt(0).toUpperCase();
-
   const isOwner = currentUserId === targetUserId;
+  const isVerified = user.accountType !== 'PERSONAL' || user.followers.length > 100; // Mock verification
 
-  let activeStatus = null;
-  if (user.customStatus && user.customStatusExpiresAt && new Date(user.customStatusExpiresAt) > new Date()) {
-    activeStatus = user.customStatus;
+  // Identity Line calculation
+  let identityLine = '';
+  if (user.outgoingConnections && user.outgoingConnections.length > 0) {
+    const conn = user.outgoingConnections[0];
+    identityLine = `${conn.role.replace('_', ' ')} at ${conn.target.name || conn.target.username}`;
+  } else if (user.personalProfile?.mainIdentity) {
+    identityLine = user.personalProfile.mainIdentity;
+  } else {
+    identityLine = user.accountType.charAt(0) + user.accountType.slice(1).toLowerCase();
   }
 
+  // Parse JSON traits
+  let skills: string[] = [];
+  let interests: string[] = [];
+  if (user.personalProfile?.skills) {
+    try { skills = JSON.parse(user.personalProfile.skills); } catch (e) {}
+  }
+  if (user.personalProfile?.interests) {
+    try { interests = JSON.parse(user.personalProfile.interests); } catch (e) {}
+  }
+  const allTraits = [...skills, ...interests].slice(0, 5); // display up to 5
+
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
-      
-      {/* Profile Header (Glass Card) */}
-      <div className="glass-card" style={{ display: 'flex', gap: 'var(--space-6)', alignItems: 'center', flexWrap: 'wrap', position: 'relative', overflow: 'hidden' }}>
-        {/* Background Accent Glow */}
-        <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '200px', height: '200px', background: 'var(--accent-glow-strong)', filter: 'blur(80px)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' }}></div>
+    <div className="layout-3-col">
+      <div className="layout-center" style={{ padding: '0', maxWidth: '800px' }}>
         
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 'var(--space-6)', alignItems: 'center', width: '100%', flexWrap: 'wrap' }}>
-          {/* Avatar with Gradient Ring */}
-          <div style={{ width: '124px', height: '124px', borderRadius: 'var(--radius-full)', background: 'var(--gradient-primary)', padding: '3px', flexShrink: 0, boxShadow: 'var(--shadow-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ProfilePicture user={user} size={118} />
+        {/* Sticky Header Back Navigation could go here, for now just empty top spacing or banner */}
+        <div style={{
+          height: '140px',
+          background: 'linear-gradient(to bottom, rgba(29, 155, 240, 0.1), rgba(0,0,0,0))',
+          width: '100%',
+        }}></div>
+
+        <div style={{ padding: '0 20px', marginTop: '-60px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <div style={{ 
+              width: '120px', 
+              height: '120px', 
+              borderRadius: '50%', 
+              border: '4px solid var(--background)', 
+              background: 'var(--surface-3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden'
+            }}>
+              <ProfilePicture user={user} size={112} />
+            </div>
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button style={{
+                background: 'transparent',
+                border: '1px solid var(--border-color)',
+                color: 'white',
+                borderRadius: '24px',
+                padding: '8px 16px',
+                fontWeight: 600,
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}>Edit Profile</button>
+              
+              <button style={{
+                background: 'rgba(29, 155, 240, 0.1)',
+                border: '1px solid rgba(29, 155, 240, 0.3)',
+                color: '#1D9BF0',
+                borderRadius: '24px',
+                padding: '8px 16px',
+                fontWeight: 600,
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}>Share Profile</button>
+            </div>
           </div>
 
-          {/* User Info */}
-          <div style={{ flex: 1, minWidth: '250px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
-              <div>
-                <h1 className="heading-jakaas" style={{ margin: 0, fontSize: 'var(--text-3xl)' }}>{user.name}</h1>
-                <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-md)', fontWeight: 500 }}>@{user.username || user.name?.toLowerCase().replace(/\s+/g, '')}</p>
-                {(user.masterPath || user.corePath) && (
-                  <div style={{ display: 'inline-block', marginTop: 'var(--space-2)', padding: 'var(--space-1) var(--space-3)', background: 'var(--surface-2)', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--accent-pink)', border: '1px solid var(--border-color)' }}>
-                    {user.masterPath} {user.corePath ? `• ${user.corePath}` : ''}
-                  </div>
-                )}
-                {activeStatus && (
-                  <div style={{ marginTop: 'var(--space-3)', display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)', background: 'rgba(59, 130, 246, 0.15)', padding: '8px 12px', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-                    <span style={{ fontSize: '1.2rem' }}>💭</span>
-                    <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: '#60a5fa' }}>{activeStatus}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
-                {currentUserId && currentUserId !== targetUserId && (
-                  <>
-                    <FollowButton targetUserId={targetUserId} initialIsFollowing={isFollowing} />
-                    <form action={`/messages/${targetUserId}`}>
-                      <button type="submit" className="btn btn-small btn-outline">
-                        <MessageCircle size={16} /> <span className="text">Message</span>
-                      </button>
-                    </form>
-                  </>
-                )}
-                {currentUserId === targetUserId && (
-                  <Link href="/settings" className="btn btn-small btn-outline">
-                    <Settings size={16} /> <span className="text">Edit</span>
-                  </Link>
-                )}
-                <ShareButton url={`/user/${user.id}`} title={`${user.username || user.name} on Amerigam`} />
-              </div>
+          <div style={{ marginTop: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800 }}>{user.name}</h1>
+              {isVerified && <CheckCircle2 size={18} color="#1D9BF0" fill="#1D9BF0" />}
             </div>
+            
+            <p style={{ color: '#71717A', fontSize: '15px', margin: '4px 0 0 0' }}>
+              @{user.username}
+            </p>
+            
+            {identityLine && (
+              <p style={{ color: '#E4E4E7', fontSize: '15px', margin: '8px 0 0 0', fontWeight: 500 }}>
+                {identityLine}
+              </p>
+            )}
 
-            <p style={{ marginTop: 'var(--space-4)', fontSize: 'var(--text-sm)', color: 'var(--text-primary)', whiteSpace: 'pre-line', lineHeight: 1.6 }}>{user.bio}</p>
+            {user.bio && (
+              <p style={{ color: 'white', fontSize: '15px', margin: '12px 0 0 0', lineHeight: 1.4 }}>
+                {user.bio}
+              </p>
+            )}
 
-            <div style={{ display: 'flex', gap: 'var(--space-4)', marginTop: 'var(--space-4)', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '16px', marginTop: '12px', flexWrap: 'wrap', color: '#71717A', fontSize: '14px' }}>
               {user.location && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>
-                  <MapPin size={14} /> {user.location}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <MapPin size={16} /> {user.location}
                 </div>
               )}
-              {user.portfolioUrl && (
-                <a href={user.portfolioUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', color: 'var(--accent-cyan)', fontSize: 'var(--text-xs)', textDecoration: 'none', fontWeight: 600 }}>
-                  <LinkIcon size={14} /> Portfolio
-                </a>
-              )}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>
-                <Calendar size={14} /> Joined {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Calendar size={16} /> Joined {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '20px', marginTop: '16px' }}>
+              <div style={{ display: 'flex', gap: '4px', fontSize: '15px' }}>
+                <strong style={{ color: 'white' }}>{user.followers.length}</strong> <span style={{ color: '#71717A' }}>Followers</span>
+              </div>
+              <div style={{ display: 'flex', gap: '4px', fontSize: '15px' }}>
+                <strong style={{ color: 'white' }}>{user.following.length}</strong> <span style={{ color: '#71717A' }}>Following</span>
+              </div>
+              <div style={{ display: 'flex', gap: '4px', fontSize: '15px' }}>
+                <strong style={{ color: 'white' }}>—</strong> <span style={{ color: '#71717A' }}>AP Points</span>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+          
+          {/* Geographic Ranking */}
+          <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between', padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: '12px', color: '#71717A', marginBottom: '4px' }}>City Rank</div>
+              <strong style={{ fontSize: '16px', color: 'white' }}>—</strong>
+              <div style={{ fontSize: '12px', color: '#71717A', marginTop: '4px' }}>Not ranked yet</div>
+            </div>
+            <div style={{ width: '1px', background: 'var(--border-color)' }}></div>
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: '12px', color: '#71717A', marginBottom: '4px' }}>State Rank</div>
+              <strong style={{ fontSize: '16px', color: 'white' }}>—</strong>
+              <div style={{ fontSize: '12px', color: '#71717A', marginTop: '4px' }}>Not ranked yet</div>
+            </div>
+            <div style={{ width: '1px', background: 'var(--border-color)' }}></div>
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: '12px', color: '#71717A', marginBottom: '4px' }}>National Rank</div>
+              <strong style={{ fontSize: '16px', color: 'white' }}>—</strong>
+              <div style={{ fontSize: '12px', color: '#71717A', marginTop: '4px' }}>Not ranked yet</div>
+            </div>
+          </div>
 
-      {/* Stats Row */}
-      <div className="card" style={{ display: 'flex', justifyContent: 'space-around', padding: 'var(--space-4)', margin: 0 }}>
-        <div style={{ textAlign: 'center' }}>
-          <strong style={{ display: 'block', fontSize: 'var(--text-xl)', color: 'var(--text-primary)' }}>{user.posts.length}</strong>
-          <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '1px' }}>Posts</span>
+          {/* Skills & Interests */}
+          {allTraits.length > 0 && (
+            <div style={{ marginTop: '20px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 12px 0' }}>Skills & Interests</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {allTraits.map((trait, idx) => (
+                  <span key={idx} style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid var(--border-color)',
+                    padding: '6px 12px',
+                    borderRadius: '16px',
+                    fontSize: '13px',
+                    color: '#E4E4E7'
+                  }}>{trait}</span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-        <div style={{ width: '1px', background: 'var(--border-color)' }}></div>
-        <div style={{ textAlign: 'center' }}>
-          <strong style={{ display: 'block', fontSize: 'var(--text-xl)', color: 'var(--text-primary)' }}>{user.followers.length}</strong>
-          <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '1px' }}>Followers</span>
-        </div>
-        <div style={{ width: '1px', background: 'var(--border-color)' }}></div>
-        <div style={{ textAlign: 'center' }}>
-          <strong style={{ display: 'block', fontSize: 'var(--text-xl)', color: 'var(--text-primary)' }}>{user.following.length}</strong>
-          <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '1px' }}>Following</span>
-        </div>
-      </div>
 
-      {/* Modern Tab Bar */}
-      <div style={{ display: 'flex', gap: 'var(--space-2)', background: 'var(--surface-2)', padding: 'var(--space-1)', borderRadius: 'var(--radius-lg)' }}>
-        {['posts', 'competitions', 'achievements'].map((t) => (
-          <Link key={t} href={`/user/${targetUserId}?tab=${t}`} style={{
-            flex: 1, textAlign: 'center', padding: 'var(--space-2) var(--space-4)', textDecoration: 'none', borderRadius: 'var(--radius-md)',
-            color: activeTab === t ? 'var(--text-primary)' : 'var(--text-secondary)',
-            background: activeTab === t ? 'var(--surface-3)' : 'transparent',
-            boxShadow: activeTab === t ? 'var(--shadow-sm)' : 'none',
-            fontWeight: activeTab === t ? 700 : 500, fontSize: 'var(--text-sm)', textTransform: 'capitalize', transition: 'all var(--duration-fast) var(--ease-smooth)'
-          }}>
-            {t}
-          </Link>
-        ))}
-      </div>
+        {/* Tabs */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-around',
+          borderBottom: '1px solid var(--border-color)',
+          marginTop: '20px'
+        }}>
+          {['posts', 'about', 'achievements', 'competitions'].map(t => (
+            <Link href={`/user/${targetUserId}?tab=${t}`} key={t} style={{
+              flex: 1, textAlign: 'center', padding: '16px 0',
+              color: activeTab === t ? 'white' : '#71717A',
+              fontWeight: activeTab === t ? 700 : 500,
+              textDecoration: 'none',
+              position: 'relative',
+              textTransform: 'capitalize'
+            }}>
+              {t}
+              {activeTab === t && (
+                <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '40px', height: '4px', background: '#1D9BF0', borderRadius: '4px 4px 0 0' }} />
+              )}
+            </Link>
+          ))}
+        </div>
 
-      {/* Tab Content */}
-      <div style={{ minHeight: '300px' }}>
-        {activeTab === 'posts' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 'var(--space-3)' }}>
-            {user.posts.length === 0 ? (
-              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 'var(--space-10)', color: 'var(--text-muted)' }}>No posts yet.</div>
-            ) : user.posts.map(post => (
-              <Link key={post.id} href={`/post/${post.id}`} className="hoverable-card" style={{ aspectRatio: '1/1', backgroundColor: 'var(--surface-2)', position: 'relative', overflow: 'hidden', display: 'block', borderRadius: 'var(--radius-md)', padding: 0 }}>
-                {post.mediaUrl ? (
-                  post.mediaType === 'image' ? 
-                    <img src={post.mediaUrl} alt="Post" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : 
-                    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                      <video src={post.mediaUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <Play size={24} color="white" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.8))' }} />
+        {/* Tab Content */}
+        <div className="tab-content" style={{ minHeight: '400px' }}>
+          
+          {activeTab === 'posts' && (
+            <div className="feed-stream">
+              {user.posts.length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#71717A', fontSize: '15px' }}>
+                  <p>No posts yet.</p>
+                </div>
+              ) : (
+                user.posts.map((post) => {
+                  const hasLiked = post.likes.some(like => like.userId === currentUserId);
+                  return (
+                    <div key={post.id} className="feed-post" style={{
+                      padding: '16px',
+                      borderBottom: '1px solid var(--border-color)',
+                      display: 'flex',
+                      gap: '12px',
+                      transition: 'background 0.2s',
+                      cursor: 'pointer'
+                    }}
+                    onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                    onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <div style={{ flexShrink: 0 }}>
+                        <ProfilePicture user={user} size={40} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span style={{ color: 'white', fontWeight: 700, fontSize: '15px' }}>{user.name}</span>
+                              {isVerified && <CheckCircle2 size={14} color="#1D9BF0" fill="#1D9BF0" />}
+                              <span style={{ color: '#71717A', fontSize: '15px', marginLeft: '4px' }}>@{user.username}</span>
+                              <span style={{ color: '#71717A', fontSize: '15px' }}>·</span>
+                              <span style={{ color: '#71717A', fontSize: '15px' }}><LocalTime date={post.createdAt} format="time" /></span>
+                            </div>
+                            <div style={{ fontSize: '13px', color: '#A1A1AA', marginTop: '2px' }}>{identityLine}</div>
+                          </div>
+                          <button style={{ background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', padding: '4px' }}><MoreHorizontal size={18} /></button>
+                        </div>
+                        {post.content && (
+                          <div style={{ fontSize: '15px', color: 'white', marginTop: '8px', lineHeight: '1.4', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                            {post.content}
+                          </div>
+                        )}
+                        {post.mediaUrl && (
+                          <div style={{ marginTop: '12px', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border-color)', maxHeight: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.02)' }}>
+                            {post.mediaType === 'image' ? (
+                              <img src={post.mediaUrl} alt="Post media" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <CustomVideoPlayer src={post.mediaUrl} style={{ width: '100%' }} />
+                            )}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', color: '#71717A', maxWidth: '425px' }}>
+                          <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}><MessageCircle size={18} /> {post.comments.length > 0 ? post.comments.length : ''}</button>
+                          <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}><Repeat2 size={18} /> {Math.floor(Math.random() * 50)}</button>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: hasLiked ? '#F91880' : 'inherit' }}><LikeButton postId={post.id} initialHasLiked={hasLiked} initialLikesCount={post.likes.length} /></div>
+                          <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}><Send size={18} /></button>
+                          <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}><Bookmark size={18} /></button>
+                        </div>
+                      </div>
                     </div>
-                ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-4)', textAlign: 'center', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', background: 'var(--surface-1)' }}>
-                    {post.content.length > 60 ? post.content.substring(0, 60) + '...' : post.content}
-                  </div>
-                )}
-              </Link>
-            ))}
-          </div>
-        )}
+                  );
+                })
+              )}
+            </div>
+          )}
 
-        {activeTab === 'competitions' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {user.eventRegistrations.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 'var(--space-10)', color: 'var(--text-muted)' }}>No events joined.</div>
-            ) : user.eventRegistrations.map(reg => (
-              <div key={reg.id} className="card hoverable-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0 }}>
-                <div>
-                  <strong style={{ display: 'block', fontSize: 'var(--text-md)', color: 'var(--text-primary)' }}>{reg.event.name}</strong>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>{reg.event.locationType} • {reg.event.category}</span>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 800, color: reg.status === 'APPROVED' ? 'var(--success)' : 'var(--accent-amber)' }}>
-                    {reg.status}
-                  </span>
-                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>ID: {reg.registrationId}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+          {activeTab === 'about' && (
+            <div style={{ padding: '40px', textAlign: 'center', color: '#71717A', fontSize: '15px' }}>
+              <p>Detailed structured identity information will appear here.</p>
+            </div>
+          )}
 
-        {activeTab === 'achievements' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 'var(--space-3)' }}>
-            {user.achievements.length === 0 ? (
-              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 'var(--space-10)', color: 'var(--text-muted)' }}>No achievements yet.</div>
-            ) : user.achievements.map(ach => (
-              <div key={ach.id} className="glass-card hoverable-card" style={{ textAlign: 'center', padding: 'var(--space-4)', margin: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)' }}>
-                <div style={{ fontSize: '3rem', filter: 'drop-shadow(0 4px 12px rgba(255,255,255,0.1))' }}>{ach.badgeIcon || '🏆'}</div>
-                <strong style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-primary)', lineHeight: 1.2 }}>{ach.title}</strong>
-                {ach.description && <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>{ach.description}</p>}
-              </div>
-            ))}
-          </div>
-        )}
+          {activeTab === 'achievements' && (
+            <div style={{ padding: '20px' }}>
+              {user.achievements.length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#71717A', fontSize: '15px' }}>
+                  <p>No achievements yet.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {user.achievements.map(ach => (
+                    <div key={ach.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ fontSize: '32px' }}>{ach.badgeIcon || '🏆'}</div>
+                      <div>
+                        <strong style={{ display: 'block', color: 'white', fontSize: '15px' }}>{ach.title}</strong>
+                        <span style={{ color: '#A1A1AA', fontSize: '14px' }}>{ach.description}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'competitions' && (
+            <div style={{ padding: '20px' }}>
+              {user.eventRegistrations.length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#71717A', fontSize: '15px' }}>
+                  <p>No competitions joined.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {user.eventRegistrations.map(reg => (
+                    <div key={reg.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                      <div>
+                        <strong style={{ display: 'block', color: 'white', fontSize: '15px' }}>{reg.event.name}</strong>
+                        <span style={{ color: '#A1A1AA', fontSize: '14px' }}>{reg.event.category}</span>
+                      </div>
+                      <div style={{ color: '#1D9BF0', fontSize: '14px', fontWeight: 600 }}>{reg.status}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
       </div>
 
+      <div className="layout-right">
+        <ProfileRightSidebar userId={targetUserId} />
+      </div>
     </div>
   );
 }
