@@ -151,8 +151,31 @@ export default function Sidebar({ unreadCount = 0, currentUser = null }: { unrea
       <div className="theme-toggle-container" style={{ 
         marginTop: 'auto', 
         paddingTop: 'var(--space-5)', 
-        borderTop: '1px solid var(--border-color)' 
+        borderTop: '1px solid var(--border-color)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px'
       }}>
+        {currentUser && (
+          <Link href="/login/test-accounts" style={{
+            fontSize: '11px',
+            color: '#A1A1AA',
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '8px',
+            padding: '6px 10px',
+            textAlign: 'center',
+            textDecoration: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            fontWeight: 500,
+            transition: 'background 0.2s ease'
+          }} className="hoverable-card-glass">
+            <Users size={14} /> Switch test account
+          </Link>
+        )}
         <ThemeToggle />
       </div>
     </nav>

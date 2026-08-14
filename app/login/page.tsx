@@ -59,11 +59,11 @@ export default async function LoginPage() {
           </form>
 
           {/* Log In - Secondary Outlined Button */}
-          <form action={login}>
+          <Link href="/login/test-accounts" style={{ width: '100%', display: 'block' }}>
             <button type="button" className="login-btn-secondary">
               Log in
             </button>
-          </form>
+          </Link>
 
           <div className="login-divider">
             <span>or</span>
