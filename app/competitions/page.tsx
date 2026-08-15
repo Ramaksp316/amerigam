@@ -15,7 +15,8 @@ export default async function CompetitionsPage() {
   const currentUser = await prisma.user.findUnique({
     where: { id: userId },
     include: {
-      following: true
+      following: true,
+      personalProfile: true
     }
   });
 
@@ -49,7 +50,7 @@ export default async function CompetitionsPage() {
     'Public Speaker': ['SpeakUp Championship']
   };
 
-  const userIdentity = currentUser?.identity || '';
+  const userIdentity = currentUser?.personalProfile?.mainIdentity || '';
   let relevantOrgNames = suggestedMapping[userIdentity] || [];
 
   const suggestedEvents = await prisma.event.findMany({
@@ -99,7 +100,12 @@ export default async function CompetitionsPage() {
   const topPeople = await prisma.user.findMany({
     where: { accountType: 'PERSONAL' },
     take: 10,
-    select: { id: true, name: true, avatarData: true, identity: true }
+    select: { 
+      id: true, 
+      name: true, 
+      avatarData: true, 
+      personalProfile: { select: { mainIdentity: true } }
+    }
   });
 
   return (

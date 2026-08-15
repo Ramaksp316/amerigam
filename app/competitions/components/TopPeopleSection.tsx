@@ -73,7 +73,7 @@ export default function TopPeopleSection({ topPeople }: { topPeople: any[] }) {
               {person.name}
             </div>
             <div style={{ fontSize: '11px', color: '#A1A1AA', textAlign: 'center', marginBottom: '12px', width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {person.identity || 'Creator'}
+              {person.personalProfile?.mainIdentity || 'Creator'}
             </div>
 
             <div style={{ padding: '4px 12px', border: '1px solid #3B82F6', borderRadius: '20px', color: '#3B82F6', fontSize: '12px', fontWeight: 600 }}>
