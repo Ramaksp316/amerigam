@@ -9,13 +9,13 @@ export default function TopPeopleSection({ topPeople }: { topPeople: any[] }) {
   const [activeGeo, setActiveGeo] = useState('International');
 
   return (
-    <div style={{ marginTop: '32px', marginBottom: '24px' }}>
+    <div style={{ marginTop: '32px', marginBottom: '24px', width: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0, color: '#FFFFFF' }}>Top 10 people in your field</h2>
         <span style={{ fontSize: '14px', color: '#A1A1AA' }}>View all &gt;</span>
       </div>
 
-      <div style={{ display: 'flex', gap: '20px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
+      <div style={{ display: 'flex', gap: '20px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px', width: '100%' }}>
         {geoTabs.map(tab => (
           <button
             key={tab}
@@ -29,7 +29,8 @@ export default function TopPeopleSection({ topPeople }: { topPeople: any[] }) {
               fontSize: '14px',
               fontWeight: activeGeo === tab ? 600 : 500,
               cursor: 'pointer',
-              whiteSpace: 'nowrap'
+              whiteSpace: 'nowrap',
+              flexShrink: 0
             }}
           >
             {tab}
@@ -37,10 +38,11 @@ export default function TopPeopleSection({ topPeople }: { topPeople: any[] }) {
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '16px', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+      <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '16px', msOverflowStyle: 'none', scrollbarWidth: 'none', width: '100%' }}>
         {topPeople.slice(0, 4).map((person, index) => (
           <div key={person.id} style={{
-            minWidth: '140px',
+            flexShrink: 0,
+            width: '140px',
             backgroundColor: 'var(--surface-1)',
             borderRadius: '16px',
             border: '1px solid var(--border-color)',
@@ -59,7 +61,7 @@ export default function TopPeopleSection({ topPeople }: { topPeople: any[] }) {
               </div>
             )}
             
-            <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#333', marginBottom: '12px', marginTop: '16px' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#333', marginBottom: '12px', marginTop: '16px', flexShrink: 0 }}>
               {person.avatarData ? (
                 <Image src={person.avatarData} alt={person.name || 'User'} width={60} height={60} style={{ objectFit: 'cover' }} />
               ) : (
