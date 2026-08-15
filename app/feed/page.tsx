@@ -74,7 +74,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
           {/* Amerigam Logo Symbol */}
           <Link href="/feed" style={{ display: 'flex', alignItems: 'center' }}>
             <Image 
-              src="/icon-192.png" 
+              src="/logo-symbol.png" 
               alt="Amerigam" 
               width={34} 
               height={34} 
@@ -169,7 +169,6 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
             const conn = post.author.outgoingConnections[0];
             identityLine = `${conn.role.replace('_', ' ')} • ${conn.target.name || conn.target.username}`;
           } else {
-            // Check specific mock identities for seeds
             if (post.author.username === 'diyadraws') identityLine = 'Illustrator • Digital Artist';
             else if (post.author.username === 'aaravbuilds') identityLine = 'Aspiring Founder • Tech';
             else if (post.author.username === 'rohan.cuts') identityLine = 'Video Editor • Filmmaking';
@@ -185,29 +184,25 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
               padding: '16px',
               borderBottom: '1px solid #27272A',
               display: 'flex',
-              gap: '12px'
+              flexDirection: 'column'
             }}>
-              {/* Left Avatar Column */}
-              <div style={{ flexShrink: 0 }}>
-                <Link href={`/user/${post.authorId}`}>
-                  <ProfilePicture user={post.author} size={52} />
+              
+              {/* Header Row: Avatar + Info */}
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                <Link href={`/user/${post.authorId}`} style={{ flexShrink: 0 }}>
+                  <ProfilePicture user={post.author} size={42} />
                 </Link>
-              </div>
-
-              {/* Right Content Column */}
-              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 
-                {/* Author Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Link href={`/user/${post.authorId}`} style={{ color: 'white', fontWeight: 600, textDecoration: 'none', fontSize: '16px', letterSpacing: '-0.3px' }}>
+                      <Link href={`/user/${post.authorId}`} style={{ color: 'white', fontWeight: 600, textDecoration: 'none', fontSize: '15px', letterSpacing: '-0.3px' }}>
                         {post.author.name || post.author.username}
                       </Link>
-                      {isVerified && <CheckCircle2 size={16} color="#1D9BF0" fill="#1D9BF0" />}
+                      {isVerified && <CheckCircle2 size={15} color="#1D9BF0" fill="#1D9BF0" />}
                     </div>
                     
-                    <div style={{ fontSize: '13px', color: '#A1A1AA', marginTop: '3px', fontWeight: 400, letterSpacing: '-0.2px' }}>
+                    <div style={{ fontSize: '13px', color: '#A1A1AA', marginTop: '2px', fontWeight: 400, letterSpacing: '-0.2px' }}>
                       {identityLine}
                     </div>
                     
@@ -222,13 +217,14 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                     <MoreHorizontal size={20} />
                   </button>
                 </div>
+              </div>
 
-                {/* Post Content */}
+              {/* Full-width Post Content */}
+              <div style={{ marginTop: '12px' }}>
                 {post.content && (
                   <div style={{ 
                     fontSize: '15px', 
                     color: '#F4F4F5', 
-                    marginTop: '12px', 
                     lineHeight: '1.45', 
                     whiteSpace: 'pre-wrap', 
                     wordBreak: 'break-word',
@@ -239,11 +235,11 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                   </div>
                 )}
 
-                {/* Media */}
+                {/* Full-width Media */}
                 {post.mediaUrl && (
                   <div style={{ 
-                    marginTop: '14px',
-                    borderRadius: '16px',
+                    marginTop: '12px',
+                    borderRadius: '12px',
                     overflow: 'hidden',
                     border: '1px solid #27272A',
                     backgroundColor: '#15161C',
@@ -271,13 +267,13 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                   </div>
                 )}
 
-                {/* Action Bar */}
+                {/* Full-width Action Bar */}
                 <div style={{ 
                   display: 'flex', 
                   justifyContent: 'space-between', 
                   marginTop: '16px', 
                   color: '#71717A',
-                  paddingRight: '12px'
+                  paddingRight: '8px'
                 }}>
                   <LikeButton postId={post.id} initialHasLiked={hasLiked} initialLikesCount={post.likes.length} />
 
