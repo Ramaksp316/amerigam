@@ -24,20 +24,23 @@ export default function LikeButton({
   );
 
   const handleLike = () => {
-    if (!optimisticLike.hasLiked) {
-      setIsAnimating(true);
-      setTimeout(() => setIsAnimating(false), 500);
-    }
-    startTransition(async () => {
-      addOptimisticLike(!optimisticLike.hasLiked);
-      await toggleLike(postId);
+    // Optimistic update immediately
+    const nextState = !optimisticLike.hasLiked;
+    startTransition(() => {
+      addOptimisticLike(nextState);
+      if (!optimisticLike.hasLiked) {
+        setIsAnimating(true);
+        setTimeout(() => setIsAnimating(false), 500);
+      }
     });
+    
+    // Fire server action in background without awaiting it to block UI
+    toggleLike(postId).catch(console.error);
   };
 
   return (
     <button 
-      onClick={handleLike} 
-      disabled={isPending}
+      onClick={(e) => { e.preventDefault(); handleLike(); }} 
       style={{ 
         background: 'transparent',
         border: 'none',
