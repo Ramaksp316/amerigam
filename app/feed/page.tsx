@@ -8,6 +8,8 @@ import LocalTime from '../components/LocalTime';
 import LikeButton from '../components/LikeButton';
 import ProfilePicture from '../components/ProfilePicture';
 import CustomVideoPlayer from '../components/CustomVideoPlayer';
+import ImageLightbox from '../components/ImageLightbox';
+import PostActionButtons from '../components/PostActionButtons';
 
 export default async function FeedPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const cookieStore = await cookies();
@@ -74,11 +76,11 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
           {/* Amerigam Logo Symbol */}
           <Link href="/feed" style={{ display: 'flex', alignItems: 'center' }}>
             <Image 
-              src="/logo-symbol.png" 
+              src="/logo-new.jpg" 
               alt="Amerigam" 
               width={34} 
               height={34} 
-              style={{ objectFit: 'contain' }}
+              style={{ objectFit: 'contain', mixBlendMode: 'screen' }}
               priority
             />
           </Link>
@@ -237,62 +239,35 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
 
                 {/* Full-width Media */}
                 {post.mediaUrl && (
-                  <div style={{ 
-                    marginTop: '12px',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    border: '1px solid #27272A',
-                    backgroundColor: '#15161C',
-                    width: '100%',
-                    display: 'block'
-                  }}>
+                  <>
                     {post.mediaType === 'image' ? (
-                      <img 
-                        src={post.mediaUrl} 
-                        alt="Post media" 
-                        loading="lazy" 
-                        style={{ 
-                          width: '100%', 
-                          height: 'auto',
-                          display: 'block',
-                          objectFit: 'contain'
-                        }} 
-                      />
+                      <ImageLightbox src={post.mediaUrl} alt="Post media" />
                     ) : (
-                      <CustomVideoPlayer 
-                        src={post.mediaUrl} 
-                        style={{ width: '100%', display: 'block' }} 
-                      />
+                      <div style={{ 
+                        marginTop: '12px',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        border: '1px solid #27272A',
+                        backgroundColor: '#15161C',
+                        width: '100%',
+                        display: 'block'
+                      }}>
+                        <CustomVideoPlayer 
+                          src={post.mediaUrl} 
+                          style={{ width: '100%', display: 'block' }} 
+                        />
+                      </div>
                     )}
-                  </div>
+                  </>
                 )}
 
                 {/* Full-width Action Bar */}
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  marginTop: '16px', 
-                  color: '#71717A',
-                  paddingRight: '8px'
-                }}>
-                  <LikeButton postId={post.id} initialHasLiked={hasLiked} initialLikesCount={post.likes.length} />
-
-                  <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '14px', outline: 'none' }} className="action-btn-hover">
-                    <MessageCircle size={20} strokeWidth={2} /> {post.comments.length > 0 ? post.comments.length : '24'}
-                  </button>
-                  
-                  <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '14px', outline: 'none' }} className="action-btn-hover">
-                    <Repeat2 size={20} strokeWidth={2} /> {Math.floor(Math.random() * 20) + 5}
-                  </button>
-
-                  <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '14px', outline: 'none' }} className="action-btn-hover">
-                    <Send size={18} strokeWidth={2} /> {Math.floor(Math.random() * 10) + 1}
-                  </button>
-
-                  <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '14px', outline: 'none' }} className="action-btn-hover">
-                    <Bookmark size={20} strokeWidth={2} />
-                  </button>
-                </div>
+                <PostActionButtons 
+                  postId={post.id} 
+                  hasLiked={hasLiked} 
+                  likesCount={post.likes.length} 
+                  commentsCount={post.comments.length} 
+                />
 
               </div>
             </div>

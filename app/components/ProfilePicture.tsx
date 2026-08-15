@@ -14,6 +14,19 @@ export default function ProfilePicture({ user, size = 48, showStatus = true }: P
   const displayName = user?.name || user?.username || 'U';
   const initials = displayName.charAt(0).toUpperCase();
 
+  const colors = [
+    '#4285F4', // Google Blue
+    '#DB4437', // Google Red
+    '#F4B400', // Google Yellow
+    '#0F9D58', // Google Green
+    '#673AB7', // Deep Purple
+    '#FF9800', // Orange
+    '#009688', // Teal
+    '#E91E63'  // Pink
+  ];
+  const charCode = initials.charCodeAt(0) || 0;
+  const bgColor = colors[charCode % colors.length];
+
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       {user?.avatarData ? (
@@ -25,9 +38,9 @@ export default function ProfilePicture({ user, size = 48, showStatus = true }: P
       ) : (
         <div style={{ 
           width: '100%', height: '100%', borderRadius: '50%', 
-          background: 'var(--gradient-primary)', color: 'white',
+          background: bgColor, color: '#FFFFFF',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: size * 0.4, fontWeight: 'bold'
+          fontSize: size * 0.45, fontWeight: '500', fontFamily: 'sans-serif'
         }}>
           {initials}
         </div>
