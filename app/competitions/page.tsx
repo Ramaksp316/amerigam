@@ -38,11 +38,28 @@ export default async function CompetitionsPage() {
     take: 10
   });
 
-  // Fetch Suggested Events (based on user category or just random if not mapped)
-  // For now we'll do a simple fetch
+  const suggestedMapping: Record<string, string[]> = {
+    'Developer': ['CodeRush India', 'Buildathon India', 'DesignSprint League'],
+    'Founder': ['PitchArena', 'IgniteX Campus League', 'Buildathon India'],
+    'Photographer': ['LensQuest', 'ArtSphere Collective'],
+    'Musician': ['Rhythm Clash'],
+    'Athlete': ['FitBattle India', 'NextGen Sports League'],
+    'Filmmaker': ['FrameFest India', 'Creator Clash India'],
+    'Gamer': ['GameGrid Esports'],
+    'Public Speaker': ['SpeakUp Championship']
+  };
+
+  const userIdentity = currentUser?.identity || '';
+  let relevantOrgNames = suggestedMapping[userIdentity] || [];
+
   const suggestedEvents = await prisma.event.findMany({
     where: {
-      NOT: { creatorId: { in: followingIds } }
+      NOT: { creatorId: { in: followingIds } },
+      ...(relevantOrgNames.length > 0 && {
+        creator: {
+          name: { in: relevantOrgNames }
+        }
+      })
     },
     include: {
       creator: {
@@ -55,6 +72,12 @@ export default async function CompetitionsPage() {
     orderBy: { startDate: 'desc' },
     take: 10
   });
+
+  // Fetch Current User's registrations to pass state down
+  const userRegistrations = await prisma.eventRegistration.findMany({
+    where: { userId }
+  });
+  const registeredEventIds = userRegistrations.map(r => r.eventId);
 
   // Fetch Top Events
   const topEvents = await prisma.event.findMany({
@@ -86,6 +109,7 @@ export default async function CompetitionsPage() {
       topEvents={topEvents}
       topPeople={topPeople}
       currentUser={currentUser}
+      registeredEventIds={registeredEventIds}
     />
   );
 }

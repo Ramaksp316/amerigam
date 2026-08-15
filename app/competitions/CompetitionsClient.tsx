@@ -13,13 +13,15 @@ export default function CompetitionsClient({
   suggestedEvents, 
   topEvents, 
   topPeople,
-  currentUser 
+  currentUser,
+  registeredEventIds
 }: { 
   followingEvents: any[], 
   suggestedEvents: any[], 
   topEvents: any[], 
   topPeople: any[],
-  currentUser: any 
+  currentUser: any,
+  registeredEventIds: string[]
 }) {
   const [activeTab, setActiveTab] = useState<TabType>('Following');
   const [activeGeo, setActiveGeo] = useState('International');
@@ -73,7 +75,7 @@ export default function CompetitionsClient({
             {followingEvents.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {followingEvents.map(event => (
-                  <CompetitionCard key={event.id} event={event} layout="horizontal" />
+                  <CompetitionCard key={event.id} event={event} layout="horizontal" isRegistered={registeredEventIds.includes(event.id)} />
                 ))}
               </div>
             ) : (
@@ -96,7 +98,7 @@ export default function CompetitionsClient({
 
             <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '16px', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
               {suggestedEvents.slice(0, 5).map(event => (
-                <CompetitionCard key={event.id} event={event} layout="vertical" />
+                <CompetitionCard key={event.id} event={event} layout="vertical" isRegistered={registeredEventIds.includes(event.id)} />
               ))}
             </div>
 
@@ -114,10 +116,10 @@ export default function CompetitionsClient({
             </div>
             <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '24px', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
               {followingEvents.slice(0, 2).map(event => (
-                <CompetitionCard key={event.id} event={event} layout="vertical" />
+                <CompetitionCard key={event.id} event={event} layout="vertical" isRegistered={registeredEventIds.includes(event.id)} />
               ))}
               {followingEvents.length === 0 && topEvents.slice(0, 2).map(event => (
-                 <CompetitionCard key={event.id} event={event} layout="vertical" />
+                 <CompetitionCard key={event.id} event={event} layout="vertical" isRegistered={registeredEventIds.includes(event.id)} />
               ))}
             </div>
 
@@ -147,7 +149,7 @@ export default function CompetitionsClient({
 
             <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '16px', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
               {topEvents.filter(e => e.eventLevel.toUpperCase() === activeGeo.toUpperCase()).slice(0, 5).map(event => (
-                <CompetitionCard key={event.id} event={event} layout="vertical" />
+                <CompetitionCard key={event.id} event={event} layout="vertical" isRegistered={registeredEventIds.includes(event.id)} />
               ))}
               {/* Fallback if no matching geo */}
               {topEvents.filter(e => e.eventLevel.toUpperCase() === activeGeo.toUpperCase()).length === 0 && (
