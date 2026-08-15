@@ -17,20 +17,20 @@ enum AccountType {
 }
 
 model User {
-  id              String      @id @default(uuid())
-  accountType     AccountType @default(PERSONAL)
-  amerigamId      String?     @unique
-  email           String      @unique
-  password        String
-  name            String?
-  username        String?     @unique
-  bio             String?
+  id          String      @id @default(uuid())
+  accountType AccountType @default(PERSONAL)
+  amerigamId  String?     @unique
+  email       String      @unique
+  password    String
+  name        String?
+  username    String?     @unique
+  bio         String?
 
   // Onboarding Fields
-  location      String?
-  portfolioUrl  String?
-  avatarData    String?  // Base64 string for cropped image
-  onboarded     Boolean  @default(false)
+  location     String?
+  portfolioUrl String?
+  avatarData   String? // Base64 string for cropped image
+  onboarded    Boolean @default(false)
 
   posts            Post[]
   comments         Comment[]
@@ -39,16 +39,16 @@ model User {
   following        Follow[]  @relation("following")
   sentMessages     Message[] @relation("sentMessages")
   receivedMessages Message[] @relation("receivedMessages")
-  
-  notifications    Notification[] @relation("userNotifications")
-  actedNotifications Notification[] @relation("actorNotifications")
+
+  notifications      Notification[]     @relation("userNotifications")
+  actedNotifications Notification[]     @relation("actorNotifications")
   pushSubscriptions  PushSubscription[]
 
   // Task relations
-  assignedTasks    CommunityTask[] @relation("assignedTasks")
-  createdTasks     CommunityTask[] @relation("createdTasks")
+  assignedTasks CommunityTask[] @relation("assignedTasks")
+  createdTasks  CommunityTask[] @relation("createdTasks")
 
-  createdAt        DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   // Communities (Phase 1)
   ownedCommunities Community[]
@@ -65,14 +65,14 @@ model User {
   achievements       Achievement[]
 
   // Universal Competition Engine (Phase 3)
-  createdModels         CompetitionModel[] @relation("createdModels")
-  createdCompetitions   Competition[] @relation("createdCompetitions")
-  competitionEntities   CompetitionEntity[] @relation("userEntities")
+  createdModels       CompetitionModel[]  @relation("createdModels")
+  createdCompetitions Competition[]       @relation("createdCompetitions")
+  competitionEntities CompetitionEntity[] @relation("userEntities")
 
   // Online Status fields
-  status                String    @default("ONLINE") // "ONLINE", "OFFLINE", "DND"
-  lastSeen              DateTime  @default(now())
-  customStatus          String?   // 24-hour custom status (e.g. "Working on Amerigam")
+  status                String          @default("ONLINE") // "ONLINE", "OFFLINE", "DND"
+  lastSeen              DateTime        @default(now())
+  customStatus          String? // 24-hour custom status (e.g. "Working on Amerigam")
   customStatusExpiresAt DateTime? // When this custom status expires
   updatedNotes          CommunityNote[] @relation("updatedNotes")
 
@@ -93,88 +93,88 @@ model User {
 // =========================================
 
 model PersonalProfile {
-  id           String @id @default(uuid())
-  userId       String @unique
-  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  mainIdentity String?  // e.g., "Aspiring Founder"
-  interests    String?  // JSON array
-  skills       String?  // JSON array
-  hobbies      String?  // JSON array
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  mainIdentity String? // e.g., "Aspiring Founder"
+  interests    String? // JSON array
+  skills       String? // JSON array
+  hobbies      String? // JSON array
 }
 
 model BusinessProfile {
-  id           String @id @default(uuid())
-  userId       String @unique
-  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  industry     String?
-  stage        String?  // e.g., "Early Startup"
-  mainFocus    String?
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  industry  String?
+  stage     String? // e.g., "Early Startup"
+  mainFocus String?
 }
 
 model CreatorProfile {
-  id           String @id @default(uuid())
-  userId       String @unique
-  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  creatorType  String?  // e.g., "Tech Creator"
-  niche        String?
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  creatorType   String? // e.g., "Tech Creator"
+  niche         String?
   audienceLevel String?
 }
 
 model InfluencerProfile {
-  id           String @id @default(uuid())
-  userId       String @unique
-  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   influencerType String? // e.g., "Lifestyle Influencer"
   mainNiche      String?
   audienceSize   String?
 }
 
 model OrganizationProfile {
-  id           String @id @default(uuid())
-  userId       String @unique
-  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   orgType      String? // e.g., "Hackathons / coding"
   mainAudience String?
 }
 
 model EntityConnection {
-  id               String   @id @default(uuid())
-  sourceId         String   // e.g., The Personal Account (Kunal Shah)
-  targetId         String   // e.g., The Business Account (NovaNest AI)
-  
-  source           User     @relation("SourceConnections", fields: [sourceId], references: [id], onDelete: Cascade)
-  target           User     @relation("TargetConnections", fields: [targetId], references: [id], onDelete: Cascade)
-  
-  role             String   // e.g., "Founder", "Video Editor"
-  relationshipType String   @default("TEAM_MEMBER") // FOUNDER, EMPLOYEE, CONTRIBUTOR
-  isFounder        Boolean  @default(false)
-  isCoFounder      Boolean  @default(false)
-  
-  status           String   @default("CURRENT") // CURRENT, PAST
-  startDate        DateTime?
-  endDate          DateTime?
+  id       String @id @default(uuid())
+  sourceId String // e.g., The Personal Account (Kunal Shah)
+  targetId String // e.g., The Business Account (NovaNest AI)
 
-  createdAt        DateTime @default(now())
+  source User @relation("SourceConnections", fields: [sourceId], references: [id], onDelete: Cascade)
+  target User @relation("TargetConnections", fields: [targetId], references: [id], onDelete: Cascade)
+
+  role             String // e.g., "Founder", "Video Editor"
+  relationshipType String  @default("TEAM_MEMBER") // FOUNDER, EMPLOYEE, CONTRIBUTOR
+  isFounder        Boolean @default(false)
+  isCoFounder      Boolean @default(false)
+
+  status    String    @default("CURRENT") // CURRENT, PAST
+  startDate DateTime?
+  endDate   DateTime?
+
+  createdAt DateTime @default(now())
 
   @@unique([sourceId, targetId, role])
 }
 
 model Post {
-  id        String    @id @default(uuid())
-  content   String
-  mediaUrl  String?
-  mediaType String?
+  id          String    @id @default(uuid())
+  content     String
+  mediaUrl    String?
+  mediaType   String?
   aspectRatio String?   @default("original")
-  authorId  String
-  author    User      @relation(fields: [authorId], references: [id])
-  comments  Comment[]
-  likes     Like[]
-  createdAt DateTime  @default(now())
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  comments    Comment[]
+  likes       Like[]
+  createdAt   DateTime  @default(now())
 }
 
 model Comment {
@@ -223,34 +223,34 @@ model Message {
 // =========================================
 
 model Community {
-  id          String   @id @default(uuid())
+  id          String            @id @default(uuid())
   name        String
   description String?
-  avatarData  String?  // Base64 string for group photo
-  category    String?  // e.g. "Tech & AI", "Visual Arts"
-  type        String   @default("PUBLIC") // "PUBLIC" or "FRIEND_GROUP"
+  avatarData  String? // Base64 string for group photo
+  category    String? // e.g. "Tech & AI", "Visual Arts"
+  type        String            @default("PUBLIC") // "PUBLIC" or "FRIEND_GROUP"
   creatorId   String
-  creator     User     @relation(fields: [creatorId], references: [id])
+  creator     User              @relation(fields: [creatorId], references: [id])
   members     CommunityMember[]
   posts       CommunityPost[]
   tasks       CommunityTask[]
   notes       CommunityNote[]
-  createdAt   DateTime @default(now())
+  createdAt   DateTime          @default(now())
 }
 
 model CommunityMember {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   userId      String
   communityId String
   user        User      @relation(fields: [userId], references: [id])
   community   Community @relation(fields: [communityId], references: [id])
   joinedAt    DateTime  @default(now())
-  
+
   @@unique([userId, communityId])
 }
 
 model CommunityPost {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   content     String
   mediaUrl    String?
   mediaType   String?
@@ -262,19 +262,19 @@ model CommunityPost {
 }
 
 model CommunityTask {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   title       String
   description String?
   communityId String
   assigneeId  String?
   creatorId   String
   deadline    DateTime?
-  status      String   @default("PENDING") // "PENDING", "IN_PROGRESS", "COMPLETED"
-  
-  community   Community @relation(fields: [communityId], references: [id])
-  assignee    User?     @relation("assignedTasks", fields: [assigneeId], references: [id])
-  creator     User      @relation("createdTasks", fields: [creatorId], references: [id])
-  createdAt   DateTime  @default(now())
+  status      String    @default("PENDING") // "PENDING", "IN_PROGRESS", "COMPLETED"
+
+  community Community @relation(fields: [communityId], references: [id])
+  assignee  User?     @relation("assignedTasks", fields: [assigneeId], references: [id])
+  creator   User      @relation("createdTasks", fields: [creatorId], references: [id])
+  createdAt DateTime  @default(now())
 }
 
 // =========================================
@@ -282,109 +282,113 @@ model CommunityTask {
 // =========================================
 
 model Event {
-  id                String   @id @default(uuid())
+  id                String    @id @default(uuid())
   name              String
   description       String
-  category          String   // e.g., "Tech & AI", "Hackathon", "Sports"
-  eventLevel        String   @default("Local") // Local, District, State, National, International
-  locationType      String   // "ONLINE", "OFFLINE", "HYBRID"
+  category          String // e.g., "Tech & AI", "Hackathon", "Sports"
+  eventLevel        String    @default("Local") // Local, District, State, National, International
+  locationType      String // "ONLINE", "OFFLINE", "HYBRID"
   venue             String?
   startDate         DateTime
   endDate           DateTime
   registrationStart DateTime?
   registrationEnd   DateTime?
-  
+
+  // Custom added for UI
+  coverImage String?
+  prizePool  String?
+
   // Toggles
-  requireApproval   Boolean  @default(false)
-  requireCheckIn    Boolean  @default(false)
-  requireBadge      Boolean  @default(false)
-  enableDigitalPass Boolean  @default(true)
+  requireApproval    Boolean @default(false)
+  requireCheckIn     Boolean @default(false)
+  requireBadge       Boolean @default(false)
+  enableDigitalPass  Boolean @default(true)
   enableCertificates Boolean @default(false)
-  allowTeams        Boolean  @default(false)
+  allowTeams         Boolean @default(false)
   requireSubmissions Boolean @default(false)
-  
+
   // Limits & Config
-  participantLimit  Int?
-  evaluationMethod  String   @default("NONE") // "NONE", "JUDGE_PANEL", "OBJECTIVE"
-  
-  creatorId         String
-  creator           User     @relation(fields: [creatorId], references: [id])
-  registrations     EventRegistration[]
-  
-  competitionId     String?
-  competition       Competition? @relation(fields: [competitionId], references: [id])
-  
-  createdAt         DateTime @default(now())
+  participantLimit Int?
+  evaluationMethod String @default("NONE") // "NONE", "JUDGE_PANEL", "OBJECTIVE"
+
+  creatorId     String
+  creator       User                @relation(fields: [creatorId], references: [id])
+  registrations EventRegistration[]
+
+  competitionId String?
+  competition   Competition? @relation(fields: [competitionId], references: [id])
+
+  createdAt DateTime @default(now())
 }
 
 model EventRegistration {
-  id              String   @id @default(uuid())
-  registrationId  String   @unique // e.g., AMG-R-2026-XXXX
+  id              String  @id @default(uuid())
+  registrationId  String  @unique // e.g., AMG-R-2026-XXXX
   userId          String
   eventId         String
-  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
-  participantType String   @default("PARTICIPANT")
-  qrToken         String   @unique @default(uuid()) // Secure opaque token for QR
+  status          String  @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
+  participantType String  @default("PARTICIPANT")
+  qrToken         String  @unique @default(uuid()) // Secure opaque token for QR
   teamId          String?
 
-  user            User       @relation(fields: [userId], references: [id])
-  event           Event      @relation(fields: [eventId], references: [id])
-  team            EventTeam? @relation(fields: [teamId], references: [id])
-  checkIns        EventCheckIn[]
-  submissions     EventSubmission[]
-  evaluations     EventEvaluation[]
-  certificates    EventCertificate[]
-  joinedAt        DateTime   @default(now())
+  user         User               @relation(fields: [userId], references: [id])
+  event        Event              @relation(fields: [eventId], references: [id])
+  team         EventTeam?         @relation(fields: [teamId], references: [id])
+  checkIns     EventCheckIn[]
+  submissions  EventSubmission[]
+  evaluations  EventEvaluation[]
+  certificates EventCertificate[]
+  joinedAt     DateTime           @default(now())
 
   @@unique([userId, eventId])
 }
 
 model EventCheckIn {
-  id              String   @id @default(uuid())
-  registrationId  String
-  scannedById     String
-  gateInfo        String?
-  timestamp       DateTime @default(now())
+  id             String   @id @default(uuid())
+  registrationId String
+  scannedById    String
+  gateInfo       String?
+  timestamp      DateTime @default(now())
 
-  registration    EventRegistration @relation(fields: [registrationId], references: [id])
-  scannedBy       User              @relation(fields: [scannedById], references: [id])
+  registration EventRegistration @relation(fields: [registrationId], references: [id])
+  scannedBy    User              @relation(fields: [scannedById], references: [id])
 }
 
 model EventTeam {
-  id          String   @id @default(uuid())
-  name        String
-  captainId   String
-  eventId     String
-  teamCode    String   @unique @default(uuid()) // Shareable code to join
+  id        String @id @default(uuid())
+  name      String
+  captainId String
+  eventId   String
+  teamCode  String @unique @default(uuid()) // Shareable code to join
 
-  captain     User     @relation(fields: [captainId], references: [id])
-  members     EventRegistration[]
+  captain             User                @relation(fields: [captainId], references: [id])
+  members             EventRegistration[]
   competitionEntities CompetitionEntity[] @relation("teamEntities")
-  createdAt   DateTime @default(now())
+  createdAt           DateTime            @default(now())
 }
 
 model EventSubmission {
-  id             String   @id @default(uuid())
+  id             String  @id @default(uuid())
   registrationId String
   projectTitle   String
   description    String?
   contentUrl     String?
-  status         String   @default("SUBMITTED")
+  status         String  @default("SUBMITTED")
 
-  registration   EventRegistration @relation(fields: [registrationId], references: [id])
-  createdAt      DateTime @default(now())
+  registration EventRegistration @relation(fields: [registrationId], references: [id])
+  createdAt    DateTime          @default(now())
 }
 
 model EventEvaluation {
-  id             String   @id @default(uuid())
+  id             String  @id @default(uuid())
   registrationId String
   judgeId        String
   score          Float
   feedback       String?
 
-  registration   EventRegistration @relation(fields: [registrationId], references: [id])
-  judge          User              @relation(fields: [judgeId], references: [id])
-  evaluatedAt    DateTime          @default(now())
+  registration EventRegistration @relation(fields: [registrationId], references: [id])
+  judge        User              @relation(fields: [judgeId], references: [id])
+  evaluatedAt  DateTime          @default(now())
 }
 
 model EventCertificate {
@@ -394,29 +398,29 @@ model EventCertificate {
   type           String   @default("PARTICIPATION") // PARTICIPATION, WINNER, MERIT
   issueDate      DateTime @default(now())
 
-  registration   EventRegistration @relation(fields: [registrationId], references: [id])
+  registration EventRegistration @relation(fields: [registrationId], references: [id])
 }
 
 model Achievement {
   id          String   @id @default(uuid())
   userId      String
-  title       String   // e.g., "National Champion 2026"
+  title       String // e.g., "National Champion 2026"
   description String?
-  badgeIcon   String?  // Emoji or image URL
+  badgeIcon   String? // Emoji or image URL
   user        User     @relation(fields: [userId], references: [id])
   earnedAt    DateTime @default(now())
 }
 
 model Notification {
   id        String   @id @default(uuid())
-  userId    String   // User receiving the notification
+  userId    String // User receiving the notification
   user      User     @relation("userNotifications", fields: [userId], references: [id])
-  actorId   String?  // User who triggered the notification (optional)
+  actorId   String? // User who triggered the notification (optional)
   actor     User?    @relation("actorNotifications", fields: [actorId], references: [id])
-  type      String   // 'message', 'like', 'comment', 'follow'
-  content   String   // Text description
+  type      String // 'message', 'like', 'comment', 'follow'
+  content   String // Text description
   isRead    Boolean  @default(false)
-  link      String?  // Destination URL
+  link      String? // Destination URL
   createdAt DateTime @default(now())
 }
 
@@ -431,16 +435,16 @@ model PushSubscription {
 }
 
 model CommunityNote {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   communityId String
   community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  title       String   @default("Untitled Page")
-  content     String   @default("")
-  penColor    String   @default("#0000ff") // Default blue ink
+  title       String    @default("Untitled Page")
+  content     String    @default("")
+  penColor    String    @default("#0000ff") // Default blue ink
   updatedById String?
   updatedBy   User?     @relation("updatedNotes", fields: [updatedById], references: [id], onDelete: SetNull)
-  updatedAt   DateTime @updatedAt
-  createdAt   DateTime @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now())
 }
 
 // =========================================
@@ -448,46 +452,46 @@ model CommunityNote {
 // =========================================
 
 model CompetitionModel {
-  id          String   @id @default(uuid())
+  id          String            @id @default(uuid())
   name        String
   description String?
   creatorId   String
-  version     Int      @default(1)
-  isPublished Boolean  @default(false)
+  version     Int               @default(1)
+  isPublished Boolean           @default(false)
   nodes       ModelNode[]
   connections ModelConnection[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
-  creator     User     @relation("createdModels", fields: [creatorId], references: [id])
+  creator      User          @relation("createdModels", fields: [creatorId], references: [id])
   competitions Competition[]
 }
 
 model ModelNode {
-  id          String   @id @default(uuid())
-  modelId     String
-  type        String   // "START", "REGISTRATION", "GROUP", "MATCH", "EVALUATION", "RESULT", "END"
-  name        String
-  config      String   // JSON string defining rules, scoring logic, limits
-  positionX   Float    @default(0) // For UI Builder
-  positionY   Float    @default(0) // For UI Builder
+  id        String @id @default(uuid())
+  modelId   String
+  type      String // "START", "REGISTRATION", "GROUP", "MATCH", "EVALUATION", "RESULT", "END"
+  name      String
+  config    String // JSON string defining rules, scoring logic, limits
+  positionX Float  @default(0) // For UI Builder
+  positionY Float  @default(0) // For UI Builder
 
-  model       CompetitionModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  model             CompetitionModel  @relation(fields: [modelId], references: [id], onDelete: Cascade)
   sourceConnections ModelConnection[] @relation("sourceNode")
   targetConnections ModelConnection[] @relation("targetNode")
-  stages      Stage[]
+  stages            Stage[]
 }
 
 model ModelConnection {
-  id          String   @id @default(uuid())
-  modelId     String
-  sourceId    String
-  targetId    String
-  condition   String?  // e.g. "WINNER", "TOP_2", "LOSER", "DEFAULT"
+  id        String  @id @default(uuid())
+  modelId   String
+  sourceId  String
+  targetId  String
+  condition String? // e.g. "WINNER", "TOP_2", "LOSER", "DEFAULT"
 
-  model       CompetitionModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
-  source      ModelNode @relation("sourceNode", fields: [sourceId], references: [id], onDelete: Cascade)
-  target      ModelNode @relation("targetNode", fields: [targetId], references: [id], onDelete: Cascade)
+  model  CompetitionModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  source ModelNode        @relation("sourceNode", fields: [sourceId], references: [id], onDelete: Cascade)
+  target ModelNode        @relation("targetNode", fields: [targetId], references: [id], onDelete: Cascade)
 }
 
 model Competition {
@@ -501,11 +505,11 @@ model Competition {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  model         CompetitionModel @relation(fields: [modelId], references: [id])
-  creator       User     @relation("createdCompetitions", fields: [creatorId], references: [id])
-  stages        Stage[]
-  entities      CompetitionEntity[]
-  events        Event[]
+  model    CompetitionModel    @relation(fields: [modelId], references: [id])
+  creator  User                @relation("createdCompetitions", fields: [creatorId], references: [id])
+  stages   Stage[]
+  entities CompetitionEntity[]
+  events   Event[]
 }
 
 model Stage {
@@ -516,49 +520,49 @@ model Stage {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  node          ModelNode   @relation(fields: [nodeId], references: [id])
-  matchups      Matchup[]
+  competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  node        ModelNode   @relation(fields: [nodeId], references: [id])
+  matchups    Matchup[]
 }
 
 model CompetitionEntity {
   id            String   @id @default(uuid())
   entityId      String   @unique // AMG-E-XXXX
   competitionId String
-  type          String   // "USER", "TEAM"
+  type          String // "USER", "TEAM"
   userId        String?
   teamId        String?
   status        String   @default("ACTIVE") // "ACTIVE", "ELIMINATED", "QUALIFIED", "WINNER"
   joinedAt      DateTime @default(now())
 
-  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  user          User?       @relation("userEntities", fields: [userId], references: [id])
-  team          EventTeam?  @relation("teamEntities", fields: [teamId], references: [id])
+  competition         Competition          @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  user                User?                @relation("userEntities", fields: [userId], references: [id])
+  team                EventTeam?           @relation("teamEntities", fields: [teamId], references: [id])
   matchupParticipants MatchupParticipant[]
 }
 
 model Matchup {
-  id            String   @id @default(uuid())
-  matchupId     String   @unique // AMG-M-XXXX
-  stageId       String
-  state         String   @default("SCHEDULED") // "SCHEDULED", "ONGOING", "FINISHED"
-  scheduledFor  DateTime?
-  resultData    String?  // JSON string storing scores and outcome
-  createdAt     DateTime @default(now())
+  id           String    @id @default(uuid())
+  matchupId    String    @unique // AMG-M-XXXX
+  stageId      String
+  state        String    @default("SCHEDULED") // "SCHEDULED", "ONGOING", "FINISHED"
+  scheduledFor DateTime?
+  resultData   String? // JSON string storing scores and outcome
+  createdAt    DateTime  @default(now())
 
-  stage         Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  participants  MatchupParticipant[]
+  stage        Stage                @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  participants MatchupParticipant[]
 }
 
 model MatchupParticipant {
-  id            String   @id @default(uuid())
-  matchupId     String
-  entityId      String
-  score         Float?
-  result        String?  // "WINNER", "LOSER", "DRAW"
-  
-  matchup       Matchup  @relation(fields: [matchupId], references: [id], onDelete: Cascade)
-  entity        CompetitionEntity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  id        String  @id @default(uuid())
+  matchupId String
+  entityId  String
+  score     Float?
+  result    String? // "WINNER", "LOSER", "DRAW"
+
+  matchup Matchup           @relation(fields: [matchupId], references: [id], onDelete: Cascade)
+  entity  CompetitionEntity @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   @@unique([matchupId, entityId])
 }
