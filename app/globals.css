@@ -1025,3 +1025,5 @@ a, button, input, textarea, select {
     transform: translateY(0);
   }
 }
+  
+@media (min-width: 769px) { .mobile-only { display: none !important; } } 

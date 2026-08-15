@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import ActiveStatusTracker from './components/ActiveStatusTracker';
 import MobileBottomNav from './components/MobileBottomNav';
+import MobileDrawer from './components/MobileDrawer';
 import { cookies } from 'next/headers';
 import { prisma } from '../lib/prisma';
 
@@ -59,6 +60,9 @@ export default async function RootLayout({
       <body className={`${inter.className} ${caveat.variable}`}>
         <ThemeProvider>
           <ActiveStatusTracker userId={userId} />
+          <div className="mobile-only">
+            <MobileDrawer currentUser={currentUser} />
+          </div>
           <div className="app-layout">
             <Sidebar unreadCount={unreadCount} currentUser={currentUser} />
             <main className="main-content">
