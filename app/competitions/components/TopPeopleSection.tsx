@@ -61,16 +61,16 @@ export default function TopPeopleSection({ topPeople }: { topPeople: any[] }) {
             
             <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#333', marginBottom: '12px', marginTop: '16px' }}>
               {person.avatarData ? (
-                <Image src={person.avatarData} alt={person.name} width={60} height={60} style={{ objectFit: 'cover' }} />
+                <Image src={person.avatarData} alt={person.name || 'User'} width={60} height={60} style={{ objectFit: 'cover' }} />
               ) : (
                 <div style={{ width: '100%', height: '100%', background: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '20px' }}>
-                  {person.name.charAt(0)}
+                  {(person.name || 'U').charAt(0)}
                 </div>
               )}
             </div>
 
             <div style={{ fontSize: '14px', fontWeight: 600, color: '#FFFFFF', textAlign: 'center', width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {person.name}
+              {person.name || 'User'}
             </div>
             <div style={{ fontSize: '11px', color: '#A1A1AA', textAlign: 'center', marginBottom: '12px', width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {person.personalProfile?.mainIdentity || 'Creator'}
