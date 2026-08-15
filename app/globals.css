@@ -902,3 +902,85 @@ a {
 .login-link:hover {
   text-decoration: underline;
 }
+
+/* ─── MOBILE HOME UI OVERRIDES ─── */
+:root { 
+  --surface-0: #000000 !important; 
+  --surface-1: #000000 !important;
+}
+
+/* Hide sidebar and right panel on mobile */
+@media (max-width: 768px) {
+  .sidebar, .layout-right {
+    display: none !important;
+  }
+  .main-content {
+    max-width: 100% !important;
+    padding-bottom: 70px; /* Space for bottom nav */
+  }
+  .layout-center {
+    border-right: none !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Mobile Bottom Navigation */
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #000000;
+    border-top: 1px solid #27272A;
+    justify-content: space-around;
+    align-items: center;
+    height: 60px;
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #71717A;
+    text-decoration: none;
+    font-size: 10px;
+    gap: 2px;
+    width: 60px;
+  }
+  
+  .nav-item.active {
+    color: #FFFFFF;
+  }
+  
+  .nav-item.active svg {
+    color: #FFFFFF;
+    fill: #FFFFFF;
+  }
+
+  .nav-item-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+  }
+
+  .create-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #FFFFFF;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    text-decoration: none;
+  }
+}

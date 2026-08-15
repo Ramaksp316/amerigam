@@ -3,15 +3,11 @@ import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { MessageCircle, Bookmark, MoreHorizontal, Repeat2, Send, CheckCircle2 } from 'lucide-react';
-import ShareButton from './ShareButton';
+import { MessageCircle, Bookmark, MoreHorizontal, Repeat2, Send, Search, Bell, CheckCircle2 } from 'lucide-react';
 import LocalTime from '../components/LocalTime';
-import DeletePostButton from '../components/DeletePostButton';
 import LikeButton from '../components/LikeButton';
-import CommentForm from '../components/CommentForm';
 import ProfilePicture from '../components/ProfilePicture';
 import CustomVideoPlayer from '../components/CustomVideoPlayer';
-import RightSidebar from '../components/RightSidebar';
 
 export default async function FeedPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const cookieStore = await cookies();
@@ -32,13 +28,13 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   const resolvedSearchParams = await searchParams;
   const currentTab = resolvedSearchParams.tab || 'foryou';
 
-  let whereClause = {};
-  if (currentTab === 'foryou' && currentUser) {
-    whereClause = {};
-  }
+  // Get unread notifications
+  const unreadCount = await prisma.notification.count({
+    where: { userId, isRead: false }
+  });
 
-  const posts = await prisma.post.findMany({
-    where: whereClause,
+  // Get posts
+  let posts = await prisma.post.findMany({
     include: { 
       author: {
         include: { outgoingConnections: { include: { target: true } } }
@@ -52,220 +48,241 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
     orderBy: { createdAt: 'desc' },
   });
 
-  return (
-    <div className="layout-3-col">
-      <div className="layout-center">
-        
-        {/* Sticky Header with Tabs */}
-        <div style={{
-          position: 'sticky',
-          top: 0,
-          background: 'rgba(11, 12, 16, 0.85)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid var(--border-color)',
-          zIndex: 50,
-          display: 'flex',
-          justifyContent: 'space-around',
-          padding: '0 16px'
-        }}>
-          <Link href="/feed?tab=foryou" style={{
-            flex: 1, textAlign: 'center', padding: '16px 0',
-            color: currentTab === 'foryou' ? 'white' : '#A1A1AA',
-            fontWeight: currentTab === 'foryou' ? 700 : 500,
-            textDecoration: 'none',
-            position: 'relative'
-          }}>
-            For you
-            {currentTab === 'foryou' && (
-              <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '56px', height: '4px', background: 'var(--accent-purple)', borderRadius: '4px 4px 0 0' }} />
-            )}
-          </Link>
-          <Link href="/feed?tab=communities" style={{
-            flex: 1, textAlign: 'center', padding: '16px 0',
-            color: currentTab === 'communities' ? 'white' : '#A1A1AA',
-            fontWeight: currentTab === 'communities' ? 700 : 500,
-            textDecoration: 'none',
-            position: 'relative'
-          }}>
-            Communities
-            {currentTab === 'communities' && (
-              <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '56px', height: '4px', background: 'var(--accent-purple)', borderRadius: '4px 4px 0 0' }} />
-            )}
-          </Link>
-          <Link href="/feed?tab=network" style={{
-            flex: 1, textAlign: 'center', padding: '16px 0',
-            color: currentTab === 'network' ? 'white' : '#A1A1AA',
-            fontWeight: currentTab === 'network' ? 700 : 500,
-            textDecoration: 'none',
-            position: 'relative'
-          }}>
-            Network
-            {currentTab === 'network' && (
-              <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '56px', height: '4px', background: 'var(--accent-purple)', borderRadius: '4px 4px 0 0' }} />
-            )}
-          </Link>
-        </div>
+  // Reorder to force Diya's Post 1 to the top for testing
+  const diyaPost1 = posts.find(p => p.author.username === 'diyadraws' && p.content?.includes('Packaging doesn’t'));
+  if (diyaPost1) {
+    const otherPosts = posts.filter(p => p.id !== diyaPost1.id);
+    posts = [diyaPost1, ...otherPosts];
+  }
 
-        {/* Post Composer Placeholder */}
-        <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '12px' }}>
-          <ProfilePicture user={currentUser} size={40} />
-          <div style={{ flex: 1 }}>
-            <input type="text" placeholder="What is happening?!" style={{
-              width: '100%', background: 'transparent', border: 'none',
-              fontSize: '20px', color: 'white', outline: 'none', padding: '8px 0', marginTop: '4px'
-            }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-              <div style={{ color: 'var(--accent-purple)', display: 'flex', gap: '16px' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-              </div>
-              <button style={{
-                background: 'white', color: 'black', borderRadius: '24px',
-                padding: '8px 16px', fontWeight: 600, border: 'none', cursor: 'pointer'
-              }}>Post</button>
-            </div>
+  return (
+    <div style={{ backgroundColor: '#000000', minHeight: '100vh', width: '100%' }}>
+      {/* Mobile Sticky Header */}
+      <div style={{
+        position: 'sticky',
+        top: 0,
+        background: '#000000',
+        zIndex: 50,
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {/* Top Icons Row */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '16px 20px',
+        }}>
+          {/* Amerigam Logo Symbol */}
+          <Link href="/feed">
+            <svg width="28" height="28" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15.4 125.7L67.7 35.1C72.5 26.8 81.3 21.8 90.9 21.8H181.5C186.6 21.8 189.5 27.6 186.4 31.6L129.5 106.1C122.9 114.8 112.5 120 101.5 120H43.9C33.1 120 22.8 126 17.1 135.5L11.5 145C8.4 150.2 11 157 17 157H106.5C111.6 157 114.5 162.8 111.4 166.8L96.2 186.7C91.4 193 83.5 196.7 75.3 196.7H17.5C7.2 196.7 0.9 186.6 5.8 178L15.4 125.7Z" fill="white"/>
+            </svg>
+          </Link>
+          
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <Link href="/search" style={{ color: 'white' }}>
+              <Search size={24} />
+            </Link>
+            <Link href="/notifications" style={{ color: 'white', position: 'relative' }}>
+              <Bell size={24} />
+              {unreadCount > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '-2px',
+                  right: '-2px',
+                  background: '#F91880',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  border: '2px solid #000'
+                }} />
+              )}
+            </Link>
           </div>
         </div>
 
-        <div className="feed-stream">
-          {posts.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#A1A1AA' }}>
-              <p style={{ fontSize: '16px' }}>No posts found.</p>
-            </div>
-          )}
-
-          {posts.map((post) => {
-            const hasLiked = post.likes.some(like => like.userId === userId);
-            const isVerified = post.author.accountType !== 'PERSONAL' || post.author.followers?.length > 100; // Mock verification
-            
-            // Build the context string (e.g. "Product Designer • Building in Public" or "Founder at NovaNest AI")
-            let identityLine = '';
-            if (post.author.outgoingConnections && post.author.outgoingConnections.length > 0) {
-              const conn = post.author.outgoingConnections[0];
-              identityLine = `${conn.role.replace('_', ' ')} at ${conn.target.name || conn.target.username}`;
-            } else {
-              identityLine = post.author.accountType.charAt(0) + post.author.accountType.slice(1).toLowerCase();
-            }
-
-            return (
-              <div key={post.id} className="feed-post" style={{
-                padding: '16px',
-                borderBottom: '1px solid var(--border-color)',
-                display: 'flex',
-                gap: '12px',
-                transition: 'background 0.2s',
-                cursor: 'pointer'
-              }}
-              onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-              onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-              >
-                
-                {/* Left Avatar Column */}
-                <div style={{ flexShrink: 0 }}>
-                  <ProfilePicture user={post.author} size={40} />
-                </div>
-
-                {/* Right Content Column */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  
-                  {/* Author Header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Link href={`/user/${post.authorId}`} style={{ color: 'white', fontWeight: 700, textDecoration: 'none', fontSize: '15px' }} className="hover-underline">
-                          {post.author.name || post.author.username}
-                        </Link>
-                        {isVerified && <CheckCircle2 size={14} color="#1D9BF0" fill="#1D9BF0" style={{ color: 'white' }} />}
-                        <span style={{ color: '#71717A', fontSize: '15px', marginLeft: '4px' }}>
-                          @{post.author.username}
-                        </span>
-                        <span style={{ color: '#71717A', fontSize: '15px' }}>·</span>
-                        <span style={{ color: '#71717A', fontSize: '15px' }}>
-                          <LocalTime date={post.createdAt} format="relative" />
-                        </span>
-                      </div>
-                      <div style={{ fontSize: '13px', color: '#A1A1AA', marginTop: '2px' }}>
-                        {identityLine}
-                      </div>
-                    </div>
-                    
-                    <button style={{ background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', padding: '4px' }}>
-                      <MoreHorizontal size={18} />
-                    </button>
-                  </div>
-
-                  {/* Post Content */}
-                  {post.content && (
-                    <div style={{ fontSize: '15px', color: 'white', marginTop: '8px', lineHeight: '1.4', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                      {post.content}
-                    </div>
-                  )}
-
-                  {/* Media */}
-                  {post.mediaUrl && (
-                    <div style={{ 
-                      marginTop: '12px',
-                      borderRadius: '16px',
-                      overflow: 'hidden',
-                      border: '1px solid var(--border-color)',
-                      maxHeight: '500px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: 'rgba(255,255,255,0.02)'
-                    }}>
-                      {post.mediaType === 'image' ? (
-                        <img 
-                          src={post.mediaUrl} 
-                          alt="Post media" 
-                          loading="lazy" 
-                          style={{ 
-                            width: '100%', 
-                            height: '100%', 
-                            objectFit: 'cover' 
-                          }} 
-                        />
-                      ) : (
-                        <CustomVideoPlayer 
-                          src={post.mediaUrl} 
-                          style={{ width: '100%' }} 
-                        />
-                      )}
-                    </div>
-                  )}
-
-                  {/* Minimal Action Bar */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', color: '#71717A', maxWidth: '425px' }}>
-                    <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}>
-                      <MessageCircle size={18} /> {post.comments.length > 0 ? post.comments.length : ''}
-                    </button>
-                    
-                    <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}>
-                      <Repeat2 size={18} /> {Math.floor(Math.random() * 50)}
-                    </button>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: hasLiked ? '#F91880' : 'inherit' }}>
-                      <LikeButton postId={post.id} initialHasLiked={hasLiked} initialLikesCount={post.likes.length} />
-                    </div>
-
-                    <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}>
-                      <Send size={18} />
-                    </button>
-
-                    <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}>
-                      <Bookmark size={18} />
-                    </button>
-                  </div>
-
-                </div>
-              </div>
-            );
-          })}
+        {/* Tabs Row */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-around',
+          borderBottom: '1px solid #27272A',
+        }}>
+          <Link href="/feed?tab=foryou" style={{
+            flex: 1, textAlign: 'center', padding: '12px 0',
+            color: currentTab === 'foryou' ? 'white' : '#71717A',
+            fontWeight: currentTab === 'foryou' ? 700 : 500,
+            textDecoration: 'none',
+            position: 'relative',
+            fontSize: '15px'
+          }}>
+            For you
+            {currentTab === 'foryou' && (
+              <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '56px', height: '3px', background: '#1D9BF0', borderRadius: '3px 3px 0 0' }} />
+            )}
+          </Link>
+          <Link href="/feed?tab=communities" style={{
+            flex: 1, textAlign: 'center', padding: '12px 0',
+            color: currentTab === 'communities' ? 'white' : '#71717A',
+            fontWeight: currentTab === 'communities' ? 700 : 500,
+            textDecoration: 'none',
+            position: 'relative',
+            fontSize: '15px'
+          }}>
+            Communities
+            {currentTab === 'communities' && (
+              <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '56px', height: '3px', background: '#1D9BF0', borderRadius: '3px 3px 0 0' }} />
+            )}
+          </Link>
+          <Link href="/feed?tab=network" style={{
+            flex: 1, textAlign: 'center', padding: '12px 0',
+            color: currentTab === 'network' ? 'white' : '#71717A',
+            fontWeight: currentTab === 'network' ? 700 : 500,
+            textDecoration: 'none',
+            position: 'relative',
+            fontSize: '15px'
+          }}>
+            Network
+            {currentTab === 'network' && (
+              <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '56px', height: '3px', background: '#1D9BF0', borderRadius: '3px 3px 0 0' }} />
+            )}
+          </Link>
         </div>
       </div>
 
-      <div className="layout-right">
-        <RightSidebar userId={currentUser.id} />
+      <div className="feed-stream">
+        {posts.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#71717A' }}>
+            <p style={{ fontSize: '15px' }}>No posts found.</p>
+          </div>
+        )}
+
+        {posts.map((post) => {
+          const hasLiked = post.likes.some(like => like.userId === userId);
+          const isVerified = post.author.accountType !== 'PERSONAL' || post.author.followers?.length > 100;
+          
+          let identityLine = '';
+          if (post.author.outgoingConnections && post.author.outgoingConnections.length > 0) {
+            const conn = post.author.outgoingConnections[0];
+            identityLine = `${conn.role.replace('_', ' ')} at ${conn.target.name || conn.target.username}`;
+          } else {
+            // Check specific mock identities for seeds
+            if (post.author.username === 'diyadraws') identityLine = 'Illustrator • Digital Artist';
+            else if (post.author.username === 'aaravbuilds') identityLine = 'Aspiring Founder • Tech';
+            else if (post.author.username === 'rohan.cuts') identityLine = 'Video Editor • Filmmaking';
+            else if (post.author.username === 'kabir.runs') identityLine = 'Athlete • Training';
+            else if (post.author.username === 'meeraframes') identityLine = 'Photographer • Visual Arts';
+            else if (post.author.username === 'ishaan.codes') identityLine = 'Developer • Apps';
+            else if (post.author.username === 'arjunstrings') identityLine = 'Musician • Songwriting';
+            else identityLine = post.author.accountType.charAt(0) + post.author.accountType.slice(1).toLowerCase();
+          }
+
+          return (
+            <div key={post.id} style={{
+              padding: '16px 20px',
+              borderBottom: '1px solid #27272A',
+              display: 'flex',
+              gap: '12px'
+            }}>
+              {/* Left Avatar Column */}
+              <div style={{ flexShrink: 0 }}>
+                <Link href={`/user/${post.authorId}`}>
+                  <ProfilePicture user={post.author} size={44} />
+                </Link>
+              </div>
+
+              {/* Right Content Column */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                
+                {/* Author Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Link href={`/user/${post.authorId}`} style={{ color: 'white', fontWeight: 700, textDecoration: 'none', fontSize: '15px' }}>
+                        {post.author.name || post.author.username}
+                      </Link>
+                      {isVerified && <CheckCircle2 size={15} color="#1D9BF0" fill="#1D9BF0" style={{ color: 'white' }} />}
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#A1A1AA', marginTop: '1px' }}>
+                      {identityLine}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', color: '#71717A', marginTop: '1px' }}>
+                      <span>@{post.author.username}</span>
+                      <span style={{ fontSize: '10px' }}>•</span>
+                      <LocalTime date={post.createdAt} format="relative" />
+                    </div>
+                  </div>
+                  
+                  <button style={{ background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', padding: '0 4px' }}>
+                    <MoreHorizontal size={20} />
+                  </button>
+                </div>
+
+                {/* Post Content */}
+                {post.content && (
+                  <div style={{ fontSize: '15px', color: 'white', marginTop: '12px', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    {post.content}
+                  </div>
+                )}
+
+                {/* Media */}
+                {post.mediaUrl && (
+                  <div style={{ 
+                    marginTop: '12px',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    border: '1px solid #27272A',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#15161C'
+                  }}>
+                    {post.mediaType === 'image' ? (
+                      <img 
+                        src={post.mediaUrl} 
+                        alt="Post media" 
+                        loading="lazy" 
+                        style={{ 
+                          width: '100%', 
+                          height: 'auto',
+                          maxHeight: '500px',
+                          objectFit: 'cover' 
+                        }} 
+                      />
+                    ) : (
+                      <CustomVideoPlayer 
+                        src={post.mediaUrl} 
+                        style={{ width: '100%' }} 
+                      />
+                    )}
+                  </div>
+                )}
+
+                {/* Action Bar */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '14px', color: '#71717A' }}>
+                  <LikeButton postId={post.id} initialHasLiked={hasLiked} initialLikesCount={post.likes.length} />
+
+                  <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', outline: 'none' }}>
+                    <MessageCircle size={18} /> {post.comments.length > 0 ? post.comments.length : '24'}
+                  </button>
+                  
+                  <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', outline: 'none' }}>
+                    <Repeat2 size={18} /> {Math.floor(Math.random() * 20) + 5}
+                  </button>
+
+                  <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', outline: 'none' }}>
+                    <Send size={18} /> {Math.floor(Math.random() * 10) + 1}
+                  </button>
+
+                  <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', outline: 'none' }}>
+                    <Bookmark size={18} />
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -35,22 +35,31 @@ export default function LikeButton({
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-      <button 
-        onClick={handleLike} 
-        disabled={isPending}
-        className="post-action-btn"
+    <button 
+      onClick={handleLike} 
+      disabled={isPending}
+      style={{ 
+        background: 'transparent',
+        border: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        cursor: 'pointer',
+        fontSize: '13px',
+        color: optimisticLike.hasLiked ? '#F91880' : '#71717A',
+        outline: 'none',
+      }}
+    >
+      <Heart 
+        size={18} 
+        fill={optimisticLike.hasLiked ? "#F91880" : "none"} 
+        color={optimisticLike.hasLiked ? "#F91880" : "#71717A"} 
         style={{ 
-          transform: isAnimating ? 'scale(1.3)' : 'scale(1)',
-          transition: 'transform var(--duration-normal) var(--ease-spring)'
+          transform: isAnimating ? 'scale(1.2)' : 'scale(1)',
+          transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
         }}
-      >
-        <Heart 
-          size={24} 
-          fill={optimisticLike.hasLiked ? "#EF4444" : "none"} 
-          color={optimisticLike.hasLiked ? "#EF4444" : "var(--text-primary)"} 
-        />
-      </button>
-    </div>
+      />
+      {optimisticLike.count > 0 ? optimisticLike.count : ''}
+    </button>
   );
 }

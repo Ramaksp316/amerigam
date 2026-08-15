@@ -5,6 +5,7 @@ import { ThemeProvider } from './components/ThemeProvider';
 import Sidebar from './components/Sidebar';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import ActiveStatusTracker from './components/ActiveStatusTracker';
+import MobileBottomNav from './components/MobileBottomNav';
 import { cookies } from 'next/headers';
 import { prisma } from '../lib/prisma';
 
@@ -72,6 +73,7 @@ export default async function RootLayout({
             <main className="main-content">
               {children}
             </main>
+            <MobileBottomNav />
             <PWAInstallPrompt />
           </div>
           <script
