@@ -4,102 +4,134 @@ export default function DesktopComingSoon() {
   return (
     <>
       <style>{`
-        /* Hide the sidebar and reset layout just for this page */
-        .sidebar { display: none !important; }
-        .sidebar-container { display: none !important; }
+        /* Complete reset to ensure pure full-screen canvas without any app shell artifacts */
+        body {
+          margin: 0;
+          padding: 0;
+          background-color: #000000 !important;
+        }
+        .sidebar, .sidebar-container, .bottom-nav, .mobile-topbar { 
+          display: none !important; 
+        }
         .app-layout { 
-          grid-template-columns: 1fr !important; 
           display: block !important;
+          background-color: #000000 !important;
         }
         .main-content { 
-          margin-left: 0 !important; 
-          border-left: none !important;
+          margin: 0 !important; 
           padding: 0 !important;
-        }
-        /* Mobile layout overrides if any */
-        @media (max-width: 768px) {
-          .bottom-nav { display: none !important; }
-          .mobile-topbar { display: none !important; }
+          border: none !important;
+          background-color: #000000 !important;
         }
       `}</style>
 
       <div style={{
         minHeight: '100vh',
+        width: '100%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'var(--background, #0B0C10)',
-        color: 'white',
-        padding: '24px',
-        textAlign: 'center',
+        backgroundColor: '#000000',
         position: 'relative',
         overflow: 'hidden',
-        width: '100%'
+        fontFamily: 'var(--font-inter), sans-serif'
       }}>
-        {/* Background Texture */}
-        <div 
-          className="login-bg-texture" 
-          style={{ 
-            position: 'absolute', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0, 
-            zIndex: 0, 
-            opacity: 0.3, 
-            pointerEvents: 'none' 
-          }}
-        ></div>
         
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {/* Massive subtle background logo acting as abstract texture (X style) */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '100vw',
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: 0.03, // Extremely subtle
+          pointerEvents: 'none',
+          zIndex: 0
+        }}>
           <Image 
             src="/amerigam-logo-transparent.png" 
-            alt="Amerigam Logo" 
-            width={70} 
-            height={32} 
-            style={{ objectFit: 'contain' }}
+            alt="" 
+            width={1200} 
+            height={1200} 
+            style={{ objectFit: 'contain', width: '80vw', maxWidth: '1000px' }}
+            priority
           />
+        </div>
+
+        {/* Foreground Content */}
+        <div style={{ 
+          position: 'relative', 
+          zIndex: 1, 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center',
+          textAlign: 'center',
+          padding: '0 24px'
+        }}>
           
-          <h1 style={{ 
-            fontSize: '32px', 
-            fontWeight: 300, // Thin font as requested
-            letterSpacing: '0.4em', // Wide spacing like A M E R I G A M
-            textTransform: 'uppercase',
-            marginTop: '16px',
-            marginBottom: '40px',
-            marginLeft: '0.4em' // Offset to center properly with the huge letter spacing
+          {/* Logo & Wordmark Group */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '80px' }}>
+            <Image 
+              src="/amerigam-logo-transparent.png" 
+              alt="Amerigam Logo" 
+              width={72} 
+              height={36} 
+              style={{ objectFit: 'contain', marginBottom: '20px' }}
+              priority
+            />
+            <div style={{ 
+              color: '#FFFFFF',
+              fontSize: '18px',
+              fontWeight: 300,
+              letterSpacing: '0.4em',
+              textTransform: 'uppercase',
+              marginLeft: '0.4em' // Optical centering for extreme tracking
+            }}>
+              Amerigam
+            </div>
+          </div>
+
+          {/* Main Copy Group */}
+          <h1 style={{
+            color: '#FFFFFF',
+            fontSize: '56px',
+            fontWeight: 700,
+            letterSpacing: '-0.03em',
+            margin: '0 0 24px 0',
+            lineHeight: 1.1
           }}>
-            Amerigam
+            Desktop is coming soon.
           </h1>
           
-          <div style={{
-            display: 'inline-block',
-            background: 'rgba(29, 155, 240, 0.08)',
-            border: '1px solid rgba(29, 155, 240, 0.2)',
-            color: '#1D9BF0',
-            padding: '8px 24px',
-            borderRadius: '24px',
-            fontSize: '13px',
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em'
-          }}>
-            Desktop Version Coming Soon
-          </div>
-          
           <p style={{
-            marginTop: '32px',
-            color: '#A1A1AA',
-            fontSize: '15px',
-            maxWidth: '450px',
-            lineHeight: 1.6,
-            fontWeight: 400
+            color: '#A1A1AA', // Soft gray
+            fontSize: '22px',
+            fontWeight: 400,
+            margin: '0 0 64px 0',
+            maxWidth: '600px',
+            lineHeight: 1.5,
+            letterSpacing: '-0.01em'
           }}>
-            We are currently focusing entirely on crafting the perfect mobile experience. A dedicated desktop application will be designed and built later. 
-            <br /><br />
-            <strong style={{ color: 'white', fontWeight: 600 }}>Please access Amerigam using your mobile device.</strong>
+            Amerigam is currently built for mobile.<br/>
+            The desktop experience is on the way.
           </p>
+          
+          {/* Subtle Call to Action */}
+          <p style={{
+            color: '#71717A', // Deeper gray
+            fontSize: '15px',
+            fontWeight: 400,
+            margin: 0,
+            letterSpacing: '0.01em'
+          }}>
+            Open Amerigam on your mobile device to continue.
+          </p>
+
         </div>
       </div>
     </>
