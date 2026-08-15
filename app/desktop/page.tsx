@@ -4,10 +4,10 @@ export default function DesktopComingSoon() {
   return (
     <>
       <style>{`
-        /* Complete reset to ensure pure full-screen canvas without any app shell artifacts */
+        /* Reset any layout constraints */
         body {
-          margin: 0;
-          padding: 0;
+          margin: 0 !important;
+          padding: 0 !important;
           background-color: #000000 !important;
         }
         .sidebar, .sidebar-container, .bottom-nav, .mobile-topbar { 
@@ -26,8 +26,8 @@ export default function DesktopComingSoon() {
       `}</style>
 
       <div style={{
-        minHeight: '100vh',
-        width: '100%',
+        height: '100vh',
+        width: '100vw',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -38,18 +38,18 @@ export default function DesktopComingSoon() {
         fontFamily: 'var(--font-inter), sans-serif'
       }}>
         
-        {/* Massive subtle background logo acting as abstract texture (X style) */}
+        {/* Decorative Background Logo (Absolute) */}
         <div style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '100vw',
-          height: '100vh',
+          width: '100%',
+          height: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          opacity: 0.03, // Extremely subtle
+          opacity: 0.03,
           pointerEvents: 'none',
           zIndex: 0
         }}>
@@ -63,7 +63,11 @@ export default function DesktopComingSoon() {
           />
         </div>
 
-        {/* Foreground Content */}
+        {/* 
+          Main Content Group 
+          Everything is grouped in a single centered column with gap-based spacing 
+          so it remains perfectly centered vertically and horizontally.
+        */}
         <div style={{ 
           position: 'relative', 
           zIndex: 1, 
@@ -71,17 +75,18 @@ export default function DesktopComingSoon() {
           flexDirection: 'column', 
           alignItems: 'center',
           textAlign: 'center',
+          gap: '64px', /* Large gap between the 3 main sections */
           padding: '0 24px'
         }}>
           
-          {/* Logo & Wordmark Group */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '80px' }}>
+          {/* Section 1: Logo & Wordmark */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
             <Image 
               src="/amerigam-logo-transparent.png" 
               alt="Amerigam Logo" 
               width={72} 
               height={36} 
-              style={{ objectFit: 'contain', marginBottom: '20px' }}
+              style={{ objectFit: 'contain' }}
               priority
             />
             <div style={{ 
@@ -90,40 +95,42 @@ export default function DesktopComingSoon() {
               fontWeight: 300,
               letterSpacing: '0.4em',
               textTransform: 'uppercase',
-              marginLeft: '0.4em' // Optical centering for extreme tracking
+              marginLeft: '0.4em'
             }}>
               Amerigam
             </div>
           </div>
 
-          {/* Main Copy Group */}
-          <h1 style={{
-            color: '#FFFFFF',
-            fontSize: '56px',
-            fontWeight: 700,
-            letterSpacing: '-0.03em',
-            margin: '0 0 24px 0',
-            lineHeight: 1.1
-          }}>
-            Desktop is coming soon.
-          </h1>
+          {/* Section 2: Main Copy */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
+            <h1 style={{
+              color: '#FFFFFF',
+              fontSize: '56px',
+              fontWeight: 700,
+              letterSpacing: '-0.03em',
+              margin: 0,
+              lineHeight: 1.1
+            }}>
+              Desktop is coming soon.
+            </h1>
+            
+            <p style={{
+              color: '#A1A1AA', 
+              fontSize: '22px',
+              fontWeight: 400,
+              margin: 0,
+              maxWidth: '600px',
+              lineHeight: 1.5,
+              letterSpacing: '-0.01em'
+            }}>
+              Amerigam is currently built for mobile.<br/>
+              The desktop experience is on the way.
+            </p>
+          </div>
           
+          {/* Section 3: Call to Action */}
           <p style={{
-            color: '#A1A1AA', // Soft gray
-            fontSize: '22px',
-            fontWeight: 400,
-            margin: '0 0 64px 0',
-            maxWidth: '600px',
-            lineHeight: 1.5,
-            letterSpacing: '-0.01em'
-          }}>
-            Amerigam is currently built for mobile.<br/>
-            The desktop experience is on the way.
-          </p>
-          
-          {/* Subtle Call to Action */}
-          <p style={{
-            color: '#71717A', // Deeper gray
+            color: '#71717A',
             fontSize: '15px',
             fontWeight: 400,
             margin: 0,
