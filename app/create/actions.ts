@@ -14,8 +14,6 @@ export async function createPost(formData: FormData) {
   const mediaUrl = formData.get('mediaUrl') as string | null;
   const mediaType = formData.get('mediaType') as string | null;
   const aspectRatio = formData.get('aspectRatio') as string || 'original';
-  const relatedMasterPath = formData.get('relatedMasterPath') as string;
-  const relatedCorePath = formData.get('relatedCorePath') as string;
   const type = formData.get('type') as string || 'post';
 
   if (content || mediaUrl) {
@@ -33,8 +31,6 @@ export async function createPost(formData: FormData) {
         mediaUrl,
         mediaType,
         aspectRatio,
-        relatedMasterPath,
-        relatedCorePath,
         authorId: userId,
       },
     });

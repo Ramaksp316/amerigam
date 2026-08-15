@@ -161,9 +161,6 @@ export default function CreatePostForm({ currentUser }: { currentUser: any }) {
     actionData.append('type', formData.get('type') as string);
     actionData.append('content', formData.get('content') as string);
     actionData.append('aspectRatio', selectedAspectRatioType);
-    actionData.append('relatedMasterPath', formData.get('relatedMasterPath') as string);
-    actionData.append('relatedCorePath', formData.get('relatedCorePath') as string);
-    
     if (mediaUrl) {
       actionData.append('mediaUrl', mediaUrl);
       actionData.append('mediaType', mediaType);
@@ -197,22 +194,6 @@ export default function CreatePostForm({ currentUser }: { currentUser: any }) {
         <textarea name="content" className="input-field" placeholder="What's on your mind? Describe your post or project here..." style={{ resize: 'vertical', minHeight: '140px', fontSize: 'var(--text-md)' }}></textarea>
       </div>
       
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-4)' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: 'var(--space-2)', color: 'var(--text-secondary)', fontWeight: 500 }}>Related Path</label>
-          <select name="relatedMasterPath" className="input-field" defaultValue={currentUser?.masterPath || ""} style={{ cursor: 'pointer' }}>
-            <option value="">None</option>
-            <option value="The Professional">The Professional</option>
-            <option value="The Creator">The Creator</option>
-            <option value="The Athlete">The Athlete</option>
-            <option value="The Explorer">The Explorer</option>
-          </select>
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: 'var(--space-2)', color: 'var(--text-secondary)', fontWeight: 500 }}>Specific Arena (Optional)</label>
-          <input type="text" name="relatedCorePath" className="input-field" placeholder="e.g. Tech & AI" defaultValue={currentUser?.corePath || ""} />
-        </div>
-      </div>
 
       <div>
         <label style={{ display: 'block', marginBottom: 'var(--space-2)', color: 'var(--text-secondary)', fontWeight: 500 }}>Upload Photo/Video</label>

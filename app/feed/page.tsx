@@ -34,12 +34,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
 
   let whereClause = {};
   if (currentTab === 'foryou' && currentUser) {
-    whereClause = {
-      OR: [
-        { relatedMasterPath: currentUser.masterPath || undefined },
-        { relatedCorePath: currentUser.corePath || undefined }
-      ]
-    };
+    whereClause = {};
   }
 
   const posts = await prisma.post.findMany({

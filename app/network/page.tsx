@@ -23,10 +23,6 @@ export default async function NetworkPage() {
     where: {
       id: { not: userId },
       onboarded: true,
-      OR: [
-        { corePath: currentUser.corePath || undefined },
-        { mindset: currentUser.mindset || undefined },
-      ]
     },
     take: 10
   });
@@ -40,8 +36,8 @@ export default async function NetworkPage() {
 
       <div className="glass-card" style={{ marginBottom: 'var(--space-8)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: 'var(--gradient-primary)' }}></div>
-        <h3 style={{ marginBottom: 'var(--space-2)', fontSize: 'var(--text-lg)', color: 'var(--text-primary)' }}>Why these matches?</h3>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-md)' }}>Because you are <strong style={{ color: 'var(--text-primary)' }}>{currentUser.masterPath}</strong> interested in <strong style={{ color: 'var(--text-primary)' }}>{currentUser.corePath}</strong>.</p>
+        <h3 style={{ marginBottom: 'var(--space-2)', fontSize: 'var(--text-lg)', color: 'var(--text-primary)' }}>Suggested for you</h3>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-md)' }}>Discover new people to connect with.</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
@@ -57,16 +53,8 @@ export default async function NetworkPage() {
               <Link href={`/user/${person.id}`} style={{ textDecoration: 'none' }}>
                 <strong style={{ fontSize: 'var(--text-lg)', color: 'var(--text-primary)' }}>{person.name || person.username}</strong>
               </Link>
-              {person.corePath === currentUser.corePath && (
-                <span style={{ fontSize: '0.65rem', background: 'var(--gradient-primary)', color: '#FFF', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-full)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  100% Match
-                </span>
-              )}
             </div>
             
-            <span style={{ color: 'var(--accent-pink)', fontSize: 'var(--text-xs)', fontWeight: 700 }}>
-              {person.masterPath} {person.corePath ? `• ${person.corePath}` : ''}
-            </span>
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
               {person.bio || "No bio provided."}
             </p>

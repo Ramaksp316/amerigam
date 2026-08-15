@@ -96,11 +96,6 @@ export default async function SinglePostPage({ params }: { params: Promise<{ id:
               <strong style={{ fontSize: '0.9rem' }}>
                 <Link href={`/user/${post.authorId}`} style={{ textDecoration: 'none', color: 'var(--text-primary)' }}>{post.author.username || post.author.name}</Link>
               </strong>
-              {(post.relatedMasterPath || post.relatedCorePath) && (
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  {post.relatedMasterPath} {post.relatedCorePath ? `• ${post.relatedCorePath}` : ''}
-                </span>
-              )}
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

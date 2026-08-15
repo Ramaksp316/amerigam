@@ -27,10 +27,6 @@ model User {
   bio             String?
 
   // Onboarding Fields
-  masterPath    String?
-  corePath      String?
-  mindset       String?
-  vision        String?
   location      String?
   portfolioUrl  String?
   avatarData    String?  // Base64 string for cropped image
@@ -174,8 +170,6 @@ model Post {
   mediaUrl  String?
   mediaType String?
   aspectRatio String?   @default("original")
-  relatedMasterPath String?
-  relatedCorePath   String?
   authorId  String
   author    User      @relation(fields: [authorId], references: [id])
   comments  Comment[]
