@@ -30,8 +30,8 @@ export default function MobileDrawer({ currentUser }: { currentUser: any }) {
       const xDiff = touchEndX - touchStartX;
       const yDiff = touchEndY - touchStartY;
 
-      // Swipe right from left edge to open
-      if (!isOpen && Math.abs(xDiff) > Math.abs(yDiff) && xDiff > 50 && touchStartX < 40) {
+      // Swipe right from anywhere on the left 60% of the screen to open
+      if (!isOpen && Math.abs(xDiff) > Math.abs(yDiff) * 1.2 && xDiff > 35 && touchStartX < window.innerWidth * 0.6) {
         setIsOpen(true);
         touchStartX = 0;
       }
