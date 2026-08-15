@@ -14,6 +14,7 @@ export default function ProfilePicture({ user, size = 48, showStatus = true }: P
   const displayName = user?.name || user?.username || 'U';
   const initials = displayName.charAt(0).toUpperCase();
 
+  return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       {user?.avatarData ? (
         <img 
