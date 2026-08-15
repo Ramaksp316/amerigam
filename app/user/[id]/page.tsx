@@ -272,7 +272,7 @@ export default async function UserProfilePage({ params, searchParams }: { params
                               {isVerified && <CheckCircle2 size={14} color="#1D9BF0" fill="#1D9BF0" />}
                               <span style={{ color: '#71717A', fontSize: '15px', marginLeft: '4px' }}>@{user.username}</span>
                               <span style={{ color: '#71717A', fontSize: '15px' }}>·</span>
-                              <span style={{ color: '#71717A', fontSize: '15px' }}><LocalTime date={post.createdAt} format="time" /></span>
+                              <span style={{ color: '#71717A', fontSize: '15px' }}><LocalTime date={post.createdAt} format="relative" /></span>
                             </div>
                             <div style={{ fontSize: '13px', color: '#A1A1AA', marginTop: '2px' }}>{identityLine}</div>
                           </div>

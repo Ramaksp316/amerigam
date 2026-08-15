@@ -181,7 +181,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                         </span>
                         <span style={{ color: '#71717A', fontSize: '15px' }}>·</span>
                         <span style={{ color: '#71717A', fontSize: '15px' }}>
-                          <LocalTime date={post.createdAt} format="time" />
+                          <LocalTime date={post.createdAt} format="relative" />
                         </span>
                       </div>
                       <div style={{ fontSize: '13px', color: '#A1A1AA', marginTop: '2px' }}>
