@@ -21,10 +21,6 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
     where: { id: userId }
   });
 
-  if (currentUser && !currentUser.onboarded) {
-    redirect('/onboarding');
-  }
-
   const resolvedSearchParams = await searchParams;
   const currentTab = resolvedSearchParams.tab || 'foryou';
 
@@ -61,7 +57,9 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
       <div style={{
         position: 'sticky',
         top: 0,
-        background: '#000000',
+        background: 'rgba(0, 0, 0, 0.85)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
         zIndex: 50,
         display: 'flex',
         flexDirection: 'column',

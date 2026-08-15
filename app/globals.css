@@ -909,6 +909,11 @@ a {
   --surface-1: #000000 !important;
 }
 
+/* Remove tap highlight globally on mobile */
+a, button, input, textarea, select {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
 /* Hide sidebar and right panel on mobile */
 @media (max-width: 768px) {
   .sidebar, .layout-right {
@@ -936,7 +941,9 @@ a {
     bottom: 0;
     left: 0;
     right: 0;
-    background: #000000;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid #27272A;
     justify-content: space-around;
     align-items: center;
@@ -954,16 +961,27 @@ a {
     text-decoration: none;
     font-size: 10px;
     gap: 2px;
-    width: 60px;
+    width: 65px;
+    transition: color 0.2s ease;
   }
   
   .nav-item.active {
     color: #FFFFFF;
+    font-weight: 600;
+  }
+  
+  .nav-item svg {
+    color: currentColor;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   
   .nav-item.active svg {
     color: #FFFFFF;
-    fill: #FFFFFF;
+  }
+
+  .nav-item:active svg {
+    transform: scale(0.85);
+    transition: transform 0.1s ease-out;
   }
 
   .nav-item-center {
@@ -982,5 +1000,28 @@ a {
     width: 44px;
     height: 44px;
     text-decoration: none;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+  }
+  
+  .create-btn:active {
+    transform: scale(0.9);
+    background: #E4E4E7;
+    transition: transform 0.1s ease-out, background-color 0.1s ease;
+  }
+}
+
+/* Page Transition Animation */
+.page-transition-enter {
+  animation: pageFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes pageFadeIn {
+  from { 
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
   }
 }
