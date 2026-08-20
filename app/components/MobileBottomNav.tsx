@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, PlaySquare, Trophy, BarChart2, Plus } from 'lucide-react';
+import { Home, MessageCircle, Trophy, BarChart2, Plus } from 'lucide-react';
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
@@ -21,9 +21,9 @@ export default function MobileBottomNav() {
         <span>Home</span>
       </Link>
       
-      <Link href="/feed" className={`nav-item ${isActive('/feed') ? 'active' : ''}`} prefetch={true}>
-        <PlaySquare size={26} strokeWidth={isActive('/feed') ? 2.5 : 2} />
-        <span>Feed</span>
+      <Link href="/messages" className={`nav-item ${isActive('/messages') ? 'active' : ''}`} prefetch={true}>
+        <MessageCircle size={26} strokeWidth={isActive('/messages') ? 2.5 : 2} />
+        <span>Messages</span>
       </Link>
       
       <div className="nav-item-center">

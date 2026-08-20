@@ -97,6 +97,9 @@ function ReelItem({ reel, isActive, isGlobalMuted, setIsGlobalMuted }: any) {
 
   useEffect(() => {
     setIsMuted(isGlobalMuted);
+    if (videoRef.current) {
+      videoRef.current.muted = isGlobalMuted;
+    }
   }, [isGlobalMuted]);
 
   useEffect(() => {
@@ -121,7 +124,11 @@ function ReelItem({ reel, isActive, isGlobalMuted, setIsGlobalMuted }: any) {
 
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsGlobalMuted(!isGlobalMuted);
+    const nextMuted = !isGlobalMuted;
+    setIsGlobalMuted(nextMuted);
+    if (videoRef.current) {
+      videoRef.current.muted = nextMuted;
+    }
   };
 
   const handleLike = async (e: React.MouseEvent) => {
