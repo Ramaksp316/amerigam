@@ -160,8 +160,8 @@ export default function MobileDrawer({ currentUser }: { currentUser: any }) {
 
               {/* Main Links */}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <Link href="/feed" style={navItemStyle}>
-                  <Home size={24} color="#F4F4F5" /> Feed
+                <Link href="/home" style={navItemStyle}>
+                  <Home size={24} color="#F4F4F5" /> Home
                 </Link>
                 <Link href="/communities" style={navItemStyle}>
                   <Users size={24} color="#F4F4F5" /> Communities
