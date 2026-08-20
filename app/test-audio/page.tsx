@@ -10,7 +10,7 @@ export default function TestAudioPage() {
           controls 
           playsInline 
           style={{ width: '100%', maxWidth: '400px' }}
-          src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+          src="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
         />
       </div>
 

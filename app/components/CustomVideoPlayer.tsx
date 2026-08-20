@@ -103,12 +103,17 @@ export default function CustomVideoPlayer({
 
   useEffect(() => {
     resetControlsTimeout();
+    // Explicitly set initial audio state
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+      videoRef.current.volume = isMuted ? 0 : 1.0;
+    }
     return () => {
       if (controlsTimeoutRef.current) {
         clearTimeout(controlsTimeoutRef.current);
       }
     };
-  }, [isPlaying]);
+  }, [isPlaying, isMuted]);
 
   const formatTime = (time: number) => {
     if (isNaN(time)) return '0:00';
@@ -266,7 +271,7 @@ export default function CustomVideoPlayer({
               </button>
 
               {/* Time Display */}
-              <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'monospace' }}>
+              <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.95)', fontFamily: 'monospace', letterSpacing: '0.5px' }}>
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
             </div>

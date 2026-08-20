@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Home, Users, Globe, Trophy, Settings, HelpCircle, Info, LogOut, ChevronRight } from 'lucide-react';
+import { Home, Users, Globe, Trophy, Settings, HelpCircle, Info, LogOut, ChevronRight, Film } from 'lucide-react';
 import ProfilePicture from './ProfilePicture';
 
 export default function MobileDrawer({ currentUser }: { currentUser: any }) {
@@ -162,6 +162,9 @@ export default function MobileDrawer({ currentUser }: { currentUser: any }) {
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <Link href="/home" style={navItemStyle}>
                   <Home size={24} color="#F4F4F5" /> Home
+                </Link>
+                <Link href="/feed" style={navItemStyle}>
+                  <Film size={24} color="#F4F4F5" /> Feed
                 </Link>
                 <Link href="/communities" style={navItemStyle}>
                   <Users size={24} color="#F4F4F5" /> Communities
