@@ -54,7 +54,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   }
 
   return (
-    <div style={{ backgroundColor: '#000000', minHeight: '100vh', width: '100%' }}>
+    <div style={{ backgroundColor: '#000000', minHeight: '100vh', width: '100%', maxWidth: '600px', margin: '0 auto', overflowX: 'hidden' }}>
       {/* Mobile Sticky Header */}
       <div style={{
         position: 'sticky',
@@ -110,48 +110,29 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
         {/* Tabs Row */}
         <div style={{
           display: 'flex',
-          justifyContent: 'space-around',
+          justifyContent: 'space-between',
           borderBottom: '1px solid #27272A',
+          padding: '0 8px'
         }}>
-          <Link href="/feed?tab=foryou" style={{
-            flex: 1, textAlign: 'center', padding: '12px 0',
-            color: currentTab === 'foryou' ? 'white' : '#71717A',
-            fontWeight: currentTab === 'foryou' ? 700 : 600,
-            textDecoration: 'none',
-            position: 'relative',
-            fontSize: '15px'
-          }}>
-            For you
-            {currentTab === 'foryou' && (
-              <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '56px', height: '4px', background: '#FFFFFF', borderRadius: '4px 4px 0 0' }} />
-            )}
-          </Link>
-          <Link href="/feed?tab=communities" style={{
-            flex: 1, textAlign: 'center', padding: '12px 0',
-            color: currentTab === 'communities' ? 'white' : '#71717A',
-            fontWeight: currentTab === 'communities' ? 700 : 600,
-            textDecoration: 'none',
-            position: 'relative',
-            fontSize: '15px'
-          }}>
-            Communities
-            {currentTab === 'communities' && (
-              <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '56px', height: '4px', background: '#FFFFFF', borderRadius: '4px 4px 0 0' }} />
-            )}
-          </Link>
-          <Link href="/feed?tab=network" style={{
-            flex: 1, textAlign: 'center', padding: '12px 0',
-            color: currentTab === 'network' ? 'white' : '#71717A',
-            fontWeight: currentTab === 'network' ? 700 : 600,
-            textDecoration: 'none',
-            position: 'relative',
-            fontSize: '15px'
-          }}>
-            Network
-            {currentTab === 'network' && (
-              <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '56px', height: '4px', background: '#FFFFFF', borderRadius: '4px 4px 0 0' }} />
-            )}
-          </Link>
+          {['For You', 'Interests', 'Hobbies', 'Following'].map((tabLabel) => {
+            const tabKey = tabLabel.toLowerCase().replace(' ', '');
+            const isActive = currentTab === tabKey;
+            return (
+              <Link key={tabKey} href={`/feed?tab=${tabKey}`} style={{
+                flex: 1, textAlign: 'center', padding: '14px 0',
+                color: isActive ? 'white' : '#71717A',
+                fontWeight: isActive ? 700 : 500,
+                textDecoration: 'none',
+                position: 'relative',
+                fontSize: '14px'
+              }}>
+                {tabLabel}
+                {isActive && (
+                  <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '36px', height: '4px', background: '#1D9BF0', borderRadius: '4px 4px 0 0' }} />
+                )}
+              </Link>
+            )
+          })}
         </div>
       </div>
 
