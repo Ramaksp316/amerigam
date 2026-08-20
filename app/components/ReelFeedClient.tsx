@@ -4,23 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Heart, MessageCircle, Send, Bookmark, Volume2, VolumeX, MoreVertical, CheckCircle2 } from 'lucide-react';
 import ProfilePicture from './ProfilePicture';
-import { toggleLike } from '../home/actions'; // Reuse existing like logic if available, else we can make a local one or just call it. Wait, home/actions might not exist. I'll mock the action for now or write a clean action if needed.
-
-// We will define toggleLike internally to avoid import issues if it moved.
-async function doToggleLike(postId: string, currentLikedState: boolean) {
-  try {
-    const res = await fetch('/api/post/like', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ postId, like: !currentLikedState })
-    });
-    if (!res.ok) throw new Error('Failed to toggle like');
-    return await res.json();
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
-}
+import { toggleLike } from '../actions/postActions';
 
 export default function ReelFeedClient({ reels, currentUserId }: { reels: any[], currentUserId: string }) {
   const [activeReelId, setActiveReelId] = useState<string | null>(reels[0]?.id || null);
@@ -137,7 +121,14 @@ function ReelItem({ reel, isActive, isGlobalMuted, setIsGlobalMuted }: any) {
     setIsLiked(newLikedState);
     setLikeCount(prev => newLikedState ? prev + 1 : prev - 1);
     
-    await doToggleLike(reel.id, isLiked);
+    try {
+      await toggleLike(reel.id);
+    } catch (err) {
+      console.error('Failed to toggle like:', err);
+      // Revert on failure
+      setIsLiked(!newLikedState);
+      setLikeCount(prev => !newLikedState ? prev + 1 : prev - 1);
+    }
   };
 
   const isVerified = reel.author.accountType !== 'PERSONAL';
