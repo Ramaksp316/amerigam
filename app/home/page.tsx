@@ -248,6 +248,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                       }}>
                         <CustomVideoPlayer 
                           src={post.mediaUrl} 
+                          audioSrc={post.audioUrl || undefined}
                           style={{ width: '100%', display: 'block' }} 
                         />
                       </div>

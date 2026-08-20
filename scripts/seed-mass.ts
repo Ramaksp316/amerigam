@@ -345,12 +345,25 @@ async function main() {
         if (!mediaUrl) continue; // Skip creating broken post
       }
 
+      let audioUrl = null;
+      if (mediaType === 'video') {
+        const AMBIENT_SOUNDS = [
+          'https://actions.google.com/sounds/v1/office/keyboard_typing.ogg',
+          'https://actions.google.com/sounds/v1/crowds/battle_crowd_cheer.ogg',
+          'https://actions.google.com/sounds/v1/ambiences/barn_swallows.ogg',
+          'https://actions.google.com/sounds/v1/water/waves_crashing_on_rock_beach.ogg'
+        ];
+        // Ensure ALL seeded video posts have a guaranteed audio track
+        audioUrl = AMBIENT_SOUNDS[Math.floor(Math.random() * AMBIENT_SOUNDS.length)];
+      }
+
       const post = await prisma.post.create({
         data: {
           authorId: user.id,
           content: getCaption(category),
           mediaUrl,
           mediaType,
+          audioUrl,
           aspectRatio,
           category,
           tags,

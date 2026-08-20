@@ -170,6 +170,7 @@ model Post {
   content     String
   mediaUrl    String?
   mediaType   String?
+  audioUrl    String?
   aspectRatio String?   @default("original")
   category    String?
   tags        String[]  @default([])

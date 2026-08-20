@@ -5,12 +5,15 @@ import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw } from 'lucide-react
 
 export default function CustomVideoPlayer({ 
   src, 
+  audioSrc,
   style 
 }: { 
   src: string; 
+  audioSrc?: string;
   style?: React.CSSProperties;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -28,9 +31,11 @@ export default function CustomVideoPlayer({
     if (!videoRef.current) return;
     if (isPlaying) {
       videoRef.current.pause();
+      if (audioRef.current) audioRef.current.pause();
       setIsPlaying(false);
     } else {
       videoRef.current.play().catch(() => {});
+      if (audioRef.current) audioRef.current.play().catch(() => {});
       setIsPlaying(true);
     }
     resetControlsTimeout();
@@ -44,8 +49,11 @@ export default function CustomVideoPlayer({
     if (!videoRef.current) return;
     const nextMuted = !isMuted;
     videoRef.current.muted = nextMuted;
+    if (audioRef.current) audioRef.current.muted = nextMuted;
+
     if (!nextMuted) {
       videoRef.current.volume = 1.0;
+      if (audioRef.current) audioRef.current.volume = 1.0;
     }
     setIsMuted(nextMuted);
     resetControlsTimeout();
@@ -70,6 +78,7 @@ export default function CustomVideoPlayer({
     const seekValue = parseFloat(e.target.value);
     const seekTime = (seekValue / 100) * duration;
     videoRef.current.currentTime = seekTime;
+    if (audioRef.current) audioRef.current.currentTime = seekTime;
     setProgress(seekValue);
     resetControlsTimeout();
   };
@@ -107,6 +116,10 @@ export default function CustomVideoPlayer({
     if (videoRef.current) {
       videoRef.current.muted = isMuted;
       videoRef.current.volume = isMuted ? 0 : 1.0;
+    }
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+      audioRef.current.volume = isMuted ? 0 : 1.0;
     }
     return () => {
       if (controlsTimeoutRef.current) {
@@ -157,6 +170,13 @@ export default function CustomVideoPlayer({
           cursor: 'pointer'
         }}
       />
+      {audioSrc && (
+        <audio
+          ref={audioRef}
+          src={audioSrc}
+          playsInline
+        />
+      )}
 
       {/* Loading Spinner */}
       {isLoading && (
