@@ -42,8 +42,12 @@ export default function CustomVideoPlayer({
       e.preventDefault();
     }
     if (!videoRef.current) return;
-    videoRef.current.muted = !isMuted;
-    setIsMuted(!isMuted);
+    const nextMuted = !isMuted;
+    videoRef.current.muted = nextMuted;
+    if (!nextMuted) {
+      videoRef.current.volume = 1.0;
+    }
+    setIsMuted(nextMuted);
     resetControlsTimeout();
   };
 

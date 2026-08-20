@@ -87,24 +87,32 @@ function ReelItem({ reel, isActive, isGlobalMuted, setIsGlobalMuted }: any) {
   }, [isGlobalMuted]);
 
   useEffect(() => {
-    if (isActive && videoRef.current) {
+    if (!videoRef.current) return;
+    
+    if (isActive) {
+      // Only reset currentTime if it's paused and at the end, or if we want to restart on swipe.
+      // Actually, just let it play from where it was, or reset ONLY when becoming active.
       videoRef.current.currentTime = 0;
-      // Play handles autoplay restrictions
+      if (!isGlobalMuted) {
+        videoRef.current.volume = 1.0;
+        videoRef.current.muted = false;
+      } else {
+        videoRef.current.muted = true;
+      }
       videoRef.current.play().catch(e => {
         console.warn("Autoplay prevented:", e);
-        // If autoplay fails (e.g. because of audio), forcing mute can sometimes fix it
-        if (!isMuted) {
-          setIsGlobalMuted(true);
-          if (videoRef.current) {
-            videoRef.current.muted = true;
-            videoRef.current.play().catch(console.error);
-          }
+        // If autoplay fails, force mute to satisfy browser policy
+        setIsGlobalMuted(true);
+        if (videoRef.current) {
+          videoRef.current.muted = true;
+          videoRef.current.play().catch(console.error);
         }
       });
-    } else if (!isActive && videoRef.current) {
+    } else {
       videoRef.current.pause();
     }
-  }, [isActive, isMuted, setIsGlobalMuted]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive]); // CRITICAL: Do NOT include isMuted or it will restart the video when toggling audio!
 
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -112,6 +120,9 @@ function ReelItem({ reel, isActive, isGlobalMuted, setIsGlobalMuted }: any) {
     setIsGlobalMuted(nextMuted);
     if (videoRef.current) {
       videoRef.current.muted = nextMuted;
+      if (!nextMuted) {
+        videoRef.current.volume = 1.0;
+      }
     }
   };
 
