@@ -31,6 +31,7 @@ model User {
   portfolioUrl String?
   avatarData   String? // Base64 string for cropped image
   onboarded    Boolean @default(false)
+  amerigamPoints Int   @default(0) // AP metric for ranking
 
   posts            Post[]
   comments         Comment[]
@@ -170,6 +171,9 @@ model Post {
   mediaUrl    String?
   mediaType   String?
   aspectRatio String?   @default("original")
+  category    String?
+  tags        String[]  @default([])
+  isSeeded    Boolean   @default(false)
   authorId    String
   author      User      @relation(fields: [authorId], references: [id])
   comments    Comment[]
