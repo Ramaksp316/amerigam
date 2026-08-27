@@ -80,7 +80,7 @@ export default async function UserProfilePage({ params, searchParams }: { params
         
         {/* Sticky Header Back Navigation could go here, for now just empty top spacing or banner */}
         <div style={{
-          height: '140px',
+          height: '100px',
           background: 'linear-gradient(to bottom, rgba(29, 155, 240, 0.1), rgba(0,0,0,0))',
           width: '100%',
         }}></div>
@@ -126,7 +126,7 @@ export default async function UserProfilePage({ params, searchParams }: { params
             </div>
           </div>
 
-          <div style={{ marginTop: '16px' }}>
+          <div style={{ marginTop: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800 }}>{user.name}</h1>
               {isVerified && <CheckCircle2 size={18} color="#1D9BF0" fill="#1D9BF0" />}
@@ -143,7 +143,7 @@ export default async function UserProfilePage({ params, searchParams }: { params
             )}
 
             {user.bio && (
-              <p style={{ color: 'white', fontSize: '15px', margin: '12px 0 0 0', lineHeight: 1.4 }}>
+              <p style={{ color: 'white', fontSize: '15px', margin: '8px 0 0 0', lineHeight: 1.4 }}>
                 {user.bio}
               </p>
             )}
@@ -216,22 +216,29 @@ export default async function UserProfilePage({ params, searchParams }: { params
         {/* Tabs */}
         <div style={{
           display: 'flex',
-          justifyContent: 'space-around',
+          justifyContent: 'space-between',
           borderBottom: '1px solid var(--border-color)',
-          marginTop: '20px'
+          marginTop: '16px',
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
         }}>
-          {['posts', 'about', 'achievements', 'competitions'].map(t => (
+          {['posts', 'about', 'achievements', 'competitions', 'challenges'].map(t => (
             <Link href={`/user/${targetUserId}?tab=${t}`} key={t} style={{
-              flex: 1, textAlign: 'center', padding: '16px 0',
+              flex: 1, 
+              textAlign: 'center', 
+              padding: '12px 8px',
               color: activeTab === t ? 'white' : '#71717A',
               fontWeight: activeTab === t ? 700 : 500,
+              fontSize: '13px',
               textDecoration: 'none',
               position: 'relative',
-              textTransform: 'capitalize'
+              textTransform: 'capitalize',
+              whiteSpace: 'nowrap'
             }}>
               {t}
               {activeTab === t && (
-                <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '40px', height: '4px', background: '#1D9BF0', borderRadius: '4px 4px 0 0' }} />
+                <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '30px', height: '3px', background: '#1D9BF0', borderRadius: '3px 3px 0 0' }} />
               )}
             </Link>
           ))}
@@ -258,8 +265,8 @@ export default async function UserProfilePage({ params, searchParams }: { params
                       transition: 'background 0.2s',
                       cursor: 'pointer'
                     }}
-                    onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-                    onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                    
+                    
                     >
                       <div style={{ flexShrink: 0 }}>
                         <ProfilePicture user={user} size={40} />
@@ -279,7 +286,7 @@ export default async function UserProfilePage({ params, searchParams }: { params
                           <button style={{ background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', padding: '4px' }}><MoreHorizontal size={18} /></button>
                         </div>
                         {post.content && (
-                          <div style={{ fontSize: '15px', color: 'white', marginTop: '8px', lineHeight: '1.4', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                          <div style={{ fontSize: '15px', color: 'white', marginTop: '4px', lineHeight: '1.4', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                             {post.content}
                           </div>
                         )}
@@ -292,12 +299,12 @@ export default async function UserProfilePage({ params, searchParams }: { params
                             )}
                           </div>
                         )}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', color: '#71717A', maxWidth: '425px' }}>
-                          <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}><MessageCircle size={18} /> {post.comments.length > 0 ? post.comments.length : ''}</button>
-                          <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}><Repeat2 size={18} /> {Math.floor(Math.random() * 50)}</button>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: hasLiked ? '#F91880' : 'inherit' }}><LikeButton postId={post.id} initialHasLiked={hasLiked} initialLikesCount={post.likes.length} /></div>
-                          <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}><Send size={18} /></button>
-                          <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}><Bookmark size={18} /></button>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', color: '#71717A', maxWidth: '425px' }}>
+                          <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}><MessageCircle size={16} /> {post.comments.length > 0 ? post.comments.length : ''}</button>
+                          <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}><Repeat2 size={16} /> {Math.floor(Math.random() * 50)}</button>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: hasLiked ? '#F91880' : 'inherit', fontSize: '13px' }}><LikeButton postId={post.id} initialHasLiked={hasLiked} initialLikesCount={post.likes.length} /></div>
+                          <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}><Send size={16} /></button>
+                          <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}><Bookmark size={16} /></button>
                         </div>
                       </div>
                     </div>
