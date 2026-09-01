@@ -1,19 +1,41 @@
-import React from 'react';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { prisma } from '@/lib/prisma';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import ViewAllPageClient from '../ViewAllPageClient';
 
-export default function ViewAllPage() {
+export default async function FollowingCompetitionsPage() {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+
+  if (!userId) redirect('/login');
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      following: { select: { followingId: true } },
+      eventRegistrations: { select: { eventId: true } }
+    }
+  });
+
+  if (!user) redirect('/login');
+
+  const followedIds = user.following.map((f: any) => f.followingId);
+  const registeredEventIds = user.eventRegistrations.map((r: any) => r.eventId);
+
+  const followingEvents = await prisma.event.findMany({
+    where: { creatorId: { in: followedIds } },
+    include: {
+      creator: { select: { name: true, avatarData: true } },
+      _count: { select: { registrations: true } }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
   return (
-    <div style={{ backgroundColor: '#000000', minHeight: '100vh', padding: '20px', color: '#FFF' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-        <Link href="/competitions" style={{ color: '#FFF' }}>
-          <ArrowLeft size={24} />
-        </Link>
-        <h1 style={{ fontSize: '20px', fontWeight: 600, margin: 0 }}>View All</h1>
-      </div>
-      <div style={{ color: '#A1A1AA' }}>
-        This page will contain the full list of competitions. Coming soon.
-      </div>
-    </div>
+    <ViewAllPageClient 
+      title="Following" 
+      events={followingEvents} 
+      registeredEventIds={registeredEventIds} 
+    />
   );
 }

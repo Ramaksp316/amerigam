@@ -1,76 +1,114 @@
-import { prisma } from '../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
-import { Search, Bell, CheckCircle2 } from 'lucide-react';
-import ProfilePicture from '../components/ProfilePicture';
+import { Search, Bell, CheckCircle2, MessageSquare, X } from 'lucide-react';
 import FollowButton from '../components/FollowButton';
 
-export default async function NetworkPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+export default async function NetworkPage({ searchParams }: { searchParams: Promise<{ tab?: string, q?: string }> }) {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
 
   if (!userId) redirect('/login');
 
   const currentUser = await prisma.user.findUnique({
-    where: { id: userId }
+    where: { id: userId },
+    include: {}
   });
+
+  if (!currentUser) redirect('/login');
 
   const resolvedSearchParams = await searchParams;
-  const currentTab = resolvedSearchParams.tab || 'suggested';
+  const currentTab = resolvedSearchParams.tab || 'foryou';
+  const searchQuery = resolvedSearchParams.q || '';
 
-  const unreadCount = await prisma.notification.count({
-    where: { userId, isRead: false }
+  // Fetch unread count for bell
+  const unreadCount = await prisma.message.count({
+    where: {
+      conversation: {
+        OR: [{ user1Id: userId }, { user2Id: userId }]
+      },
+      senderId: { not: userId },
+      isRead: false
+    }
   });
 
-  // Basic deterministic fetching for now based on active account type
-  let usersToDisplay = [];
-  
-  if (currentTab === 'following') {
-    const following = await prisma.follow.findMany({
-      where: { followerId: userId },
-      include: {
-        following: {
-          include: { outgoingConnections: { include: { target: true } } }
-        }
-      }
-    });
-    usersToDisplay = following.map(f => f.following);
-  } else if (currentTab === 'professional') {
-    usersToDisplay = await prisma.user.findMany({
-      where: { 
-        id: { not: userId },
-        accountType: { in: ['BUSINESS', 'ORGANIZATION', 'PERSONAL'] }
-      },
-      include: { outgoingConnections: { include: { target: true } } },
-      take: 20
-    });
-  } else {
-    // Suggested & Similar
-    usersToDisplay = await prisma.user.findMany({
-      where: { 
-        id: { not: userId }
-      },
-      include: { outgoingConnections: { include: { target: true } } },
-      take: 30
-    });
-    
-    // Sort randomly to simulate suggestions for the beta
-    usersToDisplay = usersToDisplay.sort(() => Math.random() - 0.5).slice(0, 15);
-  }
-
-  // Get current user's followings to pass to the FollowButton
   const currentUserFollows = await prisma.follow.findMany({
     where: { followerId: userId },
     select: { followingId: true }
   });
   const followingIds = currentUserFollows.map(f => f.followingId);
 
+  let usersToDisplay: any[] = [];
+
+  const allUsers = await prisma.user.findMany({
+    where: { id: { not: userId }, accountType: 'PERSONAL' },
+    include: {
+      outgoingConnections: { include: { target: true } },
+      followers: { select: { followerId: true } }
+    }
+  });
+
+  if (searchQuery) {
+    const qLower = searchQuery.toLowerCase();
+    const isIdSearch = /^[0-9a-fA-F]{24}$/.test(searchQuery) || /^[0-9a-fA-F-]{36}$/.test(searchQuery);
+    
+    usersToDisplay = allUsers.filter(u => {
+      if (isIdSearch && u.id === searchQuery) return true;
+      if (u.username && u.username.toLowerCase().includes(qLower)) return true;
+      if (u.name && u.name.toLowerCase().includes(qLower)) return true;
+      // Handle exact @username
+      if (qLower.startsWith('@') && u.username && u.username.toLowerCase() === qLower.substring(1)) return true;
+      return false;
+    });
+  } else if (currentTab === 'following') {
+    usersToDisplay = allUsers.filter(u => followingIds.includes(u.id));
+  } else if (currentTab === 'discover') {
+    usersToDisplay = allUsers;
+  } else {
+    // For You
+    const userKeywords = [
+      (currentUser as any).mainIdentity,
+      ...(((currentUser as any).skills ? JSON.parse((currentUser as any).skills) : []) || [])
+    ].filter(Boolean).map(k => k.toLowerCase());
+
+    usersToDisplay = allUsers.map(user => {
+      let score = 0;
+      let reasons: string[] = [];
+      const matchText = ((user as any).mainIdentity || '') + ' ' + ((user as any).mainIdentity || '');
+      
+      const userTerms = [
+        (user as any).mainIdentity,
+        ...(((user as any).skills ? JSON.parse((user as any).skills) : []) || [])
+      ].filter(Boolean);
+
+      userKeywords.forEach(kw => {
+        if (matchText.toLowerCase().includes(kw)) { score++; }
+        userTerms.forEach(t => {
+          if (t.toLowerCase().includes(kw)) { score++; reasons.push('Shared interest'); }
+        });
+      });
+
+      if ((user as any).mainIdentity && (user as any).mainIdentity === (currentUser as any).mainIdentity) {
+        score += 2;
+        reasons.push('Same career');
+      }
+
+      return { user, score, reasons: [...new Set(reasons)] };
+    }).filter(item => item.score > 0 || userKeywords.length === 0)
+      .sort((a, b) => b.score - a.score)
+      .map(item => ({ ...item.user, relevanceContext: item.reasons[0] }));
+      
+    if (usersToDisplay.length === 0) {
+      usersToDisplay = allUsers;
+    }
+  }
+
   return (
     <div style={{ backgroundColor: '#000000', minHeight: '100vh', width: '100%', maxWidth: '600px', margin: '0 auto', overflowX: 'hidden' }}>
       
-      {/* Mobile Sticky Header */}
+      {/* Header */}
       <div style={{
         position: 'sticky',
         top: 0,
@@ -81,7 +119,6 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
         display: 'flex',
         flexDirection: 'column',
       }}>
-        {/* Top Icons Row */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -90,93 +127,91 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Link href="/feed">
-              <Image 
-                src="/logo-new.jpg" 
-                alt="Amerigam" 
-                width={34} 
-                height={34} 
-                style={{ objectFit: 'contain', mixBlendMode: 'screen' }}
-                priority
-              />
+              <Image src="/logo-new.jpg" alt="Amerigam" width={34} height={34} style={{ objectFit: 'contain', mixBlendMode: 'screen' }} priority />
             </Link>
             <span style={{ color: 'white', fontSize: '18px', fontWeight: 600, letterSpacing: '-0.3px' }}>Network</span>
           </div>
-          
           <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-            <Link href="/search" style={{ color: 'white' }}>
-              <Search size={22} strokeWidth={2.5} />
-            </Link>
             <Link href="/notifications" style={{ color: 'white', position: 'relative' }}>
-              <Bell size={22} strokeWidth={2.5} />
+              <Bell size={22} strokeWidth={2} />
               {unreadCount > 0 && (
-                <div style={{
-                  position: 'absolute',
-                  top: '-2px',
-                  right: '-2px',
-                  background: '#F91880',
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  border: '2px solid #000'
-                }} />
+                <div style={{ position: 'absolute', top: '-2px', right: '-2px', background: 'var(--accent-primary)', width: '8px', height: '8px', borderRadius: '50%', border: '2px solid #000' }} />
               )}
             </Link>
           </div>
         </div>
+        
+        {/* Search Bar */}
+        <div style={{ padding: '0 16px 12px 16px' }}>
+          <form action="/network" method="GET" style={{ position: 'relative' }}>
+            <Search size={18} color="#71717A" style={{ position: 'absolute', left: '12px', top: '10px' }} strokeWidth={2} />
+            <input 
+              name="q"
+              type="text" 
+              defaultValue={searchQuery}
+              placeholder="Search users..." 
+              style={{
+                width: '100%',
+                background: '#18181B',
+                border: '1px solid #27272A',
+                borderRadius: '8px',
+                padding: '10px 10px 10px 38px',
+                color: 'white',
+                fontSize: '14px',
+                outline: 'none'
+              }}
+            />
+            {searchQuery && (
+              <Link href="/network" style={{ position: 'absolute', right: '12px', top: '10px', color: '#71717A' }}>
+                <X size={18} />
+              </Link>
+            )}
+          </form>
+        </div>
 
         {/* Tabs Row */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          borderBottom: '1px solid #27272A',
-          padding: '0 8px'
-        }}>
-          {['Suggested', 'Similar', 'Professional', 'Following'].map((tabLabel) => {
-            const tabKey = tabLabel.toLowerCase().split(' ')[0];
-            const isActive = currentTab === tabKey;
-            return (
-              <Link key={tabKey} href={`/network?tab=${tabKey}`} style={{
-                flex: 1, textAlign: 'center', padding: '14px 0',
-                color: isActive ? 'white' : '#71717A',
-                fontWeight: isActive ? 700 : 500,
-                textDecoration: 'none',
-                position: 'relative',
-                fontSize: '14px'
-              }}>
-                {tabLabel}
-                {isActive && (
-                  <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '36px', height: '4px', background: '#1D9BF0', borderRadius: '4px 4px 0 0' }} />
-                )}
-              </Link>
-            )
-          })}
-        </div>
+        {!searchQuery && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid #27272A',
+            padding: '0 8px'
+          }}>
+            {['Discover', 'Following'].map((tabLabel) => {
+              const tabKey = tabLabel.toLowerCase().replace(' ', '');
+              const isActive = currentTab === tabKey || (!currentTab && tabKey === 'discover');
+              return (
+                <Link key={tabKey} href={`/network?tab=${tabKey}`} style={{
+                  flex: 1, textAlign: 'center', padding: '14px 0',
+                  color: isActive ? 'white' : '#71717A',
+                  fontWeight: isActive ? 700 : 500,
+                  textDecoration: 'none',
+                  fontSize: '14px'
+                }}>
+                  {tabLabel}
+                </Link>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <div style={{ padding: '0', display: 'flex', flexDirection: 'column', paddingBottom: '100px' }}>
         {usersToDisplay.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px', color: '#71717A' }}>
-            <p style={{ fontSize: '15px' }}>No connections found.</p>
+            <p style={{ fontSize: '15px' }}>No users found.</p>
           </div>
         ) : (
           usersToDisplay.map(person => {
             const isVerified = person.accountType !== 'PERSONAL' || (person.followers && person.followers.length > 100);
-            const isFollowing = followingIds.includes(person.id);
             
-            let identityLine = '';
+            let identityLine = person.career || 'Amerigam Member';
             if (person.outgoingConnections && person.outgoingConnections.length > 0) {
               const conn = person.outgoingConnections[0];
-              identityLine = `${conn.role.replace('_', ' ')} • ${conn.target?.name || conn.target?.username || ''}`;
-            } else {
-              if (person.username === 'diyadraws') identityLine = 'Illustrator • Digital Artist';
-              else if (person.username === 'aaravbuilds') identityLine = 'Aspiring Founder • Tech';
-              else if (person.username === 'rohan.cuts') identityLine = 'Video Editor • Filmmaking';
-              else if (person.username === 'kabir.runs') identityLine = 'Athlete • Training';
-              else if (person.username === 'meeraframes') identityLine = 'Photographer • Visual Arts';
-              else if (person.username === 'ishaan.codes') identityLine = 'Developer • Apps';
-              else if (person.username === 'arjunstrings') identityLine = 'Musician • Songwriting';
-              else identityLine = person.accountType.charAt(0) + person.accountType.slice(1).toLowerCase();
+              identityLine = `${conn.role.replace('_', ' ')} @ ${conn.target?.name || conn.target?.username || ''}`;
             }
+
+            const isFollowing = followingIds.includes(person.id);
 
             return (
               <div key={person.id} style={{ 
@@ -184,49 +219,48 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
                 alignItems: 'center',
                 padding: '16px',
                 borderBottom: '1px solid #27272A',
-                gap: '12px'
+                gap: '12px',
+                overflow: 'hidden'
               }}>
-                <Link href={`/user/${person.id}`} style={{ flexShrink: 0 }}>
-                  <ProfilePicture user={person} size={50} />
+                <Link href={`/user/${person.id}`} style={{ flexShrink: 0, width: '50px', height: '50px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#27272A' }}>
+                  {person.avatarData ? (
+                    <img src={person.avatarData} style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                  ) : null}
                 </Link>
                 
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Link href={`/user/${person.id}`} style={{ color: 'white', textDecoration: 'none', fontWeight: 600, fontSize: '15px', letterSpacing: '-0.3px' }}>
+                    <Link href={`/user/${person.id}`} style={{ color: 'white', textDecoration: 'none', fontWeight: 600, fontSize: '15px', letterSpacing: '-0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {person.name || person.username}
                     </Link>
-                    {isVerified && <CheckCircle2 size={14} color="#1D9BF0" fill="#1D9BF0" />}
+                    {isVerified && <CheckCircle2 size={14} color="var(--accent-primary)" style={{ flexShrink: 0 }} />}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#A1A1AA', marginTop: '2px', fontWeight: 400 }}>
-                    {identityLine}
-                  </div>
-                  {person.bio && (
-                    <div style={{ 
-                      fontSize: '13px', 
-                      color: '#71717A', 
-                      marginTop: '4px',
-                      display: '-webkit-box', 
-                      WebkitLineClamp: 1, 
-                      WebkitBoxOrient: 'vertical', 
-                      overflow: 'hidden'
-                    }}>
-                      {person.bio}
-                    </div>
+                  <span style={{ color: '#71717A', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>@{person.username}</span>
+                  <span style={{ color: '#A1A1AA', fontSize: '13px', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{identityLine}</span>
+                  {person.relevanceContext && (
+                    <span style={{ color: 'var(--accent-primary)', fontSize: '12px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ fontSize: '10px' }}>✦</span> {person.relevanceContext}
+                    </span>
                   )}
                 </div>
 
-                <div style={{ flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                  <Link href={`/messages/${person.id}`} style={{
+                    width: '32px', height: '32px', borderRadius: '50%', border: '1px solid #27272A',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white'
+                  }}>
+                    <MessageSquare size={16} />
+                  </Link>
                   <FollowButton 
                     targetUserId={person.id} 
                     initialIsFollowing={isFollowing} 
-                    isMutual={false} 
                   />
                 </div>
               </div>
-            );
+            )
           })
         )}
       </div>
     </div>
-  );
+  )
 }

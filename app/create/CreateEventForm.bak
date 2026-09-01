@@ -1,0 +1,250 @@
+﻿'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
+
+const STEPS = [
+  "Basic Info",
+  "Competition Type",
+  "Registration",
+  "Schedule & Location",
+  "Eligibility & Rules",
+  "Prize & Rewards",
+  "Preview"
+];
+
+const CATEGORIES = [
+  "Technology", "Startup / Business", "Art", "Design", "Sports", 
+  "Photography", "Film", "Music", "Public Speaking", "Gaming", 
+  "Academic", "Innovation", "Creator", "Other"
+];
+
+const LEVELS = ["Local", "District", "State", "National", "International"];
+
+export default function CreateEventForm() {
+  const router = useRouter();
+  const [step, setStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const [formData, setFormData] = useState({
+    name: '',
+    category: 'Technology',
+    tags: '',
+    coverImage: '',
+    shortDescription: '',
+    description: '',
+    
+    allowTeams: false,
+    minTeamSize: '2',
+    maxTeamSize: '4',
+    locationType: 'ONLINE',
+    eventLevel: 'State',
+    qualificationEnabled: false,
+    qualificationInfo: '',
+    
+    registrationStart: '',
+    registrationEnd: '',
+    participantLimit: '',
+    isPaid: false,
+    entryFee: '',
+    currency: 'INR',
+    
+    startDate: '',
+    endDate: '',
+    country: '',
+    stateProvince: '',
+    city: '',
+    district: '',
+    venue: '',
+    onlineLink: '',
+    
+    eligibility: '',
+    rules: '',
+    
+    prizePool: ''
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const target = e.target as HTMLInputElement;
+    const { name, value, type, checked } = target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+    setErrorMsg('');
+  };
+
+  const handleSegmentChange = (name: string, value: any) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setErrorMsg('');
+  };
+
+  const validateStep = () => {
+    setErrorMsg('');
+    if (step === 0) {
+      if (!formData.name) return "Title is required";
+      if (!formData.description) return "Full description is required";
+    }
+    if (step === 2) {
+      if (formData.registrationStart && formData.registrationEnd) {
+        if (new Date(formData.registrationStart) >= new Date(formData.registrationEnd)) {
+          return "Registration end date must be after start date.";
+        }
+      }
+      if (formData.isPaid && (!formData.entryFee || parseFloat(formData.entryFee) <= 0)) {
+        return "Please enter a valid entry fee.";
+      }
+    }
+    if (step === 3) {
+      if (!formData.startDate || !formData.endDate) return "Competition dates are required.";
+      if (new Date(formData.startDate) >= new Date(formData.endDate)) {
+        return "Competition end date must be after start date.";
+      }
+      if (formData.registrationEnd && new Date(formData.registrationEnd) > new Date(formData.startDate)) {
+        return "Registration must end before competition starts.";
+      }
+    }
+    return null;
+  };
+
+  const nextStep = () => {
+    const err = validateStep();
+    if (err) {
+      setErrorMsg(err);
+      return;
+    }
+    setStep(s => Math.min(s + 1, STEPS.length - 1));
+  };
+
+  const prevStep = () => {
+    setErrorMsg('');
+    setStep(s => Math.max(s - 1, 0));
+  };
+
+  const submitCompetition = async (status: 'PUBLISHED' | 'DRAFT') => {
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const payload = {
+        ...formData,
+        minTeamSize: formData.allowTeams && formData.minTeamSize ? parseInt(formData.minTeamSize) : null,
+        maxTeamSize: formData.allowTeams && formData.maxTeamSize ? parseInt(formData.maxTeamSize) : null,
+        entryFee: formData.isPaid && formData.entryFee ? parseFloat(formData.entryFee) : 0,
+        participantLimit: formData.participantLimit ? parseInt(formData.participantLimit) : null,
+        state: formData.stateProvince,
+        status
+      };
+
+      const res = await fetch('/api/events/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const resData = await res.json();
+      if (!res.ok) {
+        setErrorMsg(resData.error || 'Failed to create competition');
+        setLoading(false);
+        return;
+      }
+
+      router.push(`/competitions/${resData.event.id}`);
+      router.refresh();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Network error occurred.');
+      setLoading(false);
+    }
+  };
+
+  // Helper for rendering segmented control
+  const renderSegmentedControl = (name: string, options: {label: string, value: any}[], currentValue: any) => (
+    <div style={{ display: 'flex', background: 'var(--surface-hover)', borderRadius: 'var(--radius-md)', padding: '4px', gap: '4px' }}>
+      {options.map(opt => {
+        const isActive = currentValue === opt.value;
+        return (
+          <button
+            key={opt.label}
+            type="button"
+            onClick={() => handleSegmentChange(name, opt.value)}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              border: 'none',
+              borderRadius: 'var(--radius-sm)',
+              background: isActive ? 'var(--surface-2)' : 'transparent',
+              color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+              fontWeight: isActive ? 600 : 500,
+              fontSize: '14px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.2)' : 'none'
+            }}
+          >
+            {opt.label}
+          </button>
+        )
+      })}
+    </div>
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
+      
+      {/* Premium Step Indicator */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', color: 'var(--text-secondary)' }}>
+          <span style={{ fontWeight: 600 }}>Step {step + 1} of {STEPS.length}</span>
+          <span style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>{STEPS[step]}</span>
+        </div>
+        <div style={{ height: '6px', background: 'var(--surface-hover)', borderRadius: '999px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', background: 'var(--accent-primary)', width: `${((step + 1) / STEPS.length) * 100}%`, transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)', borderRadius: '999px' }} />
+        </div>
+      </div>
+
+      {errorMsg && (
+        <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: 'var(--radius-md)', fontSize: '14px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+          {errorMsg}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeIn 0.3s ease' }}>
+        
+        {/* STEP 0: Basic Info */}
+        {step === 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ fontWeight: 600, fontSize: '14px' }}>Competition Title <span style={{color: '#ef4444'}}>*</span></span>
+              <input type="text" name="name" className="input-field" value={formData.name} onChange={handleChange} placeholder="E.g., National Hackathon 2026" />
+            </label>
+            
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ fontWeight: 600, fontSize: '14px' }}>Category</span>
+              <select name="category" className="input-field" value={formData.category} onChange={handleChange}>
+                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </label>
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ fontWeight: 600, fontSize: '14px' }}>Tags</span>
+              <input type="text" name="tags" className="input-field" value={formData.tags} onChange={handleChange} placeholder="Comma-separated (coding, ai, tech)" />
+            </label>
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ fontWeight: 600, fontSize: '14px' }}>Cover Image URL</span>
+              <input type="url" name="coverImage" className="input-field" value={formData.coverImage} onChange={handleChange} placeholder="https://example.com/banner.jpg" />
+              {formData.coverImage && <img src={formData.coverImage} alt="Cover" style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: 'var(--radius-md)', marginTop: '8px', border: '1px solid var(--border-color)' }} onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} onLoad={(e) => { (e.target as HTMLImageElement).style.display='block'; }} />}
+            </label>
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ fontWeight: 600, fontSize: '14px' }}>Short Description</span>
+              <textarea name="shortDescription" className="input-field" value={formData.shortDescription} onChange={handleChange} placeholder="Brief pitch of the competition" rows={2} />
+            </label>
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ fontWeight: 600, fontSize: '14px' }}>Full Description <span style={{color: '#ef4444'}}>*</span></span>
+              <textarea name="description" className="input-field" value={formData.description} onChange={handleChange} placeholder="Detailed explanation" rows={4} />
+            </label>
+          </div>
+        )}

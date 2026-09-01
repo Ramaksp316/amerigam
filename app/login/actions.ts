@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createClient } from '../../utils/supabase/server'
-import { prisma } from '../../lib/prisma'
+import { prisma } from '@/lib/prisma'
 
 export async function login(formData: FormData) {
   const email = formData.get('email') as string
@@ -27,30 +27,42 @@ export async function login(formData: FormData) {
 
   // Ensure user exists in Prisma
   if (data.user) {
-    const user = await prisma.user.findUnique({ where: { email: data.user.email } })
-    if (!user) {
-      await prisma.user.create({
+    let dbUser = await prisma.user.findFirst({ where: { email: data.user.email! } })
+    if (!dbUser) {
+      const emailPrefix = data.user.email!.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'user'
+      let username = emailPrefix
+      let attempt = 0
+      while (await prisma.user.findUnique({ where: { username } })) {
+        attempt++
+        username = `${emailPrefix}${attempt}`
+      }
+      dbUser = await prisma.user.create({
         data: {
           id: data.user.id,
           email: data.user.email!,
-          name: data.user.email!.split('@')[0],
-          username: data.user.email!.split('@')[0],
+          name: emailPrefix,
+          username,
           password: '',
+          onboarded: false,
         }
       })
     }
 
     const cookieStore = await cookies()
-    cookieStore.set('userId', data.user.id, {
+    cookieStore.set('userId', dbUser.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
     })
+
+    revalidatePath('/home')
+    if (!dbUser.onboarded) {
+      redirect('/onboarding')
+    }
+    redirect('/home')
   }
 
-  revalidatePath('/feed')
-  redirect('/feed')
 }
 
 export async function loginWithGoogle() {
@@ -124,11 +136,9 @@ export async function logout() {
   const supabase = await createClient()
   await supabase.auth.signOut()
   
-  // Also clear dummy cookie just in case
-  import('next/headers').then(async (headers) => {
-    const cookieStore = await headers.cookies()
-    cookieStore.delete('userId')
-  })
+  // Clear the userId cookie synchronously before redirecting
+  const cookieStore = await cookies()
+  cookieStore.delete('userId')
 
-  redirect('/')
+  redirect('/login')
 }

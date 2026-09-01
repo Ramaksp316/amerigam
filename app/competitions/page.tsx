@@ -1,9 +1,11 @@
-import { prisma } from '../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import CompetitionsClient from './CompetitionsClient';
 
-export default async function CompetitionsPage() {
+export default async function CompetitionsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const resolvedSearchParams = await searchParams;
+  const searchQuery = resolvedSearchParams.q || '';
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
 
@@ -22,10 +24,35 @@ export default async function CompetitionsPage() {
 
   const followingIds = currentUser?.following.map(f => f.followingId) || [];
 
+  // Fetch Search Results if querying
+  let searchResults: any[] = [];
+  if (searchQuery.trim() !== '') {
+    searchResults = await prisma.event.findMany({
+      where: {
+        status: 'PUBLISHED',
+        name: {
+          contains: searchQuery,
+          mode: 'insensitive'
+        }
+      },
+      include: {
+        creator: {
+          select: { id: true, name: true, avatarData: true }
+        },
+        _count: {
+          select: { registrations: true }
+        }
+      },
+      orderBy: { startDate: 'asc' },
+      take: 20
+    });
+  }
+
   // Fetch Following Events
   const followingEvents = await prisma.event.findMany({
     where: {
-      creatorId: { in: followingIds }
+      creatorId: { in: followingIds },
+      status: 'PUBLISHED'
     },
     include: {
       creator: {
@@ -47,7 +74,8 @@ export default async function CompetitionsPage() {
     'Athlete': ['FitBattle India', 'NextGen Sports League'],
     'Filmmaker': ['FrameFest India', 'Creator Clash India'],
     'Gamer': ['GameGrid Esports'],
-    'Public Speaker': ['SpeakUp Championship']
+    'Public Speaker': ['SpeakUp Championship'],
+    'Illustrator': ['ArtSphere Collective', 'DesignSprint League']
   };
 
   const userIdentity = currentUser?.personalProfile?.mainIdentity || '';
@@ -55,10 +83,16 @@ export default async function CompetitionsPage() {
 
   const suggestedEvents = await prisma.event.findMany({
     where: {
+      status: 'PUBLISHED',
       NOT: { creatorId: { in: followingIds } },
-      ...(relevantOrgNames.length > 0 && {
+      ...(relevantOrgNames.length > 0 ? {
         creator: {
           name: { in: relevantOrgNames }
+        }
+      } : {
+        // Fallback for better general discovery based on account type
+        creator: {
+          accountType: currentUser?.accountType
         }
       })
     },
@@ -82,6 +116,7 @@ export default async function CompetitionsPage() {
 
   // Fetch Top Events
   const topEvents = await prisma.event.findMany({
+    where: { status: 'PUBLISHED' },
     include: {
       creator: {
         select: { id: true, name: true, avatarData: true }
@@ -96,24 +131,34 @@ export default async function CompetitionsPage() {
     take: 15
   });
 
-  // Fetch Top People dummy data
-  const topPeople = await prisma.user.findMany({
-    where: { accountType: 'PERSONAL' },
-    take: 10,
-    select: { 
-      id: true, 
-      name: true, 
-      avatarData: true, 
-      personalProfile: { select: { mainIdentity: true } }
-    }
-  });
+  const { getLeaderboard } = await import('@/lib/ranking-service');
+  
+  const userCountry = currentUser?.country || undefined;
+  const userState = currentUser?.state || undefined;
+  const userCity = currentUser?.city || currentUser?.district || undefined;
+
+  const [intlTop, natTop, stateTop, distTop] = await Promise.all([
+    getLeaderboard('INTERNATIONAL', undefined, 10),
+    getLeaderboard('NATIONAL', userCountry, 10),
+    getLeaderboard('STATE', userState, 10),
+    getLeaderboard('DISTRICT', userCity, 10),
+  ]);
+
+  const rankingData = {
+    International: intlTop,
+    National: natTop,
+    State: stateTop,
+    District: distTop
+  };
 
   return (
     <CompetitionsClient 
       followingEvents={followingEvents}
       suggestedEvents={suggestedEvents}
       topEvents={topEvents}
-      topPeople={topPeople}
+      searchResults={searchResults}
+      initialSearchQuery={searchQuery}
+      rankingData={rankingData}
       currentUser={currentUser}
       registeredEventIds={registeredEventIds}
     />

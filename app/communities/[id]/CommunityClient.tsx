@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Users, LayoutGrid, ArrowLeft, MessageSquare, CheckSquare, Calendar, Plus, Camera, X, Check, Award, BookOpen } from 'lucide-react';
+import { Users, LayoutGrid, ArrowLeft, MessageSquare, CheckSquare, Calendar, Plus, Camera, X, Check, Award, BookOpen, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '../../../utils/supabase/client';
@@ -10,7 +10,7 @@ import CommunityAvatar from '../../components/CommunityAvatar';
 import CustomVideoPlayer from '../../components/CustomVideoPlayer';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.min.css';
-import { updateCommunityAvatar } from './actions';
+import { updateCommunityAvatar, deleteCommunity } from './actions';
 import CommunityNotebook from './CommunityNotebook';
 
 const playSound = (type: 'send' | 'receive') => {
@@ -214,6 +214,19 @@ export default function CommunityClient({
               <span style={{ fontSize: '10px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '2px 8px', borderRadius: 'var(--radius-full)', color: 'var(--accent-cyan)', fontWeight: 600 }}>
                 {community.type === 'FRIEND_GROUP' ? 'Private Group' : 'Public Space'}
               </span>
+              {isOwner && (
+                <button 
+                  onClick={async () => {
+                    if (confirm('Are you sure you want to delete this community?')) {
+                      await deleteCommunity(community.id);
+                    }
+                  }}
+                  style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px' }}
+                  title="Delete Community"
+                >
+                  <Trash size={14} />
+                </button>
+              )}
             </div>
             <p 
               onClick={() => setShowMembersModal(true)} 

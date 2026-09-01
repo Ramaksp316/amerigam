@@ -17,6 +17,8 @@ enum AccountType {
 }
 
 model User {
+  challengesSent     Challenge[] @relation("Challenger")
+  challengesReceived Challenge[] @relation("Challenged")
   id          String      @id @default(uuid())
   accountType AccountType @default(PERSONAL)
   amerigamId  String?     @unique
@@ -27,11 +29,15 @@ model User {
   bio         String?
 
   // Onboarding Fields
-  location     String?
-  portfolioUrl String?
-  avatarData   String? // Base64 string for cropped image
-  onboarded    Boolean @default(false)
-  amerigamPoints Int   @default(0) // AP metric for ranking
+  location       String?
+  country        String? // For ranking
+  state          String? // For ranking
+  city           String? // For ranking
+  district       String? // For ranking
+  portfolioUrl   String?
+  avatarData     String? // Base64 string for cropped image
+  onboarded      Boolean @default(false)
+  amerigamPoints Int     @default(0) // AP metric for ranking
 
   posts            Post[]
   comments         Comment[]
@@ -46,8 +52,9 @@ model User {
   pushSubscriptions  PushSubscription[]
 
   // Task relations
-  assignedTasks CommunityTask[] @relation("assignedTasks")
-  createdTasks  CommunityTask[] @relation("createdTasks")
+  assignedTasks  CommunityTask[] @relation("assignedTasks")
+  apTransactions ApTransaction[] @relation("userApTransactions")
+  createdTasks   CommunityTask[] @relation("createdTasks")
 
   createdAt DateTime @default(now())
 
@@ -55,6 +62,7 @@ model User {
   ownedCommunities Community[]
   communityMembers CommunityMember[]
   communityPosts   CommunityPost[]
+  communityMessages CommunityMessage[]
 
   // Competitions & Portfolios (Phase 2)
   // Competitions & Portfolios (Phase 2)
@@ -87,6 +95,14 @@ model User {
   // Bidirectional Entity Connections
   outgoingConnections EntityConnection[] @relation("SourceConnections")
   incomingConnections EntityConnection[] @relation("TargetConnections")
+  eventResults        EventResult[]
+
+  @@index([accountType, amerigamPoints(sort: Desc)])
+  @@index([country, state, city, district])
+
+  conversations1   Conversation[] @relation("conversationUser1")
+  conversations2   Conversation[] @relation("conversationUser2")
+  stories          Story[]
 }
 
 // =========================================
@@ -213,14 +229,17 @@ model Follow {
 }
 
 model Message {
-  id         String   @id @default(uuid())
-  content    String
-  senderId   String
-  receiverId String
-  sender     User     @relation("sentMessages", fields: [senderId], references: [id])
-  receiver   User     @relation("receivedMessages", fields: [receiverId], references: [id])
-  createdAt  DateTime @default(now())
-  isEdited   Boolean  @default(false)
+  id             String       @id @default(uuid())
+  content        String
+  senderId       String
+  receiverId     String
+  sender         User         @relation("sentMessages", fields: [senderId], references: [id])
+  receiver       User         @relation("receivedMessages", fields: [receiverId], references: [id])
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  isEdited       Boolean      @default(false)
 }
 
 // =========================================
@@ -238,6 +257,7 @@ model Community {
   creator     User              @relation(fields: [creatorId], references: [id])
   members     CommunityMember[]
   posts       CommunityPost[]
+    messages    CommunityMessage[]
   tasks       CommunityTask[]
   notes       CommunityNote[]
   createdAt   DateTime          @default(now())
@@ -302,6 +322,8 @@ model Event {
   // Custom added for UI
   coverImage String?
   prizePool  String?
+  entryFee   Float?  @default(0)
+  currency   String? @default("INR")
 
   // Toggles
   requireApproval    Boolean @default(false)
@@ -316,6 +338,24 @@ model Event {
   participantLimit Int?
   evaluationMethod String @default("NONE") // "NONE", "JUDGE_PANEL", "OBJECTIVE"
 
+  // Additional Competition Creation Fields
+  shortDescription String?
+  tags             String? // comma-separated
+  minTeamSize      Int?
+  maxTeamSize      Int?
+  onlineLink       String?
+  rules            String? @db.Text
+  eligibility      String? @db.Text
+  qualificationEnabled Boolean @default(false)
+  qualificationInfo    String? @db.Text
+  status           String  @default("PUBLISHED") // "DRAFT" | "PUBLISHED" | "CANCELLED"
+
+  // Structured Geographic Fields
+  country  String?
+  state    String?
+  city     String?
+  district String?
+
   creatorId     String
   creator       User                @relation(fields: [creatorId], references: [id])
   registrations EventRegistration[]
@@ -323,27 +363,33 @@ model Event {
   competitionId String?
   competition   Competition? @relation(fields: [competitionId], references: [id])
 
-  createdAt DateTime @default(now())
+  createdAt    DateTime      @default(now())
+  resultStatus String        @default("NOT_STARTED")
+  results      EventResult[]
 }
 
 model EventRegistration {
-  id              String  @id @default(uuid())
-  registrationId  String  @unique // e.g., AMG-R-2026-XXXX
-  userId          String
-  eventId         String
-  status          String  @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
-  participantType String  @default("PARTICIPANT")
-  qrToken         String  @unique @default(uuid()) // Secure opaque token for QR
-  teamId          String?
+  id                  String  @id @default(uuid())
+  registrationId      String  @unique // e.g., AMG-R-2026-XXXX
+  userId              String
+  eventId             String
+  status              String  @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
+  qualificationStatus String? // QUALIFIED, NON_QUALIFIED
+  rejectionReason     String?
+  participantType     String  @default("PARTICIPANT")
+  qrToken             String  @unique @default(uuid()) // Secure opaque token for QR
+  teamId              String?
 
   user         User               @relation(fields: [userId], references: [id])
   event        Event              @relation(fields: [eventId], references: [id])
   team         EventTeam?         @relation(fields: [teamId], references: [id])
+  payment      EventPayment?
   checkIns     EventCheckIn[]
   submissions  EventSubmission[]
   evaluations  EventEvaluation[]
   certificates EventCertificate[]
   joinedAt     DateTime           @default(now())
+  eventResults EventResult[]
 
   @@unique([userId, eventId])
 }
@@ -570,4 +616,115 @@ model MatchupParticipant {
   entity  CompetitionEntity @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   @@unique([matchupId, entityId])
+}
+
+model EventResult {
+  id             String    @id @default(uuid())
+  eventId        String
+  registrationId String
+  userId         String
+  rank           Int
+  type           String // WINNER, RUNNER_UP, THIRD, TOP_10
+  status         String    @default("DRAFT") // DRAFT, PUBLISHED
+  publishedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  event        Event             @relation(fields: [eventId], references: [id])
+  registration EventRegistration @relation(fields: [registrationId], references: [id])
+  user         User              @relation(fields: [userId], references: [id])
+}
+
+model EventPayment {
+  id             String            @id @default(uuid())
+  registrationId String            @unique
+  registration   EventRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  amount         Float
+  currency       String            @default("INR")
+  status         String            @default("PENDING") // PENDING, SUCCESS, FAILED
+  provider       String?
+  transactionId  String?           @unique
+  createdAt      DateTime          @default(now())
+}
+
+model ApTransaction {
+  id                  String   @id @default(uuid())
+  userId              String
+  user                User     @relation("userApTransactions", fields: [userId], references: [id])
+  sourceType          String // "COMPETITION", "CHALLENGE"
+  sourceId            String // eventId, challengeId
+  sourceName          String?
+  competitionLevel    String? // City, State, National, International
+  resultType          String? // Participation, Qualified, Bronze, Silver, Gold
+  challengeDifficulty String? // Easy, Medium, Hard, Major
+  amount              Int
+  status              String   @default("AWARDED") // AWARDED, REVOKED
+  metadata            String? // JSON string for additional context
+  awardedAt           DateTime @default(now())
+
+  @@unique([userId, sourceId, sourceType])
+}
+
+model Challenge {
+  id              String    @id @default(uuid())
+  title           String
+  objective       String
+  category        String?
+  tags            String[]  @default([])
+  difficulty      String
+  startDate       DateTime?
+  endDate         DateTime?
+  completionReq   String?
+  proofReq        String
+  rules           String?
+  status          String    @default("PENDING")
+  challengerId    String
+  challengedId    String
+  acceptedAt      DateTime?
+  proofUrl        String?
+  proofText       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  challenger      User      @relation("Challenger", fields: [challengerId], references: [id])
+  challenged      User      @relation("Challenged", fields: [challengedId], references: [id])
+}
+
+
+model Conversation {
+  id            String    @id @default(uuid())
+  user1Id       String
+  user2Id       String
+  user1         User      @relation("conversationUser1", fields: [user1Id], references: [id])
+  user2         User      @relation("conversationUser2", fields: [user2Id], references: [id])
+  lastMessageId String?
+  messages      Message[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([user1Id, user2Id])
+}
+
+model Story {
+  id          String   @id @default(uuid())
+  content     String?
+  mediaUrl    String?
+  mediaType   String?
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+}
+
+
+model CommunityMessage {
+  id          String    @id @default(uuid())
+  content     String
+  mediaUrl    String?
+  senderId    String
+  communityId String
+  createdAt   DateTime  @default(now())
+
+  sender      User      @relation(fields: [senderId], references: [id])
+  community   Community @relation(fields: [communityId], references: [id])
 }

@@ -1,0 +1,235 @@
+'use client';
+
+import React, { useState } from 'react';
+import { ChevronLeft, Filter, Check, X, Award, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+export default function ParticipantManagerClient({ event }: { event: any }) {
+  const router = useRouter();
+  const [registrations, setRegistrations] = useState(event.registrations);
+  const [filter, setFilter] = useState('ALL'); // ALL, PENDING, APPROVED, REJECTED, QUALIFIED, NON_QUALIFIED
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const handleStatusUpdate = async (registrationId: string, updates: { status?: string, qualificationStatus?: string, rejectionReason?: string }) => {
+    try {
+      const res = await fetch(`/api/competitions/${event.id}/participants/${registrationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      if (res.ok) {
+        const { registration } = await res.json();
+        setRegistrations((prev: any) => prev.map((r: any) => r.id === registrationId ? { ...r, ...registration } : r));
+      } else {
+        alert('Failed to update status');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('An error occurred while updating.');
+    }
+  };
+
+  const filteredRegistrations = registrations.filter((r: any) => {
+    if (filter === 'ALL') return true;
+    if (filter === 'PENDING') return r.status === 'PENDING';
+    if (filter === 'APPROVED') return r.status === 'APPROVED';
+    if (filter === 'REJECTED') return r.status === 'REJECTED';
+    if (filter === 'QUALIFIED') return r.qualificationStatus === 'QUALIFIED';
+    if (filter === 'NON_QUALIFIED') return r.qualificationStatus === 'NON_QUALIFIED';
+    return true;
+  });
+
+  const getPaymentStatusUI = (r: any) => {
+    if (event.entryFee === 0) return <span style={{ color: '#10b981', fontSize: '12px' }}>Free Entry</span>;
+    if (!r.payment) return <span style={{ color: '#f59e0b', fontSize: '12px' }}>Payment Pending</span>;
+    if (r.payment.status === 'SUCCESS') return <span style={{ color: '#10b981', fontSize: '12px' }}>Paid</span>;
+    return <span style={{ color: '#ef4444', fontSize: '12px' }}>Payment Failed</span>;
+  };
+
+  const canAccept = (r: any) => {
+    if (event.entryFee > 0 && (!r.payment || r.payment.status !== 'SUCCESS')) return false;
+    return r.status === 'PENDING' || r.status === 'REJECTED';
+  };
+
+  const canReject = (r: any) => {
+    return r.status === 'PENDING' || r.status === 'APPROVED';
+  };
+
+  const canQualify = (r: any) => {
+    return r.status === 'APPROVED' && r.qualificationStatus !== 'QUALIFIED';
+  };
+
+  const canDisqualify = (r: any) => {
+    return r.status === 'APPROVED' && r.qualificationStatus !== 'NON_QUALIFIED';
+  };
+
+  return (
+    <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', backgroundColor: '#000000', color: '#FFFFFF', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', paddingBottom: '80px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', padding: '16px', borderBottom: '1px solid #1F1F22', position: 'sticky', top: 0, backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 10 }}>
+        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#FFF', display: 'flex', alignItems: 'center' }}>
+          <ChevronLeft size={24} />
+        </button>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <h1 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Manage Participants</h1>
+          <div style={{ fontSize: '12px', color: '#A1A1AA', marginTop: '2px' }}>{event.name}</div>
+        </div>
+        <div style={{ width: 24 }} />
+      </div>
+
+      <div style={{ padding: '20px' }}>
+        {/* Counts Summary */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '24px' }}>
+          <div style={{ backgroundColor: '#0f172a', padding: '12px', borderRadius: '12px', textAlign: 'center', border: '1px solid #1e293b' }}>
+            <div style={{ fontSize: '20px', fontWeight: 600 }}>{registrations.length}</div>
+            <div style={{ fontSize: '11px', color: '#94a3b8' }}>Total</div>
+          </div>
+          <div style={{ backgroundColor: '#0f172a', padding: '12px', borderRadius: '12px', textAlign: 'center', border: '1px solid #1e293b' }}>
+            <div style={{ fontSize: '20px', fontWeight: 600, color: '#10b981' }}>{registrations.filter((r: any) => r.status === 'APPROVED').length}</div>
+            <div style={{ fontSize: '11px', color: '#10b981' }}>Accepted</div>
+          </div>
+          <div style={{ backgroundColor: '#0f172a', padding: '12px', borderRadius: '12px', textAlign: 'center', border: '1px solid #1e293b' }}>
+            <div style={{ fontSize: '20px', fontWeight: 600, color: '#3b82f6' }}>{registrations.filter((r: any) => r.qualificationStatus === 'QUALIFIED').length}</div>
+            <div style={{ fontSize: '11px', color: '#3b82f6' }}>Qualified</div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div style={{ display: 'flex', overflowX: 'auto', gap: '8px', marginBottom: '20px', paddingBottom: '8px', scrollbarWidth: 'none' }}>
+          {['ALL', 'PENDING', 'APPROVED', 'REJECTED', 'QUALIFIED', 'NON_QUALIFIED'].map(f => (
+            <button 
+              key={f}
+              onClick={() => setFilter(f)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '20px',
+                backgroundColor: filter === f ? '#3b82f6' : '#1e293b',
+                color: filter === f ? 'white' : '#94a3b8',
+                border: 'none',
+                fontSize: '13px',
+                fontWeight: 500,
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {f.replace('_', ' ')}
+            </button>
+          ))}
+        </div>
+
+        {/* Participant List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {filteredRegistrations.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b' }}>
+              No participants match this filter.
+            </div>
+          ) : filteredRegistrations.map((r: any) => {
+            const isExpanded = expandedId === r.id;
+
+            return (
+              <div key={r.id} style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', overflow: 'hidden' }}>
+                <div 
+                  onClick={() => setExpandedId(isExpanded ? null : r.id)}
+                  style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }}
+                >
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '24px', backgroundColor: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                      <span style={{ color: 'white', fontWeight: 600 }}>{r.user?.name?.charAt(0) || 'U'}</span>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '15px', fontWeight: 600 }}>{r.user?.name || 'Unknown User'}</div>
+                      <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>@{r.user?.username || r.userId.substring(0, 8)}</div>
+                      <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {getPaymentStatusUI(r)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                    {r.status === 'APPROVED' ? (
+                      <span style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600 }}>Accepted</span>
+                    ) : r.status === 'REJECTED' ? (
+                      <span style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600 }}>Rejected</span>
+                    ) : (
+                      <span style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600 }}>Pending</span>
+                    )}
+                    
+                    {r.qualificationStatus === 'QUALIFIED' && (
+                      <span style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Award size={10} /> Qualified
+                      </span>
+                    )}
+                    {r.qualificationStatus === 'NON_QUALIFIED' && (
+                      <span style={{ backgroundColor: 'rgba(100, 116, 139, 0.1)', color: '#94a3b8', padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600 }}>
+                        Non-qualified
+                      </span>
+                    )}
+                    <div style={{ marginTop: '4px', color: '#64748b' }}>
+                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </div>
+                  </div>
+                </div>
+
+                {isExpanded && (
+                  <div style={{ padding: '0 16px 16px', borderTop: '1px solid #1e293b' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', margin: '16px 0', fontSize: '13px' }}>
+                      <div>
+                        <div style={{ color: '#94a3b8', marginBottom: '2px' }}>Registration ID</div>
+                        <div>{r.registrationId}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#94a3b8', marginBottom: '2px' }}>Applied On</div>
+                        <div>{new Date(r.createdAt).toLocaleDateString()}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#94a3b8', marginBottom: '2px' }}>Eligibility</div>
+                        <div>Matches Criteria</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#94a3b8', marginBottom: '2px' }}>Profile</div>
+                        <Link href={`/user/${r.userId}`} style={{ color: '#3b82f6', textDecoration: 'none' }}>View Profile</Link>
+                      </div>
+                    </div>
+                    
+                    {r.rejectionReason && (
+                      <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#ef4444', padding: '12px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px' }}>
+                        <strong>Reason for Rejection:</strong> {r.rejectionReason}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {canAccept(r) && (
+                        <button onClick={() => handleStatusUpdate(r.id, { status: 'APPROVED' })} style={{ flex: 1, padding: '8px 0', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                          <Check size={16} /> Accept
+                        </button>
+                      )}
+                      {canReject(r) && (
+                        <button onClick={() => {
+                          const reason = prompt("Optional rejection reason:");
+                          if (reason !== null) handleStatusUpdate(r.id, { status: 'REJECTED', rejectionReason: reason, qualificationStatus: undefined });
+                        }} style={{ flex: 1, padding: '8px 0', backgroundColor: 'transparent', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '8px', fontSize: '13px', fontWeight: 500, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                          <X size={16} /> Reject
+                        </button>
+                      )}
+                      
+                      {canQualify(r) && (
+                        <button onClick={() => handleStatusUpdate(r.id, { qualificationStatus: 'QUALIFIED' })} style={{ flex: 1, padding: '8px 0', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '8px', fontSize: '13px', fontWeight: 500, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                          <Award size={16} /> Mark Qualify
+                        </button>
+                      )}
+                      {canDisqualify(r) && (
+                        <button onClick={() => handleStatusUpdate(r.id, { qualificationStatus: 'NON_QUALIFIED' })} style={{ flex: 1, padding: '8px 0', backgroundColor: 'transparent', color: '#94a3b8', border: '1px solid #334155', borderRadius: '8px', fontSize: '13px', fontWeight: 500, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                          Non-qualify
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );

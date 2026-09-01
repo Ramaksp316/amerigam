@@ -31,7 +31,7 @@ export default function ProfilePicture({ user, size = 48, showStatus = true }: P
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       {user?.avatarData ? (
         <img 
-          src={user.avatarData.startsWith('data:') ? user.avatarData : `data:image/jpeg;base64,${user.avatarData}`} 
+          src={user.avatarData.startsWith('http') || user.avatarData.startsWith('data:') ? user.avatarData : `data:image/jpeg;base64,${user.avatarData}`} 
           alt={displayName} 
           style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} 
         />

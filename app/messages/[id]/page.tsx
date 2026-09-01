@@ -1,96 +1,11 @@
-import { prisma } from '../../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
-import { notFound, redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
-import LocalTime from '../../components/LocalTime';
-import ChatClient from '../../components/ChatClient';
-import MessageList from '../../components/MessageList';
-import ProfilePicture from '../../components/ProfilePicture';
-import PageRefresher from '../../components/PageRefresher';
-import { sendWebPushNotification } from '../../actions/sendWebPush';
+import { ChevronLeft } from 'lucide-react';
+import ChatClient from './ChatClient';
 
-async function sendMessage(formData: FormData) {
-  'use server';
-  const cookieStore = await cookies();
-  const userId = cookieStore.get('userId')?.value;
-  if (!userId) return;
-
-  const receiverId = formData.get('receiverId') as string;
-  const content = formData.get('content') as string;
-
-  if (content && content.trim().length > 0) {
-    await prisma.message.create({
-      data: {
-        content,
-        senderId: userId,
-        receiverId,
-      }
-    });
-
-    await prisma.notification.create({
-      data: {
-        userId: receiverId,
-        actorId: userId,
-        type: 'message',
-        content: 'sent you a message.',
-        link: `/messages/${userId}`,
-      }
-    });
-
-    const actorUser = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, username: true } });
-    const actorName = actorUser ? (actorUser.username || actorUser.name || 'Someone') : 'Someone';
-    await sendWebPushNotification(receiverId, 'New Message', `${actorName}: ${content.length > 30 ? content.substring(0, 30) + '...' : content}`, `/messages/${userId}`);
-
-    revalidatePath(`/messages/${receiverId}`);
-  }
-}
-
-async function deleteMessage(formData: FormData) {
-  'use server';
-  const cookieStore = await cookies();
-  const userId = cookieStore.get('userId')?.value;
-  if (!userId) return;
-
-  const messageId = formData.get('messageId') as string;
-  const message = await prisma.message.findUnique({ where: { id: messageId } });
-  
-  if (message && message.senderId === userId) {
-    const THREE_HOURS = 3 * 60 * 60 * 1000;
-    if (Date.now() - message.createdAt.getTime() < THREE_HOURS) {
-      await prisma.message.delete({ where: { id: messageId } });
-      revalidatePath(`/messages/${message.receiverId}`);
-    }
-  }
-}
-
-async function editMessage(formData: FormData) {
-  'use server';
-  const cookieStore = await cookies();
-  const userId = cookieStore.get('userId')?.value;
-  if (!userId) return;
-
-  const messageId = formData.get('messageId') as string;
-  const content = formData.get('content') as string;
-  
-  if (!content || content.trim().length === 0) return;
-
-  const message = await prisma.message.findUnique({ where: { id: messageId } });
-  
-  if (message && message.senderId === userId) {
-    const THREE_HOURS = 3 * 60 * 60 * 1000;
-    if (Date.now() - message.createdAt.getTime() < THREE_HOURS) {
-      await prisma.message.update({ 
-        where: { id: messageId },
-        data: { content, isEdited: true }
-      });
-      revalidatePath(`/messages/${message.receiverId}`);
-    }
-  }
-}
-
-export default async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
 
@@ -98,78 +13,70 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
     redirect('/login');
   }
 
-  const { id: partnerId } = await params;
+  const { id } = await params;
   
-  if (userId === partnerId) {
-    return (
-      <div className="card" style={{ textAlign: 'center', marginTop: 'var(--space-8)', padding: 'var(--space-8)' }}>
-        <p style={{ fontSize: 'var(--text-md)', marginBottom: 'var(--space-4)' }}>You cannot message yourself.</p>
-        <Link href="/messages" className="btn btn-small">Back to Inbox</Link>
-      </div>
-    );
+  const conversation = await prisma.conversation.findUnique({
+    where: { id },
+    include: {
+      user1: true,
+      user2: true,
+    }
+  });
+
+  if (!conversation) {
+    redirect('/messages');
   }
 
-  const partner = await prisma.user.findUnique({ where: { id: partnerId } });
-  if (!partner) {
-    notFound();
+  if (conversation.user1Id !== userId && conversation.user2Id !== userId) {
+    redirect('/messages');
   }
 
-  const messages = await prisma.message.findMany({
+  const partner = conversation.user1Id === userId ? conversation.user2 : conversation.user1;
+
+  await prisma.message.updateMany({
     where: {
-      OR: [
-        { senderId: userId, receiverId: partnerId },
-        { senderId: partnerId, receiverId: userId }
-      ]
+      conversationId: id,
+      receiverId: userId,
+      isRead: false
     },
-    orderBy: { createdAt: 'asc' }
+    data: { isRead: true }
+  });
+
+  const initialMessages = await prisma.message.findMany({
+    where: { conversationId: id },
+    orderBy: { createdAt: 'asc' },
+    take: 50
   });
 
   return (
-    <div className="card" style={{ 
-      display: 'flex', flexDirection: 'column', 
-      height: '100%', maxHeight: 'calc(100dvh - 80px)',
-      padding: '0', overflow: 'hidden', margin: '0 auto', maxWidth: '1000px', width: '100%',
-      position: 'relative'
-    }}>
-      <PageRefresher intervalMs={15000} />
-      
-      {/* Chat Header */}
-      <div style={{ 
-        padding: 'var(--space-3) var(--space-4)', 
-        borderBottom: '1px solid var(--border-color)', 
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: 'var(--surface-1)'
+    <div style={{ backgroundColor: '#000000', height: '100dvh', width: '100%', maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <div style={{
+        background: 'rgba(0, 0, 0, 0.85)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        zIndex: 50,
+        padding: '12px 16px',
+        borderBottom: '1px solid #27272A',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <Link href="/messages" className="btn-text" style={{ padding: '4px' }} title="Back to Inbox">
-            <ArrowLeft size={20} />
-          </Link>
-          <Link href={`/user/${partnerId}`} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textDecoration: 'none' }}>
-            <ProfilePicture user={partner} size={40} />
-            <h2 style={{ fontSize: 'var(--text-md)', margin: 0, fontWeight: 700, color: 'var(--text-primary)' }}>
-              {partner.name || partner.username || partner.email}
-            </h2>
-          </Link>
-        </div>
+        <Link href="/messages" style={{ color: 'white', display: 'flex', alignItems: 'center' }}>
+          <ChevronLeft size={28} />
+        </Link>
+        <Link href={`/user/${partner.id}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', flexGrow: 1 }}>
+          <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#27272A', flexShrink: 0 }}>
+            {partner.profilePictureUrl ? (
+              <img src={partner.profilePictureUrl} alt={partner.name || partner.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : null}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ color: 'white', fontWeight: 600, fontSize: '16px' }}>{partner.name || partner.username}</span>
+            <span style={{ color: '#71717A', fontSize: '13px' }}>{partner.accountType}</span>
+          </div>
+        </Link>
       </div>
-      
-      {/* Messages Thread Container */}
-      <div id="chat-container" style={{ 
-        flexGrow: 1, overflowY: 'auto', padding: 'var(--space-4)', 
-        display: 'flex', flexDirection: 'column', gap: 'var(--space-3)',
-        backgroundColor: 'var(--surface-0)'
-      }}>
-        <MessageList 
-          messages={messages} 
-          myId={userId} 
-          partnerId={partnerId} 
-          deleteAction={deleteMessage} 
-          editAction={editMessage} 
-        />
-      </div>
-
-      <ChatClient myId={userId} partnerId={partnerId} sendMessageAction={sendMessage} />
-
+      <ChatClient initialMessages={initialMessages} conversationId={id} currentUserId={userId} partnerId={partner.id} />
     </div>
   );
 }

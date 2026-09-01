@@ -1,4 +1,5 @@
-import { prisma } from '../../lib/prisma';
+
+import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -10,36 +11,61 @@ export default async function CommunitiesPage({ searchParams }: { searchParams: 
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
 
-  if (!userId) {
-    redirect('/login');
-  }
+  if (!userId) redirect('/login');
 
   const currentUser = await prisma.user.findUnique({
-    where: { id: userId }
+    where: { id: userId },
+    
   });
+
+  if (!currentUser) redirect('/login');
 
   const resolvedSearchParams = await searchParams;
   const currentTab = resolvedSearchParams.tab || 'foryou';
 
-  const unreadCount = await prisma.notification.count({
-    where: { userId, isRead: false }
+  // Fetch unread count for bell
+  const unreadCount = await prisma.message.count({
+    where: {
+      conversation: {
+        OR: [{ user1Id: userId }, { user2Id: userId }]
+      },
+      senderId: { not: userId },
+      isRead: false
+    }
   });
 
-  const communities = await prisma.community.findMany({
+  const allCommunities = await prisma.community.findMany({
     include: {
-      _count: {
-        select: { members: true }
-      },
-      members: {
-        where: { userId }
-      }
+      _count: { select: { members: true } },
+      members: { where: { userId } }
     },
     orderBy: { createdAt: 'desc' }
   });
 
-  let displayCommunities = communities;
+  let displayCommunities = [];
+
   if (currentTab === 'joined') {
-    displayCommunities = communities.filter(c => c.members.length > 0);
+    displayCommunities = allCommunities.filter(c => c.members.length > 0);
+  } else if (currentTab === 'explore') {
+    displayCommunities = allCommunities;
+  } else {
+    // For You
+    const userKeywords = [
+      currentUser.bio,
+      ...(currentUser.interests?.map(i => i.name) || []),
+      ...(currentUser.skills?.map(s => s.name) || [])
+    ].filter(Boolean).map(k => k.toLowerCase());
+
+    displayCommunities = allCommunities.filter(c => {
+      const matchText = (c.name + ' ' + (c.category || '')).toLowerCase();
+      if (userKeywords.length === 0) return true; // If user has no tags, show all
+      return userKeywords.some(kw => matchText.includes(kw));
+    });
+
+    // Fallback if none match
+    if (displayCommunities.length === 0) {
+      displayCommunities = allCommunities;
+    }
   }
 
   return (

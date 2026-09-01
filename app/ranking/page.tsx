@@ -1,4 +1,4 @@
-import { prisma } from '../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -32,24 +32,51 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
   if (currentType === 'creator') typeFilter = 'CREATOR';
   if (currentType === 'influencer') typeFilter = 'INFLUENCER';
 
-  let rankedUsers = await prisma.user.findMany({
-    where: {
-      accountType: typeFilter,
-      onboarded: true
-    },
-    include: { outgoingConnections: { include: { target: true } } },
-    orderBy: { amerigamPoints: 'desc' },
-    take: 50
-  });
+  let rankedUsers: any[] = [];
+  if (typeFilter === 'PERSONAL') {
+    const { getLeaderboard } = await import('../../lib/ranking-service');
+    
+    let locationValue = undefined;
+    if (currentGeo === 'national') locationValue = currentUser.country || undefined;
+    if (currentGeo === 'state') locationValue = currentUser.state || undefined;
+    if (currentGeo === 'city') locationValue = currentUser.city || currentUser.district || undefined;
 
-  // Fallback sorting by followers if AP is all 0 (since it was just added)
-  // For the beta, to show UI, if everyone has 0 AP, we'll randomize or sort by ID just to show rankings.
-  if (rankedUsers.every(u => u.amerigamPoints === 0)) {
-    // Generate deterministic fake AP for UI showcase
-    rankedUsers = rankedUsers.map((u, i) => ({
-      ...u,
-      amerigamPoints: Math.floor(10000 / (i + 1)) + (u.name?.length || 0) * 10
-    })).sort((a, b) => b.amerigamPoints - a.amerigamPoints);
+    const leaderboard = await getLeaderboard(
+      currentGeo.toUpperCase() as any, 
+      locationValue, 
+      50
+    );
+
+    // We fetch outgoingConnections for identity line in the UI
+    const usersWithConns = await prisma.user.findMany({
+      where: { id: { in: leaderboard.map((u: any) => u.id) } },
+      include: { outgoingConnections: { include: { target: true } } }
+    });
+
+    rankedUsers = leaderboard.map((lu: any) => ({
+      ...lu,
+      outgoingConnections: usersWithConns.find(u => u.id === lu.id)?.outgoingConnections || [],
+      accountType: 'PERSONAL',
+      // Store real rank on the object to use in UI instead of array index
+      computedRank: lu.rank
+    }));
+  } else {
+    rankedUsers = await prisma.user.findMany({
+      where: {
+        accountType: typeFilter,
+        onboarded: true
+      },
+      include: { outgoingConnections: { include: { target: true } } },
+      orderBy: { amerigamPoints: 'desc' },
+      take: 50
+    });
+
+    if (rankedUsers.every((u: any) => u.amerigamPoints === 0)) {
+      rankedUsers = rankedUsers.map((u: any, i: number) => ({
+        ...u,
+        amerigamPoints: Math.floor(10000 / (i + 1)) + (u.name?.length || 0) * 10
+      })).sort((a: any, b: any) => b.amerigamPoints - a.amerigamPoints);
+    }
   }
 
   const top3 = rankedUsers.slice(0, 3);
@@ -195,7 +222,7 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
             {/* 2nd Place */}
             {top3[1] && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '30%' }}>
-                <div style={{ color: '#A1A1AA', fontSize: '18px', fontWeight: 800, marginBottom: '8px' }}>2</div>
+                <div style={{ color: '#A1A1AA', fontSize: '18px', fontWeight: 800, marginBottom: '8px' }}>{top3[1].computedRank ?? 2}</div>
                 <Link href={`/user/${top3[1].id}`}>
                   <div style={{ border: '3px solid #71717A', borderRadius: '50%', padding: '2px' }}>
                     <ProfilePicture user={top3[1]} size={60} showStatus={false} />
@@ -208,7 +235,7 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
 
             {/* 1st Place */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '35%', paddingBottom: '16px' }}>
-              <div style={{ color: '#FCD34D', fontSize: '24px', fontWeight: 900, marginBottom: '8px' }}>1</div>
+              <div style={{ color: '#FCD34D', fontSize: '24px', fontWeight: 900, marginBottom: '8px' }}>{top3[0].computedRank ?? 1}</div>
               <Link href={`/user/${top3[0].id}`}>
                 <div style={{ border: '4px solid #FCD34D', borderRadius: '50%', padding: '3px' }}>
                   <ProfilePicture user={top3[0]} size={80} showStatus={false} />
@@ -221,7 +248,7 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
             {/* 3rd Place */}
             {top3[2] && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '30%' }}>
-                <div style={{ color: '#B45309', fontSize: '18px', fontWeight: 800, marginBottom: '8px' }}>3</div>
+                <div style={{ color: '#B45309', fontSize: '18px', fontWeight: 800, marginBottom: '8px' }}>{top3[2].computedRank ?? 3}</div>
                 <Link href={`/user/${top3[2].id}`}>
                   <div style={{ border: '3px solid #B45309', borderRadius: '50%', padding: '2px' }}>
                     <ProfilePicture user={top3[2]} size={60} showStatus={false} />
@@ -237,7 +264,7 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
         {/* The Rest of the Ranking List */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {theRest.map((person, index) => {
-            const rank = index + 4;
+            const rank = person.computedRank ?? (index + 4);
             const isMe = person.id === userId;
             const isVerified = person.accountType !== 'PERSONAL' || (person.followers && person.followers.length > 100);
 
@@ -250,78 +277,74 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
             }
 
             return (
-              <Link href={`/user/${person.id}`} key={person.id} style={{ 
-                display: 'flex', 
-                alignItems: 'center',
-                padding: '16px',
-                borderBottom: '1px solid #18181B',
-                gap: '16px',
-                textDecoration: 'none',
-                backgroundColor: isMe ? 'rgba(29, 155, 240, 0.05)' : 'transparent'
-              }}>
-                <div style={{ width: '24px', textAlign: 'center', color: isMe ? '#1D9BF0' : '#71717A', fontWeight: 700, fontSize: '15px' }}>
-                  {rank}
-                </div>
-                
-                <ProfilePicture user={person} size={46} />
-                
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ color: isMe ? '#1D9BF0' : 'white', fontWeight: 600, fontSize: '15px', letterSpacing: '-0.2px' }}>
-                      {person.name || person.username}
-                    </span>
-                    {isVerified && <CheckCircle2 size={14} color="#1D9BF0" fill="#1D9BF0" />}
+              <Link key={person.id} href={`/user/${person.id}`} style={{ textDecoration: 'none' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  padding: '16px', 
+                  borderBottom: '1px solid #18181B',
+                  backgroundColor: isMe ? 'rgba(29, 155, 240, 0.05)' : 'transparent',
+                  gap: '12px'
+                }}>
+                  <div style={{ width: '24px', textAlign: 'center', color: isMe ? '#1D9BF0' : '#71717A', fontWeight: 700, fontSize: '15px' }}>
+                    {rank}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#A1A1AA', marginTop: '2px', fontWeight: 400 }}>
-                    {identityLine}
+                  
+                  <ProfilePicture user={person} size={48} showStatus={false} />
+                  
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ color: 'white', fontWeight: 600, fontSize: '15px' }}>{person.name || person.username}</span>
+                      {isVerified && <CheckCircle2 size={14} color="#1D9BF0" fill="#1D9BF0" />}
+                    </div>
+                    <span style={{ color: '#71717A', fontSize: '13px' }}>{identityLine}</span>
                   </div>
-                </div>
 
-                <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>
-                  {person.amerigamPoints.toLocaleString()} <span style={{ color: '#71717A', fontSize: '12px' }}>AP</span>
+                  <div style={{ color: isMe ? '#1D9BF0' : 'white', fontWeight: 700, fontSize: '14px' }}>
+                    {person.amerigamPoints.toLocaleString()} <span style={{ color: '#71717A', fontSize: '12px' }}>AP</span>
+                  </div>
                 </div>
               </Link>
             );
           })}
         </div>
-
       </div>
 
-      {/* Sticky Current User Anchor if not in Top 3 and scrolled or just floating at bottom */}
-      {(!isCurrentUserInTop3 && currentUser && currentUser.accountType === typeFilter) && (
+      {/* Sticky Current User Rank (if not in top 3) */}
+      {!isCurrentUserInTop3 && currentUser && currentUser.accountType === typeFilter && (
         <div style={{
           position: 'fixed',
-          bottom: '70px',
+          bottom: '72px', // above standard tab bar
           left: '50%',
           transform: 'translateX(-50%)',
           width: '100%',
           maxWidth: '600px',
-          backgroundColor: '#000000',
-          borderTop: '1px solid #27272A',
-          borderBottom: '1px solid #27272A',
-          padding: '12px 16px',
+          background: 'rgba(29, 155, 240, 0.1)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderTop: '1px solid rgba(29, 155, 240, 0.2)',
+          padding: '16px',
           display: 'flex',
           alignItems: 'center',
-          gap: '16px',
-          zIndex: 40
+          gap: '12px'
         }}>
           <div style={{ width: '24px', textAlign: 'center', color: '#1D9BF0', fontWeight: 700, fontSize: '15px' }}>
-            {currentUserRankIndex !== -1 ? currentUserRankIndex + 1 : '-'}
+            {currentUserRankIndex !== -1 ? (rankedUsers[currentUserRankIndex].computedRank ?? (currentUserRankIndex + 1)) : '-'}
           </div>
           
-          <ProfilePicture user={currentUser} size={46} />
+          <ProfilePicture user={currentUser as any} size={40} showStatus={false} />
           
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <span style={{ color: '#1D9BF0', fontWeight: 600, fontSize: '15px', letterSpacing: '-0.2px' }}>
-              You
-            </span>
-            <div style={{ fontSize: '13px', color: '#A1A1AA', marginTop: '2px', fontWeight: 400 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ color: 'white', fontWeight: 600, fontSize: '15px' }}>Your Ranking</span>
+            </div>
+            <div style={{ color: '#1D9BF0', fontSize: '12px' }}>
               {currentUser.accountType.charAt(0) + currentUser.accountType.slice(1).toLowerCase()}
             </div>
           </div>
 
           <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>
-            {currentUserRankIndex !== -1 ? rankedUsers[currentUserRankIndex].amerigamPoints.toLocaleString() : '0'} <span style={{ color: '#71717A', fontSize: '12px' }}>AP</span>
+            {currentUserRankIndex !== -1 ? rankedUsers[currentUserRankIndex].amerigamPoints.toLocaleString() : currentUser.amerigamPoints.toLocaleString()} <span style={{ color: '#71717A', fontSize: '12px' }}>AP</span>
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from '../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -33,10 +33,12 @@ export async function createCommunity(formData: FormData) {
         communityId: community.id,
       }
     });
-  }
 
-  revalidatePath('/communities');
+    revalidatePath('/communities');
+    redirect(`/communities/${community.id}`);
+  }
 }
+
 export async function joinCommunity(formData: FormData) {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
@@ -58,4 +60,26 @@ export async function joinCommunity(formData: FormData) {
   revalidatePath(`/communities/${communityId}`);
   revalidatePath('/communities');
   redirect(`/communities/${communityId}`);
+}
+
+export async function deleteCommunity(communityId: string) {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) return { success: false, error: 'Unauthorized' };
+
+  const community = await prisma.community.findUnique({
+    where: { id: communityId },
+    select: { creatorId: true },
+  });
+
+  if (!community || community.creatorId !== userId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  await prisma.community.delete({
+    where: { id: communityId }
+  });
+
+  revalidatePath('/communities');
+  redirect('/communities');
 }

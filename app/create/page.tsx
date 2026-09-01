@@ -1,10 +1,9 @@
-import { prisma } from '../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import CreatePostForm from './CreatePostForm';
-import CreateStatusForm from './CreateStatusForm';
-import CreateCommunityForm from './CreateCommunityForm';
 import CreateEventForm from './CreateEventForm';
+import CreateCommunityForm from './CreateCommunityForm';
 
 export default async function CreatePage({ searchParams }: { searchParams: Promise<{ type?: string }> }) {
   const cookieStore = await cookies();
@@ -19,40 +18,38 @@ export default async function CreatePage({ searchParams }: { searchParams: Promi
   });
 
   if (!currentUser) redirect('/login');
-  if (!currentUser.onboarded) redirect('/onboarding');
 
   const params = await searchParams;
   const type = params.type || 'post';
 
-  let title = "Create New Post";
-  let subtitle = "Share a status, project, or thought with your network.";
-
-  if (type === 'status') {
-    title = "Update Status";
-    subtitle = "Set a 24-hour status visible on your profile.";
-  } else if (type === 'project') {
-    title = "Launch Project";
-    subtitle = "Showcase your work to the community.";
-  } else if (type === 'competition') {
-    title = "Host Competition";
-    subtitle = "Organize an event for others to participate in.";
-  } else if (type === 'community') {
-    title = "Start Community";
-    subtitle = "Build a space for like-minded people.";
+  if (type === 'competition' && currentUser.accountType !== 'ORGANIZATION') {
+    return (
+      <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center', padding: 'var(--space-8)' }}>
+        <h1 className="heading-jakaas" style={{ fontSize: '2rem' }}>Unauthorized</h1>
+        <p style={{ color: 'var(--text-secondary)' }}>Only Competition Organizations can create competitions.</p>
+      </div>
+    );
   }
 
   return (
     <div style={{ maxWidth: '680px', margin: '0 auto', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
-      <div style={{ textAlign: 'center', marginBottom: 'var(--space-8)' }}>
-        <h1 className="heading-jakaas" style={{ fontSize: '2.5rem' }}>{title}</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-lg)' }}>{subtitle}</p>
-      </div>
-
-      <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
-        {type === 'post' && <CreatePostForm currentUser={currentUser} />}
-        {type === 'project' && <div style={{textAlign: 'center', padding: '2rem'}}>Project Creation coming soon!</div>}
-        {type === 'competition' && <CreateEventForm />}
-        {type === 'status' && <CreateStatusForm />}
+      <div className="glass-card" style={{ padding: 'var(--space-6)', minHeight: '80vh' }}>
+        {(type === 'post' || type === 'status' || type === 'project') && <CreatePostForm currentUser={currentUser} isReel={false} />}
+        {type === 'reel' && (
+          <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: 'var(--space-4)' }}>Reels</h2>
+            <p style={{ color: 'var(--text-secondary)' }}>This feature is coming soon!</p>
+          </div>
+        )}
+        {type === 'story' && <CreatePostForm currentUser={currentUser} isReel={false} isStory={true} />}
+        {type === 'competition' && (
+           <>
+             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px', paddingBottom: '16px' }}>
+                <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Host Competition</h1>
+             </div>
+             <CreateEventForm />
+           </>
+        )}
         {type === 'community' && <CreateCommunityForm />}
       </div>
     </div>

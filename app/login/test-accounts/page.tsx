@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { prisma } from '../../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import TestAccountSelector from './TestAccountSelector';
 
 export const dynamic = 'force-dynamic'; // Always fetch fresh test accounts

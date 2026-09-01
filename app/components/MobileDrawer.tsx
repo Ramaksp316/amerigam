@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { Home, Users, Globe, Trophy, Settings, HelpCircle, Info, LogOut, ChevronRight, Film } from 'lucide-react';
 import ProfilePicture from './ProfilePicture';
 
-export default function MobileDrawer({ currentUser }: { currentUser: any }) {
+export default function MobileDrawer({ currentUser, joinedCommunities = [], networkUsers = [] }: { currentUser: any, joinedCommunities?: any[], networkUsers?: any[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -175,6 +175,47 @@ export default function MobileDrawer({ currentUser }: { currentUser: any }) {
                 <Link href="/ranking" style={navItemStyle}>
                   <Trophy size={24} color="#F4F4F5" /> Leader
                 </Link>
+
+                {/* COMMUNITIES PREVIEW */}
+                <div style={{ marginTop: '24px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#71717A', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Communities</div>
+                  {joinedCommunities && joinedCommunities.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {joinedCommunities.map((cm: any) => (
+                        <Link key={cm.community.id} href={`/communities/${cm.community.id}`} onClick={() => setIsOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
+                          <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#27272A', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                            <Users size={14} color="#A1A1AA" />
+                          </div>
+                          <span style={{ color: '#F4F4F5', fontSize: '16px', fontWeight: 500 }}>{cm.community.name}</span>
+                        </Link>
+                      ))}
+                      <Link href="/communities" onClick={() => setIsOpen(false)} style={{ color: '#1D9BF0', fontSize: '15px', fontWeight: 500, textDecoration: 'none' }}>View All</Link>
+                    </div>
+                  ) : (
+                    <Link href="/communities?tab=foryou" onClick={() => setIsOpen(false)} style={{ color: '#1D9BF0', fontSize: '15px', fontWeight: 500, textDecoration: 'none' }}>Discover Communities</Link>
+                  )}
+                </div>
+
+                {/* NETWORK PREVIEW */}
+                <div style={{ marginTop: '24px', marginBottom: '24px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#71717A', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Your Network</div>
+                  {networkUsers && networkUsers.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {networkUsers.map((nu: any) => (
+                        <Link key={nu.following.id} href={`/user/${nu.following.id}`} onClick={() => setIsOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
+                          <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#27272A', overflow: 'hidden' }}>
+                            {nu.following.profilePictureUrl ? <img src={nu.following.profilePictureUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
+                          </div>
+                          <span style={{ color: '#F4F4F5', fontSize: '16px', fontWeight: 500 }}>{nu.following.name || nu.following.username}</span>
+                        </Link>
+                      ))}
+                      <Link href="/network" onClick={() => setIsOpen(false)} style={{ color: '#1D9BF0', fontSize: '15px', fontWeight: 500, textDecoration: 'none' }}>View All</Link>
+                    </div>
+                  ) : (
+                    <Link href="/network?tab=foryou" onClick={() => setIsOpen(false)} style={{ color: '#1D9BF0', fontSize: '15px', fontWeight: 500, textDecoration: 'none' }}>Find people in your field</Link>
+                  )}
+                </div>
+
               </div>
 
               <div style={{ flex: 1 }} />

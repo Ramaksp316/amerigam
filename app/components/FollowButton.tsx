@@ -6,10 +6,12 @@ import { UserCheck, UserPlus, UserMinus } from 'lucide-react';
 
 export default function FollowButton({ 
   targetUserId, 
-  initialIsFollowing 
+  initialIsFollowing,
+  fullWidth = false
 }: { 
   targetUserId: string, 
-  initialIsFollowing: boolean
+  initialIsFollowing: boolean,
+  fullWidth?: boolean
 }) {
   const [isPending, startTransition] = useTransition();
   const [isHovered, setIsHovered] = useState(false);
@@ -48,17 +50,29 @@ export default function FollowButton({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       disabled={isPending}
-      className={btnClass} 
       style={{ 
         opacity: isPending ? 0.7 : 1,
-        minWidth: '105px',
+        width: fullWidth ? '100%' : 'auto',
+        minWidth: '110px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 'var(--space-1)',
-        background: (isFollowing && isHovered) ? 'var(--danger)' : undefined,
-        borderColor: (isFollowing && isHovered) ? 'transparent' : undefined,
-        color: (isFollowing && isHovered) ? '#FFFFFF' : undefined,
+        gap: '6px',
+        padding: '8px 16px',
+        fontSize: '14px',
+        fontWeight: 600,
+        borderRadius: '8px',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        background: isFollowing 
+          ? (isHovered ? 'rgba(239, 68, 68, 0.1)' : 'transparent') 
+          : '#1D9BF0',
+        color: isFollowing 
+          ? (isHovered ? '#ef4444' : '#E4E4E7') 
+          : 'white',
+        border: isFollowing
+          ? (isHovered ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border-color)')
+          : '1px solid #1D9BF0',
       }}
     >
       {isPending ? (

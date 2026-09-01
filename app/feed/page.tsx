@@ -1,4 +1,4 @@
-import { prisma } from '../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import ReelFeedClient from '../components/ReelFeedClient';
@@ -38,7 +38,7 @@ export default async function FeedPage() {
   });
 
   return (
-    <div style={{ backgroundColor: '#000000', height: '100dvh', width: '100%', maxWidth: '600px', margin: '0 auto', overflow: 'hidden', position: 'relative' }}>
+    <div suppressHydrationWarning style={{ backgroundColor: '#000000', height: '100dvh', width: '100%', maxWidth: '600px', margin: '0 auto', overflow: 'hidden', position: 'relative' }}>
       <ReelFeedClient reels={reels} currentUserId={userId} />
     </div>
   );

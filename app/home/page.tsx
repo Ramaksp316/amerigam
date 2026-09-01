@@ -23,6 +23,10 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
     where: { id: userId }
   });
 
+  // Guard: redirect non-onboarded users to complete onboarding
+  if (!currentUser) redirect('/login');
+  if (!currentUser.onboarded) redirect('/onboarding');
+
   const resolvedSearchParams = await searchParams;
   const currentTab = resolvedSearchParams.tab || 'foryou';
 
@@ -31,39 +35,105 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
     where: { userId, isRead: false }
   });
 
-  // Get posts
-  let posts = await prisma.post.findMany({
-    where: {
-      // Don't show Reels in normal feed unless we want to, but user said "regular posts".
-      // Let's exclude 9:16 vertical video reels from Home to keep them distinct if needed, 
-      // but the user just said "Home can show normal posts". For now we'll just pull 20 posts.
-      NOT: {
-        AND: [
-          { mediaType: 'video' },
-          { aspectRatio: '9:16' }
-        ]
-      }
-    },
-    include: { 
-      author: {
-        include: { outgoingConnections: { include: { target: true } } }
+  // Get posts based on current tab
+  let posts: any[] = [];
+  
+  if (currentTab === 'communities') {
+    // Show Community Posts from communities the user has joined
+    const userCommunities = await prisma.communityMember.findMany({
+      where: { userId },
+      select: { communityId: true }
+    });
+    
+    if (userCommunities.length > 0) {
+      const communityIds = userCommunities.map(c => c.communityId);
+      const commPosts = await prisma.communityPost.findMany({
+        where: { communityId: { in: communityIds } },
+        include: {
+          author: { include: { outgoingConnections: { include: { target: true } } } },
+          community: true
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20
+      });
+      // Map community posts to regular post format so the UI doesn't break
+      posts = commPosts.map(cp => ({
+        ...cp,
+        likes: [],
+        comments: [],
+        isCommunityPost: true
+      }));
+    }
+  } else if (currentTab === 'network') {
+    // Show posts only from followed users
+    const following = await prisma.follow.findMany({
+      where: { followerId: userId },
+      select: { followingId: true }
+    });
+    
+    if (following.length > 0) {
+      const followingIds = following.map(f => f.followingId);
+      posts = await prisma.post.findMany({
+        where: {
+          authorId: { in: followingIds },
+          NOT: { AND: [{ mediaType: 'video' }, { aspectRatio: '9:16' }] }
+        },
+        include: { 
+          author: { include: { outgoingConnections: { include: { target: true } } } },
+          likes: true,
+          comments: { include: { author: true }, orderBy: { createdAt: 'asc' }, take: 3 }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20
+      });
+    }
+  } else {
+    // Default 'For You' - Global posts
+    // Fetch posts that match the user's accountType to personalize the feed
+    posts = await prisma.post.findMany({
+      where: {
+        NOT: { AND: [{ mediaType: 'video' }, { aspectRatio: '9:16' }] },
+        author: {
+          accountType: currentUser.accountType
+        }
       },
-      likes: true,
-      comments: {
-        include: { author: true },
-        orderBy: { createdAt: 'asc' },
-        take: 3
-      }
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 20
-  });
+      include: { 
+        author: { include: { outgoingConnections: { include: { target: true } } } },
+        likes: true,
+        comments: { include: { author: true }, orderBy: { createdAt: 'asc' }, take: 3 }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    });
 
-  // Reorder to force Diya's Post 1 to the top for testing
-  const diyaPost1 = posts.find(p => p.author.username === 'diyadraws' && p.content?.includes('Packaging doesn’t'));
-  if (diyaPost1) {
-    const otherPosts = posts.filter(p => p.id !== diyaPost1.id);
-    posts = [diyaPost1, ...otherPosts];
+    // If not enough posts, fetch others to fill the feed
+    if (posts.length < 5) {
+      const morePosts = await prisma.post.findMany({
+        where: {
+          NOT: { AND: [{ mediaType: 'video' }, { aspectRatio: '9:16' }] },
+          author: {
+            accountType: { not: currentUser.accountType }
+          }
+        },
+        include: { 
+          author: { include: { outgoingConnections: { include: { target: true } } } },
+          likes: true,
+          comments: { include: { author: true }, orderBy: { createdAt: 'asc' }, take: 3 }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20 - posts.length
+      });
+      posts = [...posts, ...morePosts];
+    }
+  }
+
+  // Reorder to force Diya's Post 1 to the top for testing (only on For You)
+  if (currentTab === 'foryou') {
+    const diyaPost1 = posts.find(p => p.author.username === 'diyadraws' && p.content?.includes('Packaging doesn’t'));
+    if (diyaPost1) {
+      const otherPosts = posts.filter(p => p.id !== diyaPost1.id);
+      posts = [diyaPost1, ...otherPosts];
+    }
   }
 
   return (
@@ -109,7 +179,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                   position: 'absolute',
                   top: '-2px',
                   right: '-2px',
-                  background: '#F91880',
+                  background: 'var(--accent-primary)',
                   width: '8px',
                   height: '8px',
                   borderRadius: '50%',
@@ -140,9 +210,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                 fontSize: '14px'
               }}>
                 {tabLabel}
-                {isActive && (
-                  <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '36px', height: '4px', background: '#1D9BF0', borderRadius: '4px 4px 0 0' }} />
-                )}
+                
               </Link>
             )
           })}
@@ -152,7 +220,13 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
       <div className="feed-stream" style={{ paddingBottom: '20px' }}>
         {posts.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px', color: '#71717A' }}>
-            <p style={{ fontSize: '15px' }}>No posts found.</p>
+            {currentTab === 'network' ? (
+              <p style={{ fontSize: '15px' }}>Start following people to see their posts here!</p>
+            ) : currentTab === 'communities' ? (
+              <p style={{ fontSize: '15px' }}>Join a community to see posts here.</p>
+            ) : (
+              <p style={{ fontSize: '15px' }}>No posts found.</p>
+            )}
           </div>
         )}
 
@@ -177,7 +251,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
 
           return (
             <div key={post.id} style={{
-              padding: '16px',
+              padding: '12px 16px',
               borderBottom: '1px solid #27272A',
               display: 'flex',
               flexDirection: 'column'
@@ -195,7 +269,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                       <Link href={`/user/${post.authorId}`} style={{ color: 'white', fontWeight: 600, textDecoration: 'none', fontSize: '15px', letterSpacing: '-0.3px' }}>
                         {post.author.name || post.author.username}
                       </Link>
-                      {isVerified && <CheckCircle2 size={15} color="#1D9BF0" fill="#1D9BF0" />}
+                      {isVerified && <CheckCircle2 size={15} color="var(--accent-primary)" fill="var(--accent-primary)" />}
                     </div>
                     
                     <div style={{ fontSize: '13px', color: '#A1A1AA', marginTop: '2px', fontWeight: 400, letterSpacing: '-0.2px' }}>

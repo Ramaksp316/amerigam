@@ -53,10 +53,14 @@ export default function CompetitionCard({ event, layout = 'vertical-split', isRe
         {/* Left Image Area */}
         <div style={{ width: '110px', height: '100%', position: 'relative', flexShrink: 0 }}>
           {event.coverImage ? (
-            <Image src={event.coverImage} alt={event.name} fill style={{ objectFit: 'cover' }} />
+            <Image src={event.coverImage} alt={event.name} fill style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
           ) : (
             <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)' }} />
           )}
+          
+          <div style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: (!event.entryFee || event.entryFee === 0) ? 'rgba(16, 185, 129, 0.9)' : 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, color: '#FFF' }}>
+            {(!event.entryFee || event.entryFee === 0) ? 'Free' : `₹${event.entryFee}`}
+          </div>
         </div>
 
         {/* Right Content Area */}
@@ -100,10 +104,13 @@ export default function CompetitionCard({ event, layout = 'vertical-split', isRe
         {/* Top Image Area */}
         <div style={{ width: '100%', height: '120px', position: 'relative' }}>
           {event.coverImage ? (
-            <Image src={event.coverImage} alt={event.name} fill style={{ objectFit: 'cover' }} />
+            <Image src={event.coverImage} alt={event.name} fill style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
           ) : (
             <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #064e3b 0%, #022c22 100%)' }} />
           )}
+          <div style={{ position: 'absolute', top: '12px', right: '12px', backgroundColor: (!event.entryFee || event.entryFee === 0) ? 'rgba(16, 185, 129, 0.9)' : 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, color: '#FFF' }}>
+            {(!event.entryFee || event.entryFee === 0) ? 'Free' : `₹${event.entryFee}`}
+          </div>
         </div>
 
         {/* Bottom Content Area */}
@@ -149,10 +156,14 @@ export default function CompetitionCard({ event, layout = 'vertical-split', isRe
       position: 'relative'
     }}>
       {event.coverImage ? (
-        <Image src={event.coverImage} alt={event.name} fill style={{ objectFit: 'cover' }} />
+        <Image src={event.coverImage} alt={event.name} fill style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
       ) : (
         <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #312e81 0%, #1e1b4b 100%)' }} />
       )}
+      
+      <div style={{ position: 'absolute', top: '12px', right: '12px', backgroundColor: (!event.entryFee || event.entryFee === 0) ? 'rgba(16, 185, 129, 0.9)' : 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, color: '#FFF', zIndex: 2 }}>
+        {(!event.entryFee || event.entryFee === 0) ? 'Free' : `₹${event.entryFee}`}
+      </div>
       
       {/* Dark gradient overlay at bottom */}
       <div style={{

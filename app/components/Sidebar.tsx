@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { Home, Search, Users, MessageCircle, Trophy, Bell, User, Plus, BarChart2 } from 'lucide-react';
 import ProfilePicture from './ProfilePicture';
 
-export default function Sidebar({ unreadCount = 0, currentUser = null }: { unreadCount?: number, currentUser?: any }) {
+export default function Sidebar({ unreadCount = 0, currentUser = null, joinedCommunities = [], networkUsers = [] }: { unreadCount?: number, currentUser?: any, joinedCommunities?: any[], networkUsers?: any[] }) {
   const pathname = usePathname();
   const [displayUnread, setDisplayUnread] = useState(unreadCount);
 
@@ -86,6 +86,47 @@ export default function Sidebar({ unreadCount = 0, currentUser = null }: { unrea
           <span className="text">Your Ranking</span>
         </Link>
 
+        {/* COMMUNITIES PREVIEW */}
+        <div style={{ marginTop: '24px', paddingLeft: '24px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: '#71717A', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Communities</div>
+          {joinedCommunities && joinedCommunities.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {joinedCommunities.map((cm: any) => (
+                <Link key={cm.community.id} href={`/communities/${cm.community.id}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#27272A', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                    <Users size={14} color="#A1A1AA" />
+                  </div>
+                  <span style={{ color: '#F4F4F5', fontSize: '15px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cm.community.name}</span>
+                </Link>
+              ))}
+              <Link href="/communities" style={{ color: '#1D9BF0', fontSize: '14px', fontWeight: 500, textDecoration: 'none', marginTop: '4px' }}>View All</Link>
+            </div>
+          ) : (
+            <Link href="/communities?tab=foryou" style={{ color: '#1D9BF0', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Discover Communities</Link>
+          )}
+        </div>
+
+        {/* NETWORK PREVIEW */}
+        <div style={{ marginTop: '24px', paddingLeft: '24px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: '#71717A', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Your Network</div>
+          {networkUsers && networkUsers.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {networkUsers.map((nu: any) => (
+                <Link key={nu.following.id} href={`/user/${nu.following.id}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#27272A', overflow: 'hidden' }}>
+                    {nu.following.profilePictureUrl ? <img src={nu.following.profilePictureUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
+                  </div>
+                  <span style={{ color: '#F4F4F5', fontSize: '15px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nu.following.name || nu.following.username}</span>
+                </Link>
+              ))}
+              <Link href="/network" style={{ color: '#1D9BF0', fontSize: '14px', fontWeight: 500, textDecoration: 'none', marginTop: '4px' }}>View All</Link>
+            </div>
+          ) : (
+            <Link href="/network?tab=foryou" style={{ color: '#1D9BF0', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Find people in your field</Link>
+          )}
+        </div>
+
+
         <Link href="/profile" className={pathname?.startsWith('/profile') ? 'active' : ''}>
           <span className="icon">
             {currentUser ? (
@@ -111,8 +152,8 @@ export default function Sidebar({ unreadCount = 0, currentUser = null }: { unrea
           textDecoration: 'none',
           transition: 'opacity 0.2s'
         }}
-        onMouseOver={e => e.currentTarget.style.opacity = '0.9'}
-        onMouseOut={e => e.currentTarget.style.opacity = '1'}
+        
+        
         >
           <span className="text">Create</span>
           <span className="icon" style={{ display: 'none' }}><Plus size={24} strokeWidth={2.5} /></span>

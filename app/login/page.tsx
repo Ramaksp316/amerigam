@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '../../utils/supabase/server';
-import { login, signup, logout, loginWithGoogle } from './actions';
+import { loginWithGoogle } from './actions';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -9,7 +9,7 @@ export default async function LoginPage() {
   const { data } = await supabase.auth.getUser();
 
   if (data?.user) {
-    redirect('/feed');
+    redirect('/home');
   }
 
   return (
@@ -48,18 +48,14 @@ export default async function LoginPage() {
         {/* Actions Section */}
         <div className="login-actions">
           {/* Create Account - Primary White Button */}
-          <form action={signup}>
-            {/* The real app would need a separate signup page or modal for email/password. 
-                For now, we keep the formAction but style it as a button. 
-                We will use dummy inputs just to make the server action work if needed, 
-                or better, redirect to a signup page. For now, it's just a button. */}
-            <button type="submit" className="login-btn-primary">
+          <Link href="/signup" style={{ width: '100%', display: 'block' }}>
+            <button type="button" className="login-btn-primary">
               Create account
             </button>
-          </form>
+          </Link>
 
           {/* Log In - Secondary Outlined Button */}
-          <Link href="/login/test-accounts" style={{ width: '100%', display: 'block' }}>
+          <Link href="/signin" style={{ width: '100%', display: 'block' }}>
             <button type="button" className="login-btn-secondary">
               Log in
             </button>
@@ -87,6 +83,10 @@ export default async function LoginPage() {
         <div className="login-footer">
           By continuing, you agree to our<br />
           <Link href="/terms" className="login-link">Terms of Service</Link> and <Link href="/privacy" className="login-link">Privacy Policy</Link>.
+          <br /><br />
+          <Link href="/login/test-accounts" style={{ color: '#3F3F46', fontSize: '12px', textDecoration: 'none' }}>
+            Dev: Switch test account
+          </Link>
         </div>
       </div>
     </div>

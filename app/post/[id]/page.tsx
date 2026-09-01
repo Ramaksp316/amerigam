@@ -1,10 +1,10 @@
-import { prisma } from '../../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, ArrowLeft } from 'lucide-react';
-import ShareButton from '../../feed/ShareButton';
+import ShareButton from '../../home/ShareButton';
 import DeletePostButton from '../../components/DeletePostButton';
 import LikeButton from '../../components/LikeButton';
 import CommentForm from '../../components/CommentForm';

@@ -49,6 +49,7 @@ export default function ReelFeedClient({ reels, currentUserId }: { reels: any[],
         height: '100%', // full height of parent
         width: '100%',
         overflowY: 'scroll',
+        scrollBehavior: 'auto' as const, overscrollBehavior: 'none', WebkitOverflowScrolling: 'touch',
         scrollSnapType: 'y mandatory',
         scrollbarWidth: 'none',
         msOverflowStyle: 'none'
@@ -166,9 +167,11 @@ function ReelItem({ reel, isActive, isGlobalMuted, setIsGlobalMuted }: any) {
       className="reel-container" 
       data-reel-id={reel.id}
       style={{
-        height: '100%', // Snap to parent height exactly
+        height: '100%',
+        maxHeight: '100%',
         width: '100%',
         scrollSnapAlign: 'start',
+        
         position: 'relative',
         backgroundColor: '#000000',
         display: 'flex',
@@ -179,7 +182,7 @@ function ReelItem({ reel, isActive, isGlobalMuted, setIsGlobalMuted }: any) {
     >
       {/* Video Element */}
       {!hasError ? (
-        <video
+        <video suppressHydrationWarning
           ref={videoRef}
           src={reel.mediaUrl}
           loop
@@ -203,6 +206,17 @@ function ReelItem({ reel, isActive, isGlobalMuted, setIsGlobalMuted }: any) {
         <div style={{ color: '#71717A' }}>Media unavailable</div>
       )}
 
+      {/* Hidden audio element for reels with separate audio track */}
+      {reel.audioUrl && (
+        <audio
+          ref={audioRef}
+          src={reel.audioUrl}
+          loop
+          muted={isMuted}
+          style={{ display: 'none' }}
+        />
+      )}
+
       {/* Header Overlay (Amerigam Logo / Safe Area) */}
       <div style={{
         position: 'absolute',
@@ -213,10 +227,8 @@ function ReelItem({ reel, isActive, isGlobalMuted, setIsGlobalMuted }: any) {
         alignItems: 'center',
         gap: '12px'
       }}>
-        <div style={{ width: 34, height: 34, borderRadius: '8px', overflow: 'hidden' }}>
-          <img src="/logo-new.jpg" alt="Amerigam" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
-        <span style={{ color: 'white', fontWeight: 800, fontSize: '20px', letterSpacing: '-0.5px', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Reels</span>
+        
+        <span style={{ color: 'white', fontWeight: 800, fontSize: '20px', letterSpacing: '-0.5px', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Feed</span>
       </div>
 
       {/* Right Side Actions */}
@@ -283,7 +295,7 @@ function ReelItem({ reel, isActive, isGlobalMuted, setIsGlobalMuted }: any) {
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <Link href={`/user/${reel.author.id}`} style={{ textDecoration: 'none', color: 'white', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}>
               {reel.author.name || reel.author.username}
-              {isVerified && <CheckCircle2 size={14} color="#1D9BF0" fill="#1D9BF0" />}
+              {isVerified && <CheckCircle2 size={14} color="var(--accent-primary)" fill="var(--accent-primary)" />}
             </Link>
             <span style={{ color: '#E4E4E7', fontSize: '13px' }}>@{reel.author.username}</span>
           </div>

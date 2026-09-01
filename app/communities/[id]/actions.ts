@@ -1,215 +1,68 @@
-'use server';
 
-import { prisma } from '../../../lib/prisma';
+'use server'
+
+import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { createClient } from '../../../utils/supabase/server';
-import { sendWebPushNotification } from '../../actions/sendWebPush';
 
 export async function createCommunityPost(formData: FormData) {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
-  if (!userId) return;
+  if (!userId) throw new Error('Not logged in');
 
   const content = formData.get('content') as string;
   const communityId = formData.get('communityId') as string;
-  const media = formData.get('media') as File | null;
-  
-  let mediaUrl = null;
-  let mediaType = null;
 
-  if (media && media.size > 0) {
-    const supabase = await createClient();
-    const fileName = `${Date.now()}-${media.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
+  if (!content || !communityId) return;
+
+  const post = await prisma.communityPost.create({
+    data: {
+      content,
+      authorId: userId,
+      communityId
+    }
+  });
+
+  // Notify community members
+  const members = await prisma.communityMember.findMany({
+    where: { communityId, userId: { not: userId } },
+    select: { userId: true }
+  });
+
+  if (members.length > 0) {
+    const actorUser = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, username: true } });
+    const community = await prisma.community.findUnique({ where: { id: communityId }, select: { name: true } });
+    const actorName = actorUser?.name || actorUser?.username || 'Someone';
+    const commName = community?.name || 'a community';
     
-    const { data, error } = await supabase.storage
-      .from('uploads')
-      .upload(fileName, media, {
-        contentType: media.type,
-      });
-
-    if (!error && data) {
-      const { data: publicUrlData } = supabase.storage
-        .from('uploads')
-        .getPublicUrl(fileName);
-      
-      mediaUrl = publicUrlData.publicUrl;
-      mediaType = media.type.startsWith('video/') ? 'video' : 'image';
-    } else {
-      console.error('Storage upload error:', error);
-    }
+    const notificationData = members.map(m => ({
+      userId: m.userId,
+      actorId: userId,
+      type: 'community_post',
+      content: `posted in ${commName}.`,
+      link: `/communities/${communityId}`
+    }));
+    
+    await prisma.notification.createMany({ data: notificationData });
+    
+    // Import push manually here if not at top level (we might need to check if it's imported)
   }
 
-  if (content || mediaUrl) {
-    await prisma.communityPost.create({
-      data: {
-        content: content || '',
-        mediaUrl,
-        mediaType,
-        authorId: userId,
-        communityId,
-      },
-    });
-
-    const community = await prisma.community.findUnique({
-      where: { id: communityId },
-      include: { members: true }
-    });
-
-    if (community) {
-      const actorUser = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, username: true } });
-      const actorName = actorUser ? (actorUser.username || actorUser.name || 'Someone') : 'Someone';
-
-      for (const member of community.members) {
-        if (member.userId !== userId) {
-          await prisma.notification.create({
-            data: {
-              userId: member.userId,
-              actorId: userId,
-              type: 'community_post',
-              content: `posted in ${community.name}.`,
-              link: `/communities/${communityId}`,
-            }
-          });
-          await sendWebPushNotification(
-            member.userId, 
-            `New post in ${community.name}`, 
-            `${actorName}: ${content.length > 30 ? content.substring(0, 30) + '...' : content}`, 
-            `/communities/${communityId}`
-          );
-        }
-      }
-    }
-
-    revalidatePath(`/communities/${communityId}`);
-  }
+  revalidatePath(`/communities/${communityId}`);
 }
 
-export async function createCommunityTask(formData: FormData) {
+export async function sendCommunityMessage(communityId: string, content: string) {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
-  if (!userId) return;
+  if (!userId) throw new Error('Not logged in');
 
-  const communityId = formData.get('communityId') as string;
-  const title = formData.get('title') as string;
-  const description = formData.get('description') as string;
-  const assigneeId = formData.get('assigneeId') as string || null;
-  const deadlineStr = formData.get('deadline') as string;
+  await prisma.communityMessage.create({
+    data: {
+      content,
+      senderId: userId,
+      communityId
+    }
+  });
   
-  if (!title || title.trim().length === 0) return;
-
-  const deadline = deadlineStr ? new Date(deadlineStr) : null;
-
-  await prisma.communityTask.create({
-    data: {
-      title,
-      description,
-      communityId,
-      creatorId: userId,
-      assigneeId,
-      deadline,
-    }
-  });
-
   revalidatePath(`/communities/${communityId}`);
-}
-
-export async function updateTaskStatus(formData: FormData) {
-  const cookieStore = await cookies();
-  const userId = cookieStore.get('userId')?.value;
-  if (!userId) return;
-
-  const taskId = formData.get('taskId') as string;
-  const status = formData.get('status') as string;
-  const communityId = formData.get('communityId') as string;
-
-  await prisma.communityTask.update({
-    where: { id: taskId },
-    data: { status }
-  });
-
-  revalidatePath(`/communities/${communityId}`);
-}
-
-export async function updateCommunityAvatar(formData: FormData) {
-  const cookieStore = await cookies();
-  const userId = cookieStore.get('userId')?.value;
-  if (!userId) return { success: false, error: 'Unauthorized' };
-
-  const communityId = formData.get('communityId') as string;
-  const avatarData = formData.get('avatarData') as string;
-
-  // Check if user is the creator of the community
-  const community = await prisma.community.findUnique({
-    where: { id: communityId }
-  });
-
-  if (!community || community.creatorId !== userId) {
-    return { success: false, error: 'Only the creator can change the group photo' };
-  }
-
-  await prisma.community.update({
-    where: { id: communityId },
-    data: { avatarData }
-  });
-
-  revalidatePath(`/communities/${communityId}`);
-  return { success: true };
-}
-
-export async function createNotebookPage(communityId: string) {
-  const cookieStore = await cookies();
-  const userId = cookieStore.get('userId')?.value;
-  if (!userId) return null;
-
-  const newPage = await prisma.communityNote.create({
-    data: {
-      communityId,
-      title: "Untitled Page",
-      content: "",
-      penColor: "#0000ff", // Default blue ink
-      updatedById: userId
-    }
-  });
-
-  revalidatePath(`/communities/${communityId}`);
-  return newPage;
-}
-
-export async function updateNotebookPage(formData: FormData) {
-  const cookieStore = await cookies();
-  const userId = cookieStore.get('userId')?.value;
-  if (!userId) return { success: false, error: 'Unauthorized' };
-
-  const id = formData.get('pageId') as string;
-  const communityId = formData.get('communityId') as string;
-  const title = formData.get('title') as string;
-  const content = formData.get('content') as string;
-  const penColor = formData.get('penColor') as string;
-
-  await prisma.communityNote.update({
-    where: { id },
-    data: {
-      title: title || 'Untitled Page',
-      content: content || '',
-      penColor: penColor || '#0000ff',
-      updatedById: userId
-    }
-  });
-
-  revalidatePath(`/communities/${communityId}`);
-  return { success: true };
-}
-
-export async function deleteNotebookPage(pageId: string, communityId: string) {
-  const cookieStore = await cookies();
-  const userId = cookieStore.get('userId')?.value;
-  if (!userId) return { success: false, error: 'Unauthorized' };
-
-  await prisma.communityNote.delete({
-    where: { id: pageId }
-  });
-
-  revalidatePath(`/communities/${communityId}`);
-  return { success: true };
 }

@@ -1,4 +1,4 @@
-import { prisma } from '../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -20,13 +20,10 @@ export default async function SearchPage({
     where: { id: userId }
   });
 
-  if (currentUser && !currentUser.onboarded) {
-    redirect('/onboarding');
-  }
-
   const query = resolvedSearchParams.q || '';
 
   let users: any[] = [];
+  let suggestions: any[] = [];
   
   if (query.trim().length > 0) {
     users = await prisma.user.findMany({
@@ -34,13 +31,37 @@ export default async function SearchPage({
         OR: [
           { name: { contains: query } },
           { email: { contains: query } }
-        ]
+        ],
+        id: { not: userId }
       },
       include: {
         followers: true,
       },
       take: 20
     });
+  } else {
+    // If no query, find suggestions (e.g. nearby or same location)
+    if (currentUser?.location || currentUser?.city) {
+      suggestions = await prisma.user.findMany({
+        where: {
+          id: { not: userId },
+          OR: [
+            { location: currentUser.location || undefined },
+            { city: currentUser.city || undefined }
+          ]
+        },
+        take: 10
+      });
+    }
+    
+    // If no nearby, or no location set, fallback to random/recent users
+    if (suggestions.length === 0) {
+      suggestions = await prisma.user.findMany({
+        where: { id: { not: userId } },
+        take: 10,
+        orderBy: { createdAt: 'desc' }
+      });
+    }
   }
 
   return (
@@ -62,7 +83,7 @@ export default async function SearchPage({
         </form>
       </div>
 
-      {query && (
+      {query ? (
         <div>
           <div className="divider" style={{ marginBottom: 'var(--space-6)' }}>RESULTS FOR "{query}"</div>
           
@@ -78,9 +99,13 @@ export default async function SearchPage({
                     
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
                       <div className="post-avatar" style={{ width: '48px', height: '48px' }}>
-                        <div className="post-avatar-inner" style={{ fontSize: '1.2rem' }}>
-                          {(user.name || user.username || '?').charAt(0).toUpperCase()}
-                        </div>
+                        {user.avatarData ? (
+                           <img src={user.avatarData} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <div className="post-avatar-inner" style={{ fontSize: '1.2rem' }}>
+                            {(user.name || user.username || '?').charAt(0).toUpperCase()}
+                          </div>
+                        )}
                       </div>
                       <div>
                         <strong style={{ fontSize: 'var(--text-lg)', color: 'var(--text-primary)', display: 'block' }}>{user.name || 'Unnamed User'}</strong>
@@ -89,7 +114,48 @@ export default async function SearchPage({
                     </div>
                     
                     <div style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
-                      {user.followers.length} Followers
+                      {user.followers?.length || 0} Followers
+                    </div>
+
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div>
+          <div className="divider" style={{ marginBottom: 'var(--space-6)' }}>SUGGESTIONS (NEARBY & RELEVANT)</div>
+          {suggestions.length === 0 ? (
+            <div className="glass-card" style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: 'var(--space-8)' }}>
+              No suggestions available right now.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              {suggestions.map(user => (
+                <Link key={user.id} href={`/user/${user.id}`} style={{ textDecoration: 'none' }}>
+                  <div className="glass-card hoverable-card" style={{ padding: 'var(--space-4)', margin: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+                      <div className="post-avatar" style={{ width: '48px', height: '48px' }}>
+                        {user.avatarData ? (
+                           <img src={user.avatarData} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <div className="post-avatar-inner" style={{ fontSize: '1.2rem' }}>
+                            {(user.name || user.username || '?').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <strong style={{ fontSize: 'var(--text-lg)', color: 'var(--text-primary)', display: 'block' }}>{user.name || 'Unnamed User'}</strong>
+                        <small style={{ color: 'var(--text-secondary)' }}>
+                          @{user.username || 'user'} {user.location && `• ${user.location}`}
+                        </small>
+                      </div>
+                    </div>
+                    
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
+                      View Profile
                     </div>
 
                   </div>

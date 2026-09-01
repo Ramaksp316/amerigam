@@ -8,7 +8,7 @@ import ActiveStatusTracker from './components/ActiveStatusTracker';
 import MobileBottomNav from './components/MobileBottomNav';
 import MobileDrawer from './components/MobileDrawer';
 import { cookies } from 'next/headers';
-import { prisma } from '../lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -43,16 +43,35 @@ export default async function RootLayout({
 }) {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
+  
   let unreadCount = 0;
   let currentUser = null;
+  let joinedCommunities: any[] = [];
+  let networkUsers: any[] = [];
+  
   if (userId) {
     unreadCount = await prisma.notification.count({
       where: { userId, isRead: false }
     });
     currentUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, username: true, avatarData: true, status: true, lastSeen: true }
+      select: { id: true, name: true, username: true, avatarData: true, status: true, lastSeen: true, accountType: true }
     });
+
+    if (currentUser?.accountType === 'PERSONAL') {
+      joinedCommunities = await prisma.communityMember.findMany({
+        where: { userId },
+        include: { community: true },
+        orderBy: { joinedAt: 'desc' },
+        take: 5
+      });
+      networkUsers = await prisma.follow.findMany({
+        where: { followerId: userId, following: { accountType: 'PERSONAL' } },
+        include: { following: true },
+        orderBy: { createdAt: 'desc' },
+        take: 5
+      });
+    }
   }
 
   return (
@@ -61,14 +80,15 @@ export default async function RootLayout({
         <ThemeProvider>
           <ActiveStatusTracker userId={userId} />
           <div className="mobile-only">
-            <MobileDrawer currentUser={currentUser} />
+            <MobileDrawer currentUser={currentUser} joinedCommunities={joinedCommunities} networkUsers={networkUsers} />
           </div>
           <div className="app-layout">
-            <Sidebar unreadCount={unreadCount} currentUser={currentUser} />
+            <Sidebar unreadCount={unreadCount} currentUser={currentUser} joinedCommunities={joinedCommunities} networkUsers={networkUsers} />
+
             <main className="main-content">
               {children}
             </main>
-            <MobileBottomNav />
+            <MobileBottomNav currentUser={currentUser} />
             <PWAInstallPrompt />
           </div>
           <script

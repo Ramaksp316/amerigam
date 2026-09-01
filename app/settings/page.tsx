@@ -1,9 +1,10 @@
-import { prisma } from '../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Settings, LogOut, UserCircle } from 'lucide-react';
 import ProfileFormClient from './ProfileFormClient';
+import DeleteAccountButton from './DeleteAccountButton';
 
 async function updateProfile(formData: FormData) {
   'use server';
@@ -32,6 +33,42 @@ async function logout() {
   redirect('/login');
 }
 
+async function deleteAccount() {
+  'use server';
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) redirect('/login');
+
+  const randomString = Date.now().toString();
+  
+  // Hard deleting is dangerous in Prisma without cascade constraints everywhere.
+  // We perform a safe soft-delete: scramble identifiable info and remove posts/comments/likes.
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      email: `deleted_${randomString}@amerigam.test`,
+      username: `deleted_${randomString}`,
+      name: 'Deleted User',
+      password: 'DELETED',
+      bio: null,
+      portfolioUrl: null,
+      avatarData: null,
+      amerigamId: null,
+    }
+  });
+
+  // Remove the user's content and relationships
+  await prisma.post.deleteMany({ where: { authorId: userId } });
+  await prisma.comment.deleteMany({ where: { authorId: userId } });
+  await prisma.like.deleteMany({ where: { userId: userId } });
+  await prisma.follow.deleteMany({ where: { followerId: userId } });
+  await prisma.follow.deleteMany({ where: { followingId: userId } });
+  
+  // End session
+  cookieStore.delete('userId');
+  redirect('/login');
+}
+
 export default async function SettingsPage() {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
@@ -45,7 +82,6 @@ export default async function SettingsPage() {
   });
 
   if (!user) redirect('/login');
-  if (!user.onboarded) redirect('/onboarding');
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
@@ -72,6 +108,8 @@ export default async function SettingsPage() {
         <form action={logout}>
           <button type="submit" className="btn btn-outline" style={{ color: 'var(--danger)', borderColor: 'var(--danger)', width: 'auto', padding: 'var(--space-2) var(--space-6)' }}>Log Out</button>
         </form>
+
+        <DeleteAccountButton deleteAction={deleteAccount} />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from '../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { sendWebPushNotification } from './sendWebPush';
@@ -45,4 +45,5 @@ export async function toggleFollow(targetUserId: string) {
     await sendWebPushNotification(targetUserId, 'New Follower', `${actorName} started following you.`, `/user/${currentUserId}`);
   }
   revalidatePath(`/user/${targetUserId}`);
+  revalidatePath('/network');
 }

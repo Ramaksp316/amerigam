@@ -1,0 +1,1 @@
+const fs = require('fs'); const lines = fs.readFileSync('app/competitions/manage-participants/[eventId]/ParticipantManagerClient.tsx', 'utf8').split('\n'); fs.writeFileSync('app/competitions/manage-participants/[eventId]/ParticipantManagerClient.tsx', lines.slice(0, 236).join('\n'));  
