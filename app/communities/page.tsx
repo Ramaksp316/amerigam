@@ -47,7 +47,7 @@ export default async function CommunitiesPage({ searchParams }: { searchParams: 
   if (currentTab === 'joined') {
     displayCommunities = allCommunities.filter(c => c.members.length > 0);
   } else if (currentTab === 'explore') {
-    displayCommunities = allCommunities;
+    displayCommunities = allCommunities.filter(c => c.type !== 'FRIEND_GROUP' || c.members.length > 0);
   } else {
     // For You
     const userKeywords = [

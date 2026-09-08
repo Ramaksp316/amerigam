@@ -34,6 +34,26 @@ export const metadata: Metadata = {
   title: "Amerigam - Connect, Create, Share",
   description: "A platform for creators, professionals, athletes, and explorers.",
   manifest: "/manifest.json",
+  openGraph: {
+    title: "Amerigam - Connect, Create, Share",
+    description: "A platform for creators, professionals, athletes, and explorers.",
+    url: "https://amerigam.com",
+    siteName: "Amerigam",
+    images: [
+      {
+        url: "https://amerigam.com/apple-icon.jpg",
+        width: 512,
+        height: 512,
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Amerigam",
+    description: "Connect, Create, Share on Amerigam.",
+    images: ["https://amerigam.com/apple-icon.jpg"],
+  }
 };
 
 export default async function RootLayout({

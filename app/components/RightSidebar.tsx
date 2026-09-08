@@ -15,6 +15,12 @@ export default async function RightSidebar({ userId }: { userId: string }) {
 
   // Fetch some communities deterministically
   const communities = await prisma.community.findMany({
+    where: {
+      OR: [
+        { type: 'PUBLIC' },
+        { members: { some: { userId } } }
+      ]
+    },
     take: 3,
     orderBy: { createdAt: 'desc' }
   });

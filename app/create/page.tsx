@@ -5,7 +5,7 @@ import CreatePostForm from './CreatePostForm';
 import CreateEventForm from './CreateEventForm';
 import CreateCommunityForm from './CreateCommunityForm';
 
-export default async function CreatePage({ searchParams }: { searchParams: Promise<{ type?: string }> }) {
+export default async function CreatePage({ searchParams }: { searchParams: Promise<{ type?: string, communityId?: string }> }) {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
 
@@ -21,6 +21,7 @@ export default async function CreatePage({ searchParams }: { searchParams: Promi
 
   const params = await searchParams;
   const type = params.type || 'post';
+  const communityId = params.communityId;
 
   if (type === 'competition' && currentUser.accountType !== 'ORGANIZATION') {
     return (
@@ -31,27 +32,31 @@ export default async function CreatePage({ searchParams }: { searchParams: Promi
     );
   }
 
+  const isPostFlow = type === 'post' || type === 'status' || type === 'project' || type === 'story';
+
   return (
-    <div style={{ maxWidth: '680px', margin: '0 auto', animation: 'fadeIn var(--duration-slow) var(--ease-smooth)' }}>
-      <div className="glass-card" style={{ padding: 'var(--space-6)', minHeight: '80vh' }}>
-        {(type === 'post' || type === 'status' || type === 'project') && <CreatePostForm currentUser={currentUser} isReel={false} />}
-        {type === 'reel' && (
-          <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: 'var(--space-4)' }}>Reels</h2>
-            <p style={{ color: 'var(--text-secondary)' }}>This feature is coming soon!</p>
-          </div>
-        )}
-        {type === 'story' && <CreatePostForm currentUser={currentUser} isReel={false} isStory={true} />}
-        {type === 'competition' && (
-           <>
-             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px', paddingBottom: '16px' }}>
-                <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Host Competition</h1>
-             </div>
-             <CreateEventForm />
-           </>
-        )}
-        {type === 'community' && <CreateCommunityForm />}
-      </div>
+    <div style={{ maxWidth: '680px', margin: '0 auto', animation: 'fadeIn 0.2s ease', height: '100dvh', display: 'flex', flexDirection: 'column' }}>
+      {isPostFlow ? (
+        <CreatePostForm currentUser={currentUser} isReel={false} isStory={type === 'story'} communityId={communityId} />
+      ) : (
+        <div className="glass-card" style={{ padding: 'var(--space-6)', minHeight: '80vh' }}>
+          {type === 'reel' && (
+            <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: 'var(--space-4)' }}>Reels</h2>
+              <p style={{ color: 'var(--text-secondary)' }}>This feature is coming soon!</p>
+            </div>
+          )}
+          {type === 'competition' && (
+             <>
+               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px', paddingBottom: '16px' }}>
+                  <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Host Competition</h1>
+               </div>
+               <CreateEventForm />
+             </>
+          )}
+          {type === 'community' && <CreateCommunityForm />}
+        </div>
+      )}
     </div>
   );
 }

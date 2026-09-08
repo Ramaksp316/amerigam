@@ -5,11 +5,15 @@ import { redirect } from 'next/navigation';
 import { createCommunityPost, sendCommunityMessage } from './actions';
 import LocalTime from '../../components/LocalTime';
 import Link from 'next/link';
+import ProfilePicture from '../../components/ProfilePicture';
+import CommunityAvatar from '../../components/CommunityAvatar';
 import Image from 'next/image';
 import { Users, LayoutGrid, ArrowLeft, MessageSquare, Info, Plus } from 'lucide-react';
 import CommunityChatClient from './CommunityChatClient';
 import DeleteCommunityButton from './DeleteCommunityButton';
 import InviteMembersButton from './InviteMembersButton';
+import AddMemberSection from './AddMemberSection';
+import RemoveMemberButton from './RemoveMemberButton';
 
 export default async function CommunityDetailPage({ 
   params, 
@@ -54,10 +58,25 @@ export default async function CommunityDetailPage({
   const isMember = community.members.some(m => m.userId === userId);
   const isAdmin = community.creatorId === userId;
 
+  if (community.type !== 'PUBLIC' && !isMember) {
+    return (
+      <div style={{ backgroundColor: '#000000', height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
+        <div style={{ width: '64px', height: '64px', borderRadius: '16px', backgroundColor: '#18181B', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+          <Users size={32} color="#71717A" />
+        </div>
+        <h1 style={{ color: 'white', fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Private Community</h1>
+        <p style={{ color: '#A1A1AA', fontSize: '15px', maxWidth: '300px', marginBottom: '24px' }}>This community is private. You must be invited to join.</p>
+        <Link href="/communities" style={{ backgroundColor: '#ffffff', color: '#000000', padding: '10px 24px', borderRadius: '24px', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>
+          Go Back
+        </Link>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ backgroundColor: '#000000', height: '100dvh', width: '100%', maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ backgroundColor: '#000000', position: 'fixed', top: 0, bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '600px', zIndex: 100, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       
-      {/* Premium Header */}
+      {/* Premium Compact Header */}
       <div style={{
         flexShrink: 0,
         background: 'rgba(0, 0, 0, 0.85)',
@@ -65,42 +84,44 @@ export default async function CommunityDetailPage({
         WebkitBackdropFilter: 'blur(20px)',
         zIndex: 50,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', gap: '16px' }}>
-          <Link href="/communities" style={{ color: 'white', textDecoration: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', gap: '12px' }}>
+          <Link href="/communities" style={{ color: 'white', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
             <ArrowLeft size={24} />
           </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#18181B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#18181B', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               {community.avatarData ? (
                 <img src={community.avatarData} alt={community.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 <Users size={20} color="#71717A" />
               )}
             </div>
-            <div>
-              <h1 style={{ color: 'white', fontSize: '16px', fontWeight: 600, margin: 0 }}>{community.name}</h1>
-              <p style={{ color: '#A1A1AA', fontSize: '12px', margin: 0 }}>{community._count.members} members</p>
+            <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <h1 style={{ color: 'white', fontSize: '16px', fontWeight: 600, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'var(--font-sans), sans-serif' }}>{community.name}</h1>
+              <p style={{ color: '#A1A1AA', fontSize: '13px', margin: 0, fontFamily: 'var(--font-sans), sans-serif' }}>{community._count.members} members {community.type === 'PRIVATE' && '• Private'}</p>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', borderBottom: '1px solid #27272A', padding: '0 8px' }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid #18181B', padding: '0 8px', gap: '16px', overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
           {['Posts', 'Chat', 'Members', 'About'].map(tab => {
             const tabKey = tab.toLowerCase();
             const isActive = activeTab === tabKey;
             return (
               <Link key={tabKey} href={`/communities/${communityId}?tab=${tabKey}`} style={{
-                flex: 1, textAlign: 'center', padding: '14px 0',
+                textAlign: 'center', padding: '12px 4px',
                 color: isActive ? 'white' : '#71717A',
-                fontWeight: isActive ? 700 : 500,
+                fontWeight: isActive ? 600 : 500,
                 textDecoration: 'none',
                 position: 'relative',
-                fontSize: '14px'
+                fontSize: '14px',
+                fontFamily: 'var(--font-sans), sans-serif',
+                whiteSpace: 'nowrap'
               }}>
                 {tab}
                 {isActive && (
-                  <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '36px', height: '4px', background: '#1D9BF0', borderRadius: '4px 4px 0 0' }} />
+                  <div style={{ position: 'absolute', bottom: 0, left: '0', right: '0', height: '2px', background: 'white', borderRadius: '2px 2px 0 0' }} />
                 )}
               </Link>
             )
@@ -109,48 +130,68 @@ export default async function CommunityDetailPage({
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflowY: activeTab === 'chat' ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column' }}>
         
         {/* POSTS TAB */}
         {activeTab === 'posts' && (
-          <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '100px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', paddingBottom: '80px' }}>
             {isMember ? (
-              <form action={createCommunityPost} style={{ display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#0A0A0A', padding: '16px', borderRadius: '16px', border: '1px solid #27272A' }}>
-                <input type="hidden" name="communityId" value={communityId} />
-                <textarea 
-                  name="content"
-                  placeholder="Share something with the community..."
-                  style={{ width: '100%', minHeight: '80px', backgroundColor: 'transparent', border: 'none', color: 'white', fontSize: '15px', resize: 'none', outline: 'none' }}
-                  required
-                />
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <button type="submit" style={{ backgroundColor: '#1D9BF0', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 16px', fontWeight: 600, fontSize: '14px', cursor: 'pointer' }}>Post</button>
-                </div>
-              </form>
+              <div style={{ padding: '16px', borderBottom: '1px solid #18181B' }}>
+                <Link href={`/create?communityId=${communityId}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
+                   <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#27272A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <Users size={16} color="#71717A" />
+                   </div>
+                   <div style={{ flexGrow: 1, color: '#A1A1AA', fontSize: '15px', fontFamily: 'var(--font-sans), sans-serif' }}>
+                     Share something with the community...
+                   </div>
+                   <div style={{ padding: '6px 12px', backgroundColor: 'rgba(29, 155, 240, 0.1)', color: '#1D9BF0', borderRadius: '16px', fontSize: '13px', fontWeight: 600, fontFamily: 'var(--font-sans), sans-serif' }}>
+                     Post
+                   </div>
+                </Link>
+              </div>
             ) : (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#71717A', border: '1px solid #27272A', borderRadius: '12px' }}>
+              <div style={{ padding: '20px', textAlign: 'center', color: '#71717A', fontFamily: 'var(--font-sans), sans-serif' }}>
                 Join this community to post.
               </div>
             )}
 
             {community.posts.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#71717A' }}>No posts yet.</div>
+              <div style={{ textAlign: 'center', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <h3 style={{ color: 'white', margin: '0 0 4px 0', fontSize: '16px', fontWeight: 600, fontFamily: 'var(--font-sans), sans-serif' }}>No posts yet</h3>
+                <p style={{ color: '#71717A', margin: '0 0 16px 0', fontSize: '14px', fontFamily: 'var(--font-sans), sans-serif' }}>{isMember ? 'Start the conversation.' : 'Be the first to know when members post.'}</p>
+                {isMember && (
+                  <Link href={`/create?communityId=${communityId}`} style={{ display: 'inline-block', backgroundColor: '#1D9BF0', color: 'white', fontWeight: 600, fontSize: '14px', padding: '8px 16px', borderRadius: '20px', textDecoration: 'none', fontFamily: 'var(--font-sans), sans-serif' }}>
+                    Create Post
+                  </Link>
+                )}
+              </div>
             ) : (
-              community.posts.map(post => (
-                <div key={post.id} style={{ display: 'flex', gap: '12px', padding: '16px', borderBottom: '1px solid #27272A' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#27272A', overflow: 'hidden' }}>
-                     {post.author.profilePictureUrl ? <img src={post.author.profilePictureUrl} style={{width:'100%', height:'100%', objectFit:'cover'}} /> : <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', color:'#71717A'}}><Users size={20}/></div>}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                      <Link href={`/user/${post.author.id}`} style={{ color: 'white', fontWeight: 600, textDecoration: 'none', fontSize: '15px' }}>{post.author.name}</Link>
-                      <span style={{ color: '#71717A', fontSize: '13px' }}>@{post.author.username}</span>
-                      <span style={{ color: '#71717A', fontSize: '13px' }}>· <LocalTime date={post.createdAt} /></span>
+              community.posts.map(post => {
+                const author = post.author;
+                return (
+                  <div key={post.id} style={{ display: 'flex', gap: '12px', padding: '16px', borderBottom: '1px solid #18181B' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#27272A', overflow: 'hidden', flexShrink: 0 }}>
+                       {author.avatarData ? <img src={author.avatarData} style={{width:'100%', height:'100%', objectFit:'cover'}} /> : <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', color:'#71717A'}}><Users size={20}/></div>}
                     </div>
-                    <p style={{ color: 'white', fontSize: '15px', marginTop: '4px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: '1.4' }}>{post.content}</p>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                        <Link href={`/user/${author.id}`} style={{ color: 'white', fontWeight: 600, textDecoration: 'none', fontSize: '15px', fontFamily: 'var(--font-sans), sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          @{author.username}
+                        </Link>
+                      </div>
+                      <p style={{ color: 'white', fontSize: '15px', margin: '0', whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: '1.4', fontFamily: 'var(--font-sans), sans-serif' }}>{post.content}</p>
+                      {post.mediaUrl && (
+                        <div style={{ marginTop: '12px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #27272A' }}>
+                          <img src={post.mediaUrl} alt="Post media" style={{ width: '100%', display: 'block' }} />
+                        </div>
+                      )}
+                      <div style={{ marginTop: '8px', color: '#71717A', fontSize: '13px', fontFamily: 'var(--font-sans), sans-serif' }}>
+                        <LocalTime date={post.createdAt} compact={false} />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
@@ -174,51 +215,88 @@ export default async function CommunityDetailPage({
 
         {/* MEMBERS TAB */}
         {activeTab === 'members' && (
-          <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {isAdmin && <InviteMembersButton communityId={communityId} />}
-
-            {community.members.map(member => (
-              <Link key={member.id} href={`/user/${member.user.id}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#27272A', overflow: 'hidden' }}>
-                  {member.user.profilePictureUrl ? <img src={member.user.profilePictureUrl} style={{width:'100%', height:'100%', objectFit:'cover'}} /> : <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', color:'#71717A'}}><Users size={24}/></div>}
+          <div style={{ display: 'flex', flexDirection: 'column', paddingBottom: '100px' }}>
+            {isAdmin && (
+              <div style={{ padding: '16px', borderBottom: '1px solid #18181B' }}>
+                {community.type === 'PUBLIC' ? (
+                  <InviteMembersButton communityId={communityId} />
+                ) : (
+                  <AddMemberSection communityId={communityId} members={community.members} />
+                )}
+              </div>
+            )}
+            
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {community.members.map(member => (
+                <div key={member.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #18181B' }}>
+                  <Link href={`/user/${member.user.id}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', flex: 1, minWidth: 0 }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#27272A', overflow: 'hidden', flexShrink: 0 }}>
+                      {member.user.avatarData ? (
+                        <img src={member.user.avatarData} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#71717A' }}><Users size={24} /></div>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ color: 'white', fontWeight: 600, fontSize: '15px', fontFamily: 'var(--font-sans), sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.user.name || member.user.username}</span>
+                        {member.userId === community.creatorId && (
+                          <span style={{ backgroundColor: 'rgba(29, 155, 240, 0.1)', color: '#1D9BF0', fontSize: '11px', fontWeight: 600, padding: '2px 6px', borderRadius: '4px', fontFamily: 'var(--font-sans), sans-serif', flexShrink: 0 }}>Admin</span>
+                        )}
+                      </div>
+                      <span style={{ color: '#71717A', fontSize: '13px', fontFamily: 'var(--font-sans), sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{member.user.username}</span>
+                    </div>
+                  </Link>
+                  {isAdmin && member.userId !== userId && (
+                    <div style={{ position: 'relative', zIndex: 10 }}>
+                      <RemoveMemberButton communityId={communityId} userId={member.userId} userName={member.user.name || member.user.username} />
+                    </div>
+                  )}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ color: 'white', fontWeight: 600, fontSize: '15px' }}>{member.user.name}</span>
-                    {member.userId === community.creatorId && <span style={{ backgroundColor: '#27272A', color: '#1D9BF0', fontSize: '10px', padding: '2px 6px', borderRadius: '10px', fontWeight: 600 }}>Admin</span>}
-                  </div>
-                  <div style={{ color: '#A1A1AA', fontSize: '13px' }}>@{member.user.username}</div>
-                  {member.user.career && <div style={{ color: '#71717A', fontSize: '13px', marginTop: '2px' }}>{member.user.career}</div>}
-                </div>
-              </Link>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 
         {/* ABOUT TAB */}
         {activeTab === 'about' && (
-          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div>
-              <h2 style={{ color: 'white', fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>About</h2>
-              <p style={{ color: '#A1A1AA', fontSize: '15px', lineHeight: '1.5' }}>{community.description || 'No description provided.'}</p>
-            </div>
+          <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '100px' }}>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#0A0A0A', padding: '16px', borderRadius: '12px', border: '1px solid #27272A' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#71717A', fontSize: '14px' }}>Category</span>
-                <span style={{ color: 'white', fontSize: '14px' }}>{community.category || 'General'}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <h2 style={{ color: 'white', fontSize: '20px', fontWeight: 700, margin: 0, fontFamily: 'var(--font-sans), sans-serif' }}>About</h2>
+              {community.description && (
+                <p style={{ color: '#E4E4E7', fontSize: '15px', margin: 0, lineHeight: 1.5, fontFamily: 'var(--font-sans), sans-serif' }}>
+                  {community.description}
+                </p>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #18181B' }}>
+                <span style={{ color: '#A1A1AA', fontSize: '15px', fontFamily: 'var(--font-sans), sans-serif' }}>Category</span>
+                <span style={{ color: 'white', fontSize: '15px', fontWeight: 500, fontFamily: 'var(--font-sans), sans-serif' }}>{community.category || 'General'}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#71717A', fontSize: '14px' }}>Members</span>
-                <span style={{ color: 'white', fontSize: '14px' }}>{community._count.members}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #18181B' }}>
+                <span style={{ color: '#A1A1AA', fontSize: '15px', fontFamily: 'var(--font-sans), sans-serif' }}>Type</span>
+                <span style={{ color: 'white', fontSize: '15px', fontWeight: 500, fontFamily: 'var(--font-sans), sans-serif' }}>{community.type === 'PUBLIC' ? 'Public' : 'Private'}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#71717A', fontSize: '14px' }}>Created</span>
-                <span style={{ color: 'white', fontSize: '14px' }}><LocalTime date={community.createdAt} /></span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #18181B' }}>
+                <span style={{ color: '#A1A1AA', fontSize: '15px', fontFamily: 'var(--font-sans), sans-serif' }}>Members</span>
+                <span style={{ color: 'white', fontSize: '15px', fontWeight: 500, fontFamily: 'var(--font-sans), sans-serif' }}>{community._count.members}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #18181B' }}>
+                <span style={{ color: '#A1A1AA', fontSize: '15px', fontFamily: 'var(--font-sans), sans-serif' }}>Created</span>
+                <span style={{ color: 'white', fontSize: '15px', fontWeight: 500, fontFamily: 'var(--font-sans), sans-serif' }}>
+                  {new Date(community.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
               </div>
             </div>
 
-            {isAdmin && <DeleteCommunityButton communityId={community.id} />}
+            {isAdmin && (
+              <div style={{ marginTop: '32px' }}>
+                <DeleteCommunityButton communityId={communityId} />
+              </div>
+            )}
           </div>
         )}
       </div>

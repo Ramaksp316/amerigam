@@ -66,70 +66,82 @@ export default async function CompetitionsPage({ searchParams }: { searchParams:
     take: 10
   });
 
-  const suggestedMapping: Record<string, string[]> = {
-    'Developer': ['CodeRush India', 'Buildathon India', 'DesignSprint League'],
-    'Founder': ['PitchArena', 'IgniteX Campus League', 'Buildathon India'],
-    'Photographer': ['LensQuest', 'ArtSphere Collective'],
-    'Musician': ['Rhythm Clash'],
-    'Athlete': ['FitBattle India', 'NextGen Sports League'],
-    'Filmmaker': ['FrameFest India', 'Creator Clash India'],
-    'Gamer': ['GameGrid Esports'],
-    'Public Speaker': ['SpeakUp Championship'],
-    'Illustrator': ['ArtSphere Collective', 'DesignSprint League']
-  };
+  // Get User Keywords for Personalization
+  let userKeywords: string[] = [];
+  if (currentUser?.personalProfile) {
+    const pProfile = currentUser.personalProfile;
+    let skills: string[] = [];
+    let interests: string[] = [];
+    let hobbies: string[] = [];
+    try { if (pProfile.skills) skills = JSON.parse(pProfile.skills); } catch(e){}
+    try { if (pProfile.interests) interests = JSON.parse(pProfile.interests); } catch(e){}
+    try { if (pProfile.hobbies) hobbies = JSON.parse(pProfile.hobbies); } catch(e){}
+    
+    userKeywords = [
+      pProfile.mainIdentity,
+      ...skills,
+      ...interests,
+      ...hobbies
+    ].filter(Boolean).map(k => String(k).toLowerCase());
+  }
 
-  const userIdentity = currentUser?.personalProfile?.mainIdentity || '';
-  let relevantOrgNames = suggestedMapping[userIdentity] || [];
-
-  const suggestedEvents = await prisma.event.findMany({
+  // Fetch all published events not created by following (since following is shown above)
+  const availableEvents = await prisma.event.findMany({
     where: {
       status: 'PUBLISHED',
-      NOT: { creatorId: { in: followingIds } },
-      ...(relevantOrgNames.length > 0 ? {
-        creator: {
-          name: { in: relevantOrgNames }
-        }
-      } : {
-        // Fallback for better general discovery based on account type
-        creator: {
-          accountType: currentUser?.accountType
-        }
-      })
+      NOT: { creatorId: { in: followingIds } }
     },
     include: {
       creator: {
-        select: { id: true, name: true, avatarData: true }
+        select: { id: true, name: true, avatarData: true, accountType: true }
       },
       _count: {
         select: { registrations: true }
       }
-    },
-    orderBy: { startDate: 'desc' },
-    take: 10
+    }
   });
+
+  // Score events for Suggestions and Top
+  const scoredEvents = availableEvents.map(event => {
+    let score = 0;
+    const matchText = [
+      event.name,
+      event.description,
+      event.category,
+      event.creator.name
+    ].join(' ').toLowerCase();
+
+    userKeywords.forEach(kw => {
+      if (matchText.includes(kw)) score += 3;
+    });
+
+    if (event.creator.accountType === currentUser?.accountType) {
+      score += 1;
+    }
+
+    // Popularity modifier
+    const popularity = (event._count.registrations || 0) + (event.participantLimit ? event.participantLimit / 100 : 0);
+    
+    return { event, score, popularity };
+  });
+
+  // Suggested Events: Prioritize personalization score
+  const suggestedEvents = [...scoredEvents]
+    .sort((a, b) => b.score - a.score || b.popularity - a.popularity)
+    .map(item => item.event)
+    .slice(0, 10);
+
+  // Top Events: Prioritize popularity, but boost with personalization score
+  const topEvents = [...scoredEvents]
+    .sort((a, b) => (b.popularity + b.score * 10) - (a.popularity + a.score * 10))
+    .map(item => item.event)
+    .slice(0, 15);
 
   // Fetch Current User's registrations to pass state down
   const userRegistrations = await prisma.eventRegistration.findMany({
     where: { userId }
   });
   const registeredEventIds = userRegistrations.map(r => r.eventId);
-
-  // Fetch Top Events
-  const topEvents = await prisma.event.findMany({
-    where: { status: 'PUBLISHED' },
-    include: {
-      creator: {
-        select: { id: true, name: true, avatarData: true }
-      },
-      _count: {
-        select: { registrations: true }
-      }
-    },
-    orderBy: {
-      participantLimit: 'desc' // or _count: { registrations: 'desc' } but Prisma requires special grouping for order by count, participantLimit is easy
-    },
-    take: 15
-  });
 
   const { getLeaderboard } = await import('@/lib/ranking-service');
   

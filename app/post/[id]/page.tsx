@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const title = `${post.author.username || post.author.name} on Amerigam`;
   const description = post.content ? (post.content.length > 100 ? post.content.substring(0, 100) + '...' : post.content) : 'Check out this post on Amerigam';
   
-  const ogImageUrl = `https://${process.env.VERCEL_URL || 'amerigam-wk8l.vercel.app'}/api/og?postId=${post.id}`;
+  const ogImageUrl = `https://amerigam.com/api/og?postId=${post.id}`;
 
   return {
     title,
@@ -52,7 +52,7 @@ export default async function SinglePostPage({ params }: { params: Promise<{ id:
   const userId = cookieStore.get('userId')?.value;
 
   if (!userId) {
-    redirect('/login');
+    // We do NOT redirect here, so that WhatsApp/social bots can scrape the Open Graph tags!
   }
 
   const resolvedParams = await params;
@@ -74,7 +74,7 @@ export default async function SinglePostPage({ params }: { params: Promise<{ id:
     notFound();
   }
 
-  const hasLiked = post.likes.some(like => like.userId === userId);
+  const hasLiked = userId ? post.likes.some(like => like.userId === userId) : false;
   const authorInitial = (post.author.name || post.author.username || '?').charAt(0).toUpperCase();
 
   return (

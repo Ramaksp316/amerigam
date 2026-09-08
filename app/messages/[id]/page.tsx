@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import ProfilePicture from '../../components/ProfilePicture';
 import { ChevronLeft } from 'lucide-react';
 import ChatClient from './ChatClient';
 
@@ -49,14 +50,15 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   });
 
   return (
-    <div style={{ backgroundColor: '#000000', height: '100dvh', width: '100%', maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+    <div style={{ backgroundColor: '#000000', position: 'fixed', top: 0, bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '600px', zIndex: 100, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <div style={{
+        flexShrink: 0,
         background: 'rgba(0, 0, 0, 0.85)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         zIndex: 50,
         padding: '12px 16px',
-        borderBottom: '1px solid #27272A',
+        borderBottom: '1px solid #18181B',
         display: 'flex',
         alignItems: 'center',
         gap: '16px'
@@ -64,15 +66,15 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         <Link href="/messages" style={{ color: 'white', display: 'flex', alignItems: 'center' }}>
           <ChevronLeft size={28} />
         </Link>
-        <Link href={`/user/${partner.id}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', flexGrow: 1 }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#27272A', flexShrink: 0 }}>
-            {partner.profilePictureUrl ? (
-              <img src={partner.profilePictureUrl} alt={partner.name || partner.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : null}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ color: 'white', fontWeight: 600, fontSize: '16px' }}>{partner.name || partner.username}</span>
-            <span style={{ color: '#71717A', fontSize: '13px' }}>{partner.accountType}</span>
+        <Link href={`/user/${partner.id}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', flexGrow: 1, minWidth: 0 }}>
+          <ProfilePicture user={partner} size={40} showStatus={false} />
+          <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <span style={{ color: 'white', fontWeight: 600, fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'var(--font-sans), sans-serif' }}>
+              {partner.name || partner.username}
+            </span>
+            <span style={{ color: '#71717A', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'var(--font-sans), sans-serif' }}>
+              @{partner.username}
+            </span>
           </div>
         </Link>
       </div>

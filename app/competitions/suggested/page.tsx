@@ -3,24 +3,6 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import ViewAllPageClient from '../ViewAllPageClient';
 
-const suggestedMapping: Record<string, string[]> = {
-  'Coding': ['Technology', 'Programming', 'Hackathon'],
-  'Software Developer': ['Technology', 'Programming', 'Hackathon'],
-  'React Developer': ['Technology', 'Programming'],
-  'Designer': ['Art/Design', 'Creative'],
-  'Illustrator': ['Art/Design', 'Creative'],
-  'Photography': ['Art/Design', 'Photography'],
-  'Music': ['Music', 'Entertainment'],
-  'Dance': ['Dance', 'Entertainment'],
-  'Writing': ['Literature', 'Writing'],
-  'Business': ['Business', 'Entrepreneurship'],
-  'Gaming': ['Gaming', 'Esports'],
-  'Fitness': ['Sports', 'Fitness'],
-  'Sports': ['Sports', 'Fitness'],
-  'Science': ['Science', 'Education'],
-  'Student': ['Education', 'Campus']
-};
-
 export default async function SuggestedCompetitionsPage() {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
@@ -39,57 +21,57 @@ export default async function SuggestedCompetitionsPage() {
 
   const registeredEventIds = user.eventRegistrations.map((r: any) => r.eventId);
 
-  let targetCategories: string[] = [];
+  let userKeywords: string[] = [];
   if (user.personalProfile) {
     const pp = user.personalProfile;
-    const traits = [
-      ...(pp.skills || []),
-      ...(pp.interests || []),
-      ...(pp.hobbies || []),
-      pp.mainIdentity || ''
-    ];
-    for (const t of traits) {
-      if (!t) continue;
-      for (const key in suggestedMapping) {
-        if (t.toLowerCase().includes(key.toLowerCase())) {
-          targetCategories.push(...suggestedMapping[key]);
-        }
-      }
-    }
+    let skills: string[] = [];
+    let interests: string[] = [];
+    let hobbies: string[] = [];
+    try { if (pp.skills) skills = JSON.parse(pp.skills); } catch(e){}
+    try { if (pp.interests) interests = JSON.parse(pp.interests); } catch(e){}
+    try { if (pp.hobbies) hobbies = JSON.parse(pp.hobbies); } catch(e){}
+    
+    userKeywords = [
+      pp.mainIdentity,
+      ...skills,
+      ...interests,
+      ...hobbies
+    ].filter(Boolean).map(k => String(k).toLowerCase());
   }
-  
-  targetCategories = [...new Set(targetCategories)];
 
-  let suggestedEvents: any[] = [];
-  if (targetCategories.length > 0) {
-    suggestedEvents = await prisma.event.findMany({
-      where: { category: { in: targetCategories } },
-      include: {
-        creator: { select: { name: true, avatarData: true } },
-        _count: { select: { registrations: true } }
-      },
-      orderBy: { createdAt: 'desc' }
+  const allEvents = await prisma.event.findMany({
+    where: { status: 'PUBLISHED' },
+    include: {
+      creator: { select: { name: true, avatarData: true, accountType: true } },
+      _count: { select: { registrations: true } }
+    }
+  });
+
+  const scoredEvents = allEvents.map(event => {
+    let score = 0;
+    const matchText = [
+      event.name,
+      event.description,
+      event.category,
+      event.creator.name
+    ].join(' ').toLowerCase();
+
+    userKeywords.forEach(kw => {
+      if (matchText.includes(kw)) score += 3;
     });
-  }
-  
-  // Fallback to top events if very few suggested found
-  if (suggestedEvents.length < 5) {
-      const topFallback = await prisma.event.findMany({
-          take: 20,
-          include: {
-            creator: { select: { name: true, avatarData: true } },
-            _count: { select: { registrations: true } }
-          },
-          orderBy: { createdAt: 'desc' }
-      });
-      
-      const existingIds = suggestedEvents.map(e => e.id);
-      for (const e of topFallback) {
-          if (!existingIds.includes(e.id)) {
-              suggestedEvents.push(e);
-          }
-      }
-  }
+
+    if (event.creator.accountType === user.accountType) {
+      score += 1;
+    }
+
+    const popularity = (event._count.registrations || 0) + (event.participantLimit ? event.participantLimit / 100 : 0);
+    return { event, score, popularity };
+  });
+
+  let suggestedEvents = [...scoredEvents]
+    .sort((a, b) => b.score - a.score || b.popularity - a.popularity)
+    .map(item => item.event)
+    .slice(0, 30);
 
   return (
     <ViewAllPageClient 

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { signupNewUser } from './actions';
+import { signupNewUser, checkEmailExists } from './actions';
 
 const ACCOUNT_TYPES = [
   {

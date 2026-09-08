@@ -88,43 +88,85 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
       });
     }
   } else {
-    // Default 'For You' - Global posts
-    // Fetch posts that match the user's accountType to personalize the feed
-    posts = await prisma.post.findMany({
+    // Default 'For You' - Global posts personalized
+    const fullUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { personalProfile: true }
+    });
+    
+    let userKeywords: string[] = [];
+    if (fullUser?.personalProfile) {
+      const pp = fullUser.personalProfile;
+      let skills: string[] = [];
+      let interests: string[] = [];
+      let hobbies: string[] = [];
+      try { if (pp.skills) skills = JSON.parse(pp.skills); } catch(e){}
+      try { if (pp.interests) interests = JSON.parse(pp.interests); } catch(e){}
+      try { if (pp.hobbies) hobbies = JSON.parse(pp.hobbies); } catch(e){}
+      
+      userKeywords = [
+        pp.mainIdentity,
+        ...skills,
+        ...interests,
+        ...hobbies
+      ].filter(Boolean).map(k => String(k).toLowerCase());
+    }
+
+    const allGlobalPosts = await prisma.post.findMany({
       where: {
         NOT: { AND: [{ mediaType: 'video' }, { aspectRatio: '9:16' }] },
-        author: {
-          accountType: currentUser.accountType
-        }
       },
       include: { 
-        author: { include: { outgoingConnections: { include: { target: true } } } },
+        author: { 
+          include: { 
+            outgoingConnections: { include: { target: true } },
+            personalProfile: true
+          } 
+        },
         likes: true,
         comments: { include: { author: true }, orderBy: { createdAt: 'asc' }, take: 3 }
       },
       orderBy: { createdAt: 'desc' },
-      take: 20
+      take: 100 // Fetch a pool to score
     });
 
-    // If not enough posts, fetch others to fill the feed
-    if (posts.length < 5) {
-      const morePosts = await prisma.post.findMany({
-        where: {
-          NOT: { AND: [{ mediaType: 'video' }, { aspectRatio: '9:16' }] },
-          author: {
-            accountType: { not: currentUser.accountType }
-          }
-        },
-        include: { 
-          author: { include: { outgoingConnections: { include: { target: true } } } },
-          likes: true,
-          comments: { include: { author: true }, orderBy: { createdAt: 'asc' }, take: 3 }
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 20 - posts.length
+    const scoredPosts = allGlobalPosts.map(post => {
+      let score = 0;
+      
+      // Match post content
+      const contentText = (post.content || '').toLowerCase();
+      userKeywords.forEach(kw => {
+        if (contentText.includes(kw)) score += 3;
       });
-      posts = [...posts, ...morePosts];
-    }
+
+      // Match author profile
+      if (post.author.personalProfile) {
+        const up = post.author.personalProfile;
+        let uSkills: string[] = [];
+        let uInterests: string[] = [];
+        let uHobbies: string[] = [];
+        try { if (up.skills) uSkills = JSON.parse(up.skills); } catch(e){}
+        try { if (up.interests) uInterests = JSON.parse(up.interests); } catch(e){}
+        try { if (up.hobbies) uHobbies = JSON.parse(up.hobbies); } catch(e){}
+
+        const authorText = [up.mainIdentity, ...uSkills, ...uInterests, ...uHobbies].join(' ').toLowerCase();
+        userKeywords.forEach(kw => {
+          if (authorText.includes(kw)) score += 2;
+        });
+      }
+
+      // Exact Account Type match fallback
+      if (post.author.accountType === currentUser.accountType) {
+        score += 1;
+      }
+      
+      return { post, score };
+    });
+
+    posts = scoredPosts
+      .sort((a, b) => b.score - a.score)
+      .map(item => item.post)
+      .slice(0, 20);
   }
 
   // Reorder to force Diya's Post 1 to the top for testing (only on For You)
@@ -202,15 +244,29 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
             const isActive = currentTab === tabKey;
             return (
               <Link key={tabKey} href={`/home?tab=${tabKey}`} style={{
-                flex: 1, textAlign: 'center', padding: '14px 0',
+                flex: 1, padding: '14px 0',
                 color: isActive ? 'white' : '#71717A',
                 fontWeight: isActive ? 700 : 500,
                 textDecoration: 'none',
-                position: 'relative',
-                fontSize: '14px'
+                fontSize: '14px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
               }}>
-                {tabLabel}
-                
+                <div style={{ position: 'relative', paddingBottom: '4px' }}>
+                  {tabLabel}
+                  {isActive && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '-10px',
+                      left: 0,
+                      right: 0,
+                      height: '4px',
+                      backgroundColor: '#1D9BF0',
+                      borderRadius: '4px'
+                    }} />
+                  )}
+                </div>
               </Link>
             )
           })}

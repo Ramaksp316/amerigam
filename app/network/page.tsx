@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
+import ProfilePicture from '../components/ProfilePicture';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { Search, Bell, CheckCircle2, MessageSquare, X } from 'lucide-react';
@@ -14,7 +15,7 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
 
   const currentUser = await prisma.user.findUnique({
     where: { id: userId },
-    include: {}
+    include: { personalProfile: true }
   });
 
   if (!currentUser) redirect('/login');
@@ -43,8 +44,9 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
   let usersToDisplay: any[] = [];
 
   const allUsers = await prisma.user.findMany({
-    where: { id: { not: userId }, accountType: 'PERSONAL' },
+    where: { id: { not: userId } },
     include: {
+      personalProfile: true, businessProfile: true, orgProfile: true,
       outgoingConnections: { include: { target: true } },
       followers: { select: { followerId: true } }
     }
@@ -68,31 +70,57 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
     usersToDisplay = allUsers;
   } else {
     // For You
-    const userKeywords = [
-      (currentUser as any).mainIdentity,
-      ...(((currentUser as any).skills ? JSON.parse((currentUser as any).skills) : []) || [])
-    ].filter(Boolean).map(k => k.toLowerCase());
+    const pProfile = currentUser.personalProfile;
+    let userKeywords: string[] = [];
+    if (pProfile) {
+      let skills: string[] = [];
+      let interests: string[] = [];
+      let hobbies: string[] = [];
+      try { if (pProfile.skills) skills = JSON.parse(pProfile.skills); } catch(e){}
+      try { if (pProfile.interests) interests = JSON.parse(pProfile.interests); } catch(e){}
+      try { if (pProfile.hobbies) hobbies = JSON.parse(pProfile.hobbies); } catch(e){}
+      
+      userKeywords = [
+        pProfile.mainIdentity,
+        ...skills,
+        ...interests,
+        ...hobbies
+      ].filter(Boolean).map(k => String(k).toLowerCase());
+    }
 
     usersToDisplay = allUsers.map(user => {
       let score = 0;
       let reasons: string[] = [];
-      const matchText = ((user as any).mainIdentity || '') + ' ' + ((user as any).mainIdentity || '');
+      const up = user.personalProfile;
       
-      const userTerms = [
-        (user as any).mainIdentity,
-        ...(((user as any).skills ? JSON.parse((user as any).skills) : []) || [])
-      ].filter(Boolean);
+      let uSkills: string[] = [];
+      let uInterests: string[] = [];
+      let uHobbies: string[] = [];
+      if (up) {
+        try { if (up.skills) uSkills = JSON.parse(up.skills); } catch(e){}
+        try { if (up.interests) uInterests = JSON.parse(up.interests); } catch(e){}
+        try { if (up.hobbies) uHobbies = JSON.parse(up.hobbies); } catch(e){}
+      }
+
+      const matchText = [
+        up?.mainIdentity || '',
+        ...uSkills, ...uInterests, ...uHobbies
+      ].join(' ').toLowerCase();
 
       userKeywords.forEach(kw => {
-        if (matchText.toLowerCase().includes(kw)) { score++; }
-        userTerms.forEach(t => {
-          if (t.toLowerCase().includes(kw)) { score++; reasons.push('Shared interest'); }
-        });
+        if (matchText.includes(kw)) {
+          score++;
+          if (!reasons.includes('Shared interest/skill')) reasons.push('Shared interest/skill');
+        }
       });
 
-      if ((user as any).mainIdentity && (user as any).mainIdentity === (currentUser as any).mainIdentity) {
-        score += 2;
-        reasons.push('Same career');
+      if (pProfile?.mainIdentity && up?.mainIdentity) {
+        const myProfession = pProfile.mainIdentity.split('•')[0].trim().toLowerCase();
+        const theirProfession = up.mainIdentity.split('•')[0].trim().toLowerCase();
+        if (myProfession === theirProfession || myProfession.includes(theirProfession) || theirProfession.includes(myProfession)) {
+          score += 5;
+          reasons.unshift('Same career');
+        }
       }
 
       return { user, score, reasons: [...new Set(reasons)] };
@@ -182,13 +210,29 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
               const isActive = currentTab === tabKey || (!currentTab && tabKey === 'discover');
               return (
                 <Link key={tabKey} href={`/network?tab=${tabKey}`} style={{
-                  flex: 1, textAlign: 'center', padding: '14px 0',
+                  flex: 1, padding: '14px 0',
                   color: isActive ? 'white' : '#71717A',
                   fontWeight: isActive ? 700 : 500,
                   textDecoration: 'none',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center'
                 }}>
-                  {tabLabel}
+                  <div style={{ position: 'relative', paddingBottom: '4px' }}>
+                    {tabLabel}
+                    {isActive && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '-10px',
+                        left: 0,
+                        right: 0,
+                        height: '4px',
+                        backgroundColor: '#1D9BF0',
+                        borderRadius: '4px'
+                      }} />
+                    )}
+                  </div>
                 </Link>
               )
             })}

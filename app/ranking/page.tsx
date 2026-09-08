@@ -13,7 +13,8 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
   if (!userId) redirect('/login');
 
   const currentUser = await prisma.user.findUnique({
-    where: { id: userId }
+    where: { id: userId },
+    include: { personalProfile: true }
   });
 
   if (!currentUser) redirect('/login');
@@ -41,10 +42,14 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
     if (currentGeo === 'state') locationValue = currentUser.state || undefined;
     if (currentGeo === 'city') locationValue = currentUser.city || currentUser.district || undefined;
 
+    const categoryMatch = currentUser.personalProfile?.mainIdentity || undefined;
+
     const leaderboard = await getLeaderboard(
       currentGeo.toUpperCase() as any, 
       locationValue, 
-      50
+      50,
+      0,
+      categoryMatch
     );
 
     // We fetch outgoingConnections for identity line in the UI
@@ -77,7 +82,10 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
         amerigamPoints: Math.floor(10000 / (i + 1)) + (u.name?.length || 0) * 10
       })).sort((a: any, b: any) => b.amerigamPoints - a.amerigamPoints);
     }
-  }
+    }
+
+  // Filter out any deleted users
+  rankedUsers = rankedUsers.filter(u => u.name !== 'Deleted User' && !u.username?.startsWith('deleted_'));
 
   const top3 = rankedUsers.slice(0, 3);
   const theRest = rankedUsers.slice(3);
@@ -208,54 +216,59 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
 
       <div style={{ paddingBottom: '120px' }}>
         
-        {/* Top 3 Podium Experience */}
+        {/* Premium Top 3 Area */}
         {top3.length > 0 && (
           <div style={{ 
-            padding: '32px 16px',
+            padding: '24px 16px 32px 16px',
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'center',
-            gap: '12px',
-            background: 'radial-gradient(ellipse at top, #152238 0%, #000000 70%)',
-            borderBottom: '1px solid #18181B'
+            gap: '16px',
+            borderBottom: '1px solid #27272A'
           }}>
             {/* 2nd Place */}
             {top3[1] && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '30%' }}>
-                <div style={{ color: '#A1A1AA', fontSize: '18px', fontWeight: 800, marginBottom: '8px' }}>{top3[1].computedRank ?? 2}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '30%', gap: '8px' }}>
+                <div style={{ color: '#E5E7EB', fontSize: '15px', fontWeight: 600 }}>2</div>
                 <Link href={`/user/${top3[1].id}`}>
-                  <div style={{ border: '3px solid #71717A', borderRadius: '50%', padding: '2px' }}>
-                    <ProfilePicture user={top3[1]} size={60} showStatus={false} />
+                  <div style={{ border: '2px solid #E5E7EB', borderRadius: '50%', padding: '2px' }}>
+                    <ProfilePicture user={top3[1]} size={56} showStatus={false} />
                   </div>
                 </Link>
-                <div style={{ color: 'white', fontWeight: 600, fontSize: '13px', marginTop: '8px', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{top3[1].name}</div>
-                <div style={{ color: '#1D9BF0', fontWeight: 700, fontSize: '12px', marginTop: '2px' }}>{top3[1].amerigamPoints.toLocaleString()} AP</div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ color: 'white', fontWeight: 600, fontSize: '14px', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{top3[1].name || top3[1].username}</div>
+                  <div style={{ color: '#E5E7EB', fontWeight: 500, fontSize: '13px', marginTop: '2px' }}>{top3[1].amerigamPoints.toLocaleString()} AP</div>
+                </div>
               </div>
             )}
 
             {/* 1st Place */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '35%', paddingBottom: '16px' }}>
-              <div style={{ color: '#FCD34D', fontSize: '24px', fontWeight: 900, marginBottom: '8px' }}>{top3[0].computedRank ?? 1}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '35%', gap: '8px', paddingBottom: '12px' }}>
+              <div style={{ color: '#F59E0B', fontSize: '15px', fontWeight: 600 }}>1</div>
               <Link href={`/user/${top3[0].id}`}>
-                <div style={{ border: '4px solid #FCD34D', borderRadius: '50%', padding: '3px' }}>
-                  <ProfilePicture user={top3[0]} size={80} showStatus={false} />
+                <div style={{ border: '3px solid #F59E0B', borderRadius: '50%', padding: '3px' }}>
+                  <ProfilePicture user={top3[0]} size={64} showStatus={false} />
                 </div>
               </Link>
-              <div style={{ color: 'white', fontWeight: 700, fontSize: '15px', marginTop: '8px', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{top3[0].name}</div>
-              <div style={{ color: '#FCD34D', fontWeight: 800, fontSize: '14px', marginTop: '2px' }}>{top3[0].amerigamPoints.toLocaleString()} AP</div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ color: 'white', fontWeight: 600, fontSize: '15px', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{top3[0].name || top3[0].username}</div>
+                <div style={{ color: '#F59E0B', fontWeight: 500, fontSize: '14px', marginTop: '2px' }}>{top3[0].amerigamPoints.toLocaleString()} AP</div>
+              </div>
             </div>
 
             {/* 3rd Place */}
             {top3[2] && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '30%' }}>
-                <div style={{ color: '#B45309', fontSize: '18px', fontWeight: 800, marginBottom: '8px' }}>{top3[2].computedRank ?? 3}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '30%', gap: '8px' }}>
+                <div style={{ color: '#B45309', fontSize: '15px', fontWeight: 600 }}>3</div>
                 <Link href={`/user/${top3[2].id}`}>
-                  <div style={{ border: '3px solid #B45309', borderRadius: '50%', padding: '2px' }}>
-                    <ProfilePicture user={top3[2]} size={60} showStatus={false} />
+                  <div style={{ border: '2px solid #B45309', borderRadius: '50%', padding: '2px' }}>
+                    <ProfilePicture user={top3[2]} size={56} showStatus={false} />
                   </div>
                 </Link>
-                <div style={{ color: 'white', fontWeight: 600, fontSize: '13px', marginTop: '8px', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{top3[2].name}</div>
-                <div style={{ color: '#1D9BF0', fontWeight: 700, fontSize: '12px', marginTop: '2px' }}>{top3[2].amerigamPoints.toLocaleString()} AP</div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ color: 'white', fontWeight: 600, fontSize: '14px', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{top3[2].name || top3[2].username}</div>
+                  <div style={{ color: '#B45309', fontWeight: 500, fontSize: '13px', marginTop: '2px' }}>{top3[2].amerigamPoints.toLocaleString()} AP</div>
+                </div>
               </div>
             )}
           </div>
@@ -281,27 +294,31 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
                 <div style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
-                  padding: '16px', 
+                  padding: '12px 16px', 
                   borderBottom: '1px solid #18181B',
-                  backgroundColor: isMe ? 'rgba(29, 155, 240, 0.05)' : 'transparent',
-                  gap: '12px'
+                  backgroundColor: isMe ? '#18181B' : 'transparent',
+                  gap: '16px'
                 }}>
-                  <div style={{ width: '24px', textAlign: 'center', color: isMe ? '#1D9BF0' : '#71717A', fontWeight: 700, fontSize: '15px' }}>
+                  <div style={{ width: '24px', color: '#A1A1AA', fontWeight: 600, fontSize: '15px' }}>
                     {rank}
                   </div>
                   
-                  <ProfilePicture user={person} size={48} showStatus={false} />
+                  <ProfilePicture user={person} size={40} showStatus={false} />
                   
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span style={{ color: 'white', fontWeight: 600, fontSize: '15px' }}>{person.name || person.username}</span>
-                      {isVerified && <CheckCircle2 size={14} color="#1D9BF0" fill="#1D9BF0" />}
+                      <span style={{ color: 'white', fontWeight: 600, fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {person.name || person.username}
+                      </span>
+                      {isVerified && <CheckCircle2 size={14} color="#1D9BF0" fill="#1D9BF0" style={{ flexShrink: 0 }} />}
                     </div>
-                    <span style={{ color: '#71717A', fontSize: '13px' }}>{identityLine}</span>
+                    <span style={{ color: '#71717A', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {identityLine}
+                    </span>
                   </div>
 
-                  <div style={{ color: isMe ? '#1D9BF0' : 'white', fontWeight: 700, fontSize: '14px' }}>
-                    {person.amerigamPoints.toLocaleString()} <span style={{ color: '#71717A', fontSize: '12px' }}>AP</span>
+                  <div style={{ color: 'white', fontWeight: 600, fontSize: '14px', display: 'flex', gap: '4px', alignItems: 'baseline' }}>
+                    {person.amerigamPoints.toLocaleString()} <span style={{ color: '#71717A', fontSize: '12px', fontWeight: 500 }}>AP</span>
                   </div>
                 </div>
               </Link>

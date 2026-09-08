@@ -12,6 +12,7 @@ import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.min.css';
 import { updateCommunityAvatar, deleteCommunity } from './actions';
 import CommunityNotebook from './CommunityNotebook';
+import AddMemberSection from './AddMemberSection';
 
 const playSound = (type: 'send' | 'receive') => {
   if (typeof window === 'undefined') return;
@@ -699,6 +700,10 @@ export default function CommunityClient({
                 <X size={20} />
               </button>
             </div>
+
+            {!community.isPublic && isCreator && (
+              <AddMemberSection communityId={community.id} members={community.members} />
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '300px', overflowY: 'auto' }}>
               {community.members.map((member: any) => (

@@ -210,16 +210,17 @@ export default function CompetitionsClient({
             </div>
             {/* Horizontal Scroll Carousel */}
             <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '24px', msOverflowStyle: 'none', scrollbarWidth: 'none', width: '100%' }}>
-              {followingEvents.slice(0, 2).map(event => (
-                <div key={event.id} style={{ flexShrink: 0 }}>
-                  <CompetitionCard event={event} layout="vertical-overlay" isRegistered={registeredEventIds.includes(event.id)} />
+              {followingEvents.length > 0 ? (
+                followingEvents.slice(0, 2).map(event => (
+                  <div key={event.id} style={{ flexShrink: 0 }}>
+                    <CompetitionCard event={event} layout="vertical-overlay" isRegistered={registeredEventIds.includes(event.id)} />
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: '#A1A1AA', fontSize: '14px', width: '100%' }}>
+                  No competitions from followed organizations yet.
                 </div>
-              ))}
-              {followingEvents.length === 0 && topEvents.slice(0, 2).map(event => (
-                 <div key={event.id} style={{ flexShrink: 0 }}>
-                   <CompetitionCard event={event} layout="vertical-overlay" isRegistered={registeredEventIds.includes(event.id)} />
-                 </div>
-              ))}
+              )}
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>

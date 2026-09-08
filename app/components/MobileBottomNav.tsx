@@ -11,10 +11,17 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hoveredOption, setHoveredOption] = useState<string | null>(null);
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
+  
+  const [isCommunityPage, setIsCommunityPage] = useState(false);
 
   // Close menu on route change
   useEffect(() => {
     setIsMenuOpen(false);
+    if (pathname?.startsWith('/communities/')) {
+      setIsCommunityPage(true);
+    } else {
+      setIsCommunityPage(false);
+    }
   }, [pathname]);
 
   const isActive = (route: string) => {
@@ -24,7 +31,10 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
     return pathname?.startsWith(route);
   };
 
-  if (pathname?.startsWith('/messages/') && pathname !== '/messages/') {
+  const isIndividualChat = pathname?.startsWith('/messages/') && pathname !== '/messages';
+  if (isIndividualChat || isCommunityPage || pathname?.includes('/apply')) return null;
+
+  if ((pathname?.startsWith('/messages/') && pathname !== '/messages/') || pathname?.startsWith('/create')) {
     return null;
   }
 

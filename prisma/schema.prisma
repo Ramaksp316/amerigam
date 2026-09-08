@@ -38,6 +38,7 @@ model User {
   avatarData     String? // Base64 string for cropped image
   onboarded      Boolean @default(false)
   amerigamPoints Int     @default(0) // AP metric for ranking
+  joinKey        String? // Secret key for Business/Org accounts to allow employees to join
 
   posts            Post[]
   comments         Comment[]

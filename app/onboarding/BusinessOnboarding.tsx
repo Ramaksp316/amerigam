@@ -88,9 +88,9 @@ export default function BusinessOnboarding({ initialData }: { initialData: { nam
 
       {step === 2 && (
         <div>
-          <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 20px 0' }}>Industry & Stage</h2>
+          <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 20px 0' }}>Category & Stage</h2>
 
-          <label style={{ fontSize: '13px', color: '#A1A1AA', marginBottom: '8px', display: 'block' }}>Industry</label>
+          <label style={{ fontSize: '13px', color: '#A1A1AA', marginBottom: '8px', display: 'block' }}>Category / Industry</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px' }}>
             {INDUSTRIES.map(ind => (
               <button key={ind} className={`onboarding-pill ${industry === ind ? 'selected' : ''}`} onClick={() => setIndustry(ind)}>{ind}</button>

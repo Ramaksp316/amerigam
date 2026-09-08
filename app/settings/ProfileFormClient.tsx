@@ -140,6 +140,14 @@ export default function ProfileFormClient({
           <input type="url" name="portfolioUrl" className="input-field" defaultValue={user.portfolioUrl || ''} placeholder="https://yourwebsite.com" />
         </div>
 
+        {(user.accountType === 'BUSINESS' || user.accountType === 'ORGANIZATION') && user.joinKey && (
+          <div style={{ padding: '16px', background: '#18181B', border: '1px solid #3F3F46', borderRadius: '12px', marginTop: '8px' }}>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 600, color: 'white' }}>Company Join Key</label>
+            <p style={{ fontSize: '13px', color: '#A1A1AA', marginBottom: '12px', margin: '0 0 12px 0' }}>Share this key with your employees so they can attach their personal profiles to your organization.</p>
+            <SpoilerKey joinKey={user.joinKey} />
+          </div>
+        )}
+
         <button type="submit" className="btn" style={{ marginTop: 'var(--space-2)' }}>Save Profile</button>
       </form>
 
@@ -218,6 +226,104 @@ export default function ProfileFormClient({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function SpoilerKey({ joinKey }: { joinKey: string }) {
+  const [revealed, setRevealed] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const fallbackCopy = (text: string) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    // Prevent scrolling to bottom of page in MS Edge
+    textArea.style.position = 'fixed';
+    textArea.style.top = '0';
+    textArea.style.left = '0';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+    } catch (err) {}
+    document.body.removeChild(textArea);
+  };
+
+  const handleCopy = () => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(joinKey).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }).catch(() => {
+        fallbackCopy(joinKey);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
+    } else {
+      fallbackCopy(joinKey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', gap: '8px' }}>
+      <div 
+        onClick={() => setRevealed(true)}
+        style={{ 
+          flex: 1, 
+          position: 'relative', 
+          background: '#27272A', 
+          borderRadius: '10px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          cursor: revealed ? 'default' : 'pointer',
+          overflow: 'hidden',
+          minHeight: '44px',
+          border: '1px solid #3F3F46'
+        }}
+      >
+        {revealed ? (
+          <span style={{ color: 'white', fontFamily: 'monospace', letterSpacing: '4px', fontSize: '18px', fontWeight: 700 }}>
+            {joinKey}
+          </span>
+        ) : (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: 'radial-gradient(#ffffff 20%, transparent 20%), radial-gradient(#ffffff 20%, transparent 20%)',
+            backgroundSize: '16px 16px',
+            backgroundPosition: '0 0, 8px 8px',
+            opacity: 0.15,
+            animation: 'dots-move 2s linear infinite'
+          }}>
+          </div>
+        )}
+        {!revealed && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#E4E4E7', fontSize: '14px', fontWeight: 600, pointerEvents: 'none', background: 'rgba(24, 24, 27, 0.9)', padding: '6px 16px', borderRadius: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', border: '1px solid #3F3F46' }}>
+              Tap to reveal
+            </span>
+          </div>
+        )}
+      </div>
+      <button 
+        type="button" 
+        onClick={handleCopy}
+        className="btn btn-outline"
+        style={{ padding: '10px 16px', minWidth: '80px', height: '44px', fontWeight: 600 }}
+      >
+        {copied ? 'Copied!' : 'Copy'}
+      </button>
+      <style>{`
+        @keyframes dots-move {
+          0% { background-position: 0 0, 8px 8px; }
+          100% { background-position: 16px 16px, 24px 24px; }
+        }
+      `}</style>
     </div>
   );
 }

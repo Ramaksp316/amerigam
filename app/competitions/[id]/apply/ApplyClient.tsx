@@ -46,7 +46,7 @@ export default function ApplyClient({ event, currentUser, eligibilityError }: { 
   const isFree = !event.entryFee || event.entryFee === 0;
 
   return (
-    <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', backgroundColor: '#000000', color: '#FFFFFF', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', backgroundColor: '#000000', color: '#FFFFFF', minHeight: '100vh', paddingBottom: '100px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px', borderBottom: '1px solid #1F1F22' }}>
         <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#FFF', padding: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>

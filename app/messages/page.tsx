@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { MessageCircle, Search, Edit } from 'lucide-react';
 import Link from 'next/link';
+import ProfilePicture from '../components/ProfilePicture';
 
 export default async function InboxPage({ searchParams }: { searchParams: Promise<{ userId?: string }> }) {
   const cookieStore = await cookies();
@@ -68,9 +69,9 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   });
 
   return (
-    <div style={{ backgroundColor: '#000000', minHeight: '100vh', width: '100%', maxWidth: '600px', margin: '0 auto', overflowX: 'hidden' }}>
+    <div style={{ backgroundColor: '#000000', minHeight: '100vh', width: '100%', maxWidth: '600px', margin: '0 auto', overflowX: 'hidden', paddingBottom: '70px' }}>
       
-      {/* Premium Header */}
+      {/* Premium Compact Header */}
       <div style={{
         position: 'sticky',
         top: 0,
@@ -78,19 +79,19 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         zIndex: 50,
-        padding: '16px',
-        borderBottom: '1px solid #27272A'
+        padding: '12px 16px',
+        borderBottom: '1px solid #18181B'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: 'white' }}>Messages</h1>
-          <Link href="/network" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'rgba(29, 155, 240, 0.1)', color: '#1D9BF0' }}>
-            <Edit size={20} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: 'white', fontFamily: 'var(--font-sans), sans-serif' }}>Messages</h1>
+          <Link href="/network" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', color: '#1D9BF0' }}>
+            <Edit size={22} />
           </Link>
         </div>
 
-        {/* Search */}
+        {/* Compact Search */}
         <div style={{ position: 'relative' }}>
-          <Search size={18} color="#71717A" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
+          <Search size={16} color="#71717A" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           <input 
             type="text" 
             placeholder="Search messages..." 
@@ -98,65 +99,64 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
               width: '100%',
               backgroundColor: '#18181B',
               border: 'none',
-              borderRadius: '24px',
-              padding: '12px 16px 12px 42px',
+              borderRadius: '8px',
+              padding: '8px 12px 8px 36px',
               color: 'white',
-              fontSize: '15px',
+              fontSize: '14px',
+              fontFamily: 'var(--font-sans), sans-serif',
               outline: 'none'
             }}
           />
         </div>
       </div>
       
-      <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
         {conversations.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-            <div style={{ margin: '0 auto 16px', width: '64px', height: '64px', borderRadius: '50%', background: '#18181B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MessageCircle size={32} color="#71717A" />
-            </div>
-            <h3 style={{ color: 'white', margin: '0 0 8px 0', fontSize: '18px' }}>No messages</h3>
-            <p style={{ color: '#71717A', margin: 0, fontSize: '15px' }}>Start a conversation with someone.</p>
+            <h3 style={{ color: 'white', margin: '0 0 4px 0', fontSize: '16px', fontWeight: 600, fontFamily: 'var(--font-sans), sans-serif' }}>No messages yet</h3>
+            <p style={{ color: '#71717A', margin: '0 0 16px 0', fontSize: '14px', fontFamily: 'var(--font-sans), sans-serif' }}>Start a conversation.</p>
+            <Link href="/network" style={{ display: 'inline-block', backgroundColor: '#1D9BF0', color: 'white', fontWeight: 600, fontSize: '14px', padding: '8px 16px', borderRadius: '20px', textDecoration: 'none', fontFamily: 'var(--font-sans), sans-serif' }}>
+              New Message
+            </Link>
           </div>
         ) : (
           conversations.map(conv => {
             const partner = conv.user1Id === userId ? conv.user2 : conv.user1;
             const lastMessage = conv.messages[0];
             const unreadCount = conv._count.messages;
+            const isUnread = unreadCount > 0;
 
             return (
-              <Link key={conv.id} href={`/messages/${conv.id}`} style={{ textDecoration: 'none', padding: '12px 0', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #18181B' }}>
-                <div style={{ width: '56px', height: '56px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#27272A', flexShrink: 0 }}>
-                  {partner.avatarData ? (
-                    <img src={partner.avatarData} alt={partner.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : null}
-                </div>
+              <Link key={conv.id} href={`/messages/${conv.id}`} style={{ textDecoration: 'none', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #18181B' }}>
+                <ProfilePicture user={partner} size={48} showStatus={false} />
                 
-                <div style={{ flexGrow: 1, overflow: 'hidden' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ color: 'white', fontWeight: 600, fontSize: '16px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: 'white', fontWeight: isUnread ? 700 : 500, fontSize: '15px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-sans), sans-serif' }}>
                       {partner.name || partner.username}
                     </span>
                     {lastMessage && (
-                      <span style={{ color: unreadCount > 0 ? '#1D9BF0' : '#71717A', fontSize: '13px', flexShrink: 0, marginLeft: '8px' }}>
+                      <span style={{ color: isUnread ? '#1D9BF0' : '#71717A', fontSize: '12px', flexShrink: 0, marginLeft: '8px', fontWeight: isUnread ? 600 : 400, fontFamily: 'var(--font-sans), sans-serif' }}>
                         {new Date(lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     )}
                   </div>
                   
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ 
-                      color: unreadCount > 0 ? 'white' : '#71717A', 
-                      fontSize: '15px', 
+                      color: isUnread ? '#E4E4E7' : '#71717A', 
+                      fontSize: '14px', 
                       overflow: 'hidden', 
                       textOverflow: 'ellipsis', 
                       whiteSpace: 'nowrap',
-                      fontWeight: unreadCount > 0 ? 600 : 400 
+                      fontWeight: isUnread ? 500 : 400,
+                      fontFamily: 'var(--font-sans), sans-serif'
                     }}>
                       {lastMessage ? (lastMessage.senderId === userId ? 'You: ' + lastMessage.content : lastMessage.content) : 'No messages yet'}
                     </span>
                     
-                    {unreadCount > 0 && (
-                      <div style={{ backgroundColor: '#1D9BF0', color: 'white', fontSize: '11px', fontWeight: 700, width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: '8px' }}>
+                    {isUnread && (
+                      <div style={{ backgroundColor: '#1D9BF0', color: 'white', fontSize: '10px', fontWeight: 700, minWidth: '16px', height: '16px', padding: '0 4px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: '8px', fontFamily: 'var(--font-sans), sans-serif' }}>
                         {unreadCount > 99 ? '99+' : unreadCount}
                       </div>
                     )}

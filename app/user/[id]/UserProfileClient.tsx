@@ -13,6 +13,7 @@ import CustomVideoPlayer from '../../components/CustomVideoPlayer';
 import PostActionButtons from '../../components/PostActionButtons';
 import ImageLightbox from '../../components/ImageLightbox';
 import { deletePost } from '../../actions/postActions';
+import { toggleFollow } from '../../actions/userActions';
 
 // ============================================================
 // TYPOGRAPHY & SPACING SCALE
@@ -86,14 +87,13 @@ function ProfileActions({ isOwner, targetUserId, isFollowing: initialIsFollowing
   const handleFollow = async () => {
     if (!currentUserId || followLoading) return;
     setFollowLoading(true);
+    const previousState = isFollowing;
     try {
-      const res = await fetch('/api/follow', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetUserId })
-      });
-      if (res.ok) setIsFollowing(!isFollowing);
-    } catch (e) {}
+      setIsFollowing(!isFollowing);
+      await toggleFollow(targetUserId);
+    } catch (e) {
+      setIsFollowing(previousState);
+    }
     setFollowLoading(false);
   };
 
@@ -437,7 +437,7 @@ export default function UserProfileClient({
         {tabs.map(t => (
           <Link
             key={t}
-            href={`/user/${targetUserId}?tab=${t}`}
+            href={`/user/${targetUserId}?tab=${t}`} scroll={false}
             style={{
               flex: '1 0 auto',
               textAlign: 'center',

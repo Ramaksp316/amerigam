@@ -64,6 +64,7 @@ export default function PersonalOnboarding({ initialData }: { initialData: { nam
   const [orgSearchResults, setOrgSearchResults] = useState<any[]>([]);
   const [isSearchingOrg, setIsSearchingOrg] = useState(false);
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
+  const [joinKey, setJoinKey] = useState('');
   
   // Inline Org form state
   const [newOrgUsername, setNewOrgUsername] = useState('');
@@ -164,6 +165,7 @@ export default function PersonalOnboarding({ initialData }: { initialData: { nam
         profession: selectedRole || customRole || undefined,
         organizationName: organizationName || undefined,
         organizationId: organizationId || undefined,
+        organizationJoinKey: joinKey || undefined,
         skills,
         interests,
         hobbies,
@@ -407,6 +409,7 @@ export default function PersonalOnboarding({ initialData }: { initialData: { nam
                               setError(res.error);
                             } else if (res.success) {
                               setOrganizationId(res.orgId as string);
+                              // We don't ask for joinKey if they just created it inline
                               setIsCreatingOrg(false);
                             }
                             setIsSubmittingOrg(false);
@@ -418,11 +421,17 @@ export default function PersonalOnboarding({ initialData }: { initialData: { nam
                       </div>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: '#18181B', border: '1px solid #3F3F46', borderRadius: '12px' }}>
-                      <div style={{ color: 'white', fontWeight: 600 }}>{organizationName}</div>
-                      <button style={{ background: 'transparent', border: 'none', color: '#EF4444', fontSize: '13px', cursor: 'pointer' }} onClick={() => { setOrganizationId(''); setOrganizationName(''); }}>
-                        Remove
-                      </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px', background: '#18181B', border: '1px solid #3F3F46', borderRadius: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ color: 'white', fontWeight: 600 }}>{organizationName}</div>
+                        <button style={{ background: 'transparent', border: 'none', color: '#EF4444', fontSize: '13px', cursor: 'pointer' }} onClick={() => { setOrganizationId(''); setOrganizationName(''); setJoinKey(''); }}>
+                          Remove
+                        </button>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '13px', color: '#A1A1AA' }}>Organization Join Key (Ask your Admin)</label>
+                        <input className="onboarding-input" placeholder="e.g. A1B2C3" value={joinKey} onChange={e => setJoinKey(e.target.value.toUpperCase())} />
+                      </div>
                     </div>
                   )}
                   {/* Show Not Found Message */}
