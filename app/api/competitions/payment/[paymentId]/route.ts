@@ -13,7 +13,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pay
     const resolvedParams = await params;
     const paymentId = resolvedParams.paymentId;
     
-    const { status } = await req.json();
+    const { status, transactionId } = await req.json();
 
     const payment = await prisma.eventPayment.findUnique({
       where: { id: paymentId },
@@ -28,20 +28,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pay
       return NextResponse.json({ error: 'Payment already completed' }, { status: 400 });
     }
 
-    // Update Payment
+    // Update Payment - handle PENDING (manual UTR), SUCCESS, and FAILED
+    const newStatus = status === 'SUCCESS' ? 'SUCCESS' : status === 'PENDING' ? 'PENDING' : 'FAILED';
     await prisma.eventPayment.update({
       where: { id: paymentId },
       data: {
-        status: status === 'SUCCESS' ? 'SUCCESS' : 'FAILED',
-        transactionId: status === 'SUCCESS' ? `TEST-TXN-${Date.now()}` : null
+        status: newStatus,
+        transactionId: transactionId || null
       }
     });
 
-    // Update Registration
+    // Update Registration - auto-approve on SUCCESS, keep PENDING for manual review
     if (status === 'SUCCESS') {
       await prisma.eventRegistration.update({
         where: { id: payment.registrationId },
-        data: { status: 'APPROVED' } // Approved means registered for Phase 2
+        data: { status: 'APPROVED' }
       });
     }
 

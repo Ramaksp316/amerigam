@@ -1,22 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Home, MessageCircle, Trophy, BarChart2, Plus, PenTool, Clapperboard, Aperture, Target, Users } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import ProfilePicture from './ProfilePicture';
 
 export default function MobileBottomNav({ currentUser }: { currentUser?: any }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [hoveredOption, setHoveredOption] = useState<string | null>(null);
-  const pressTimer = useRef<NodeJS.Timeout | null>(null);
-  
   const [isCommunityPage, setIsCommunityPage] = useState(false);
 
-  // Close menu on route change
   useEffect(() => {
-    setIsMenuOpen(false);
     if (pathname?.startsWith('/communities/')) {
       setIsCommunityPage(true);
     } else {
@@ -34,230 +27,171 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
   const isIndividualChat = pathname?.startsWith('/messages/') && pathname !== '/messages';
   if (isIndividualChat || isCommunityPage || pathname?.includes('/apply')) return null;
 
-  if ((pathname?.startsWith('/messages/') && pathname !== '/messages/') || pathname?.startsWith('/create')) {
+  if ((pathname?.startsWith('/messages/') && pathname !== '/messages/')) {
     return null;
   }
 
-  const options = [
-    { id: 'post', icon: PenTool, label: 'Post', href: '/create?type=post', bg: 'linear-gradient(135deg, #8B5CF6, #6366F1)' },
-    { id: 'reel', icon: Clapperboard, label: 'Reel', href: '/create?type=reel', bg: 'linear-gradient(135deg, #10B981, #059669)' },
-    { id: 'story', icon: Aperture, label: 'Story', href: '/create?type=story', bg: 'linear-gradient(135deg, #F59E0B, #EA580C)' },
-    { id: 'community', icon: Users, label: 'Community', href: '/create?type=community', bg: 'linear-gradient(135deg, #0ea5e9, #0284c7)' }
-  ];
-
-  if (currentUser?.accountType === 'ORGANIZATION') {
-    options.push({ id: 'competition', icon: Target, label: 'Compete', href: '/create?type=competition', bg: 'linear-gradient(135deg, #EC4899, #E11D48)' });
-  }
-
-  const radius = 95; // Distance from the center of the plus button
-  
-  const getOptionStyle = (index: number, total: number) => {
-    const step = 180 / (total + 1);
-    const angleDeg = 180 - step * (index + 1);
-    const angleRad = (angleDeg * Math.PI) / 180;
-    
-    const x = Math.cos(angleRad) * radius;
-    const y = -Math.sin(angleRad) * radius; 
-
-    const isHovered = hoveredOption === options[index].id;
-
-    return {
-      transform: isMenuOpen ? `translate(${x}px, ${y}px) scale(${isHovered ? 1.3 : 1})` : `translate(0px, 0px) scale(0.3)`,
-      opacity: isMenuOpen ? 1 : 0,
-      transition: isMenuOpen 
-        ? `transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${isHovered ? '0s' : `${index * 0.04}s`}, opacity 0.3s ${index * 0.04}s, box-shadow 0.25s`
-        : `transform 0.2s ease-in, opacity 0.2s ease-in`,
-      position: 'absolute' as const,
-      top: 0,
-      left: 0,
-      width: '56px',
-      height: '56px',
-      borderRadius: '50%',
-      background: options[index].bg,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      boxShadow: isHovered ? '0 12px 28px rgba(0,0,0,0.7)' : '0 4px 12px rgba(0,0,0,0.3)',
-      zIndex: isHovered ? 10001 : 10000,
-      color: 'white',
-      pointerEvents: isMenuOpen ? 'auto' as const : 'none' as const
-    };
-  };
-
-  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
-    // Start long press timer for drag interaction
-    pressTimer.current = setTimeout(() => {
-      setIsMenuOpen(true);
-    }, 400); // 400ms is standard for UI long-press (2 seconds feels unresponsive)
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isMenuOpen) return;
-    const el = document.elementFromPoint(e.clientX, e.clientY);
-    const radialOption = el?.closest('.radial-option');
-    if (radialOption) {
-      setHoveredOption(radialOption.getAttribute('data-id'));
-    } else {
-      setHoveredOption(null);
-    }
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (pressTimer.current) {
-      clearTimeout(pressTimer.current);
-      pressTimer.current = null;
-    }
-    
-    if (hoveredOption) {
-      const option = options.find(o => o.id === hoveredOption);
-      if (option) {
-        if (option.id === 'reel') {
-          alert("This feature is coming soon");
-          setIsMenuOpen(false);
-        } else {
-          router.push(option.href);
-        }
-      }
-    }
-    
-    // If it was just a quick tap and menu didn't open yet, toggle it
-    if (!isMenuOpen) {
-      // The onClick handler will catch this, or we can just do it here:
-    } else {
-      // If we released while open (and maybe didn't select anything), close it
-      if (!hoveredOption) {
-        setIsMenuOpen(false);
-      }
-    }
-    setHoveredOption(null);
-  };
-
   return (
     <>
-      {isMenuOpen && (
-        <div
-          className="radial-overlay"
-          onClick={() => setIsMenuOpen(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.4)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            // z-index below bottom nav so it doesn't blur the nav items and options
-            zIndex: 900, 
-            animation: 'fadeIn 0.2s ease-out'
-          }}
-        />
-      )}
 
-      <div className={`mobile-bottom-nav ${isMenuOpen ? 'nav-blurred' : ''}`}>
-        <Link href="/home" className={`nav-item ${isActive('/home') ? 'active' : ''}`} prefetch={true}>
-          <Home size={26} strokeWidth={isActive('/home') ? 2.5 : 2} />
-          <span>Home</span>
-        </Link>
-        
-        <Link href="/messages" className={`nav-item ${isActive('/messages') ? 'active' : ''}`} prefetch={true}>
-          <MessageCircle size={26} strokeWidth={isActive('/messages') ? 2.5 : 2} />
-          <span>Messages</span>
-        </Link>
-        
-        <div className="nav-item-center" style={{ position: 'relative', zIndex: 1000 }}>
-          {/* Radial Options Wrapper */}
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '56px', height: '56px', zIndex: 9999 }}>
-            {options.map((option, index) => {
-              const Icon = option.icon;
-              return (
-                <div
-                  key={option.id}
-                  className="radial-option"
-                  data-id={option.id}
-                  style={getOptionStyle(index, options.length)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (option.id === 'reel') {
-                      alert("This feature is coming soon");
-                    } else {
-                      router.push(option.href);
-                    }
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  <Icon size={24} strokeWidth={2.5} />
-                </div>
-              );
-            })}
-          </div>
+      {/* Floating Bottom Navigation Dock matching Figma dock (figma_dock_crop.png) */}
+      <nav aria-label="Bottom Navigation" style={{
+        position: 'fixed',
+        bottom: '22px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        pointerEvents: 'auto'
+      }}>
+        {/* Dark Pill Dock */}
+        <div style={{
+          backgroundColor: '#0F0F12',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          borderRadius: '999px',
+          height: '52px',
+          padding: '0 24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '26px',
+          boxShadow: '0 12px 36px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)'
+        }}>
+          {/* 1. Home icon: rounded roof outline */}
+          <Link href="/home" title="Home" style={{
+            color: isActive('/home') ? '#FFFFFF' : '#8E8E93',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textDecoration: 'none',
+            transition: 'all 0.15s ease',
+            filter: isActive('/home') ? 'drop-shadow(0 0 6px rgba(255, 255, 255, 0.5))' : 'none'
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 10.5L12 3.5l9 7V20a2 2 0 0 1-2 2h-4a1 1 0 0 1-1-1v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2z" />
+            </svg>
+          </Link>
 
-          <button 
-            className="create-btn"
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={(e) => {
-              e.currentTarget.releasePointerCapture(e.pointerId);
-              handlePointerUp(e);
-            }}
-            onClick={() => {
-              // Toggle menu on a simple tap
-              setIsMenuOpen(!isMenuOpen);
-            }}
-            style={{
-              background: 'var(--accent-blue)',
-              border: 'none',
-              cursor: 'pointer',
+          {/* 2. Play / Video icon: rounded square with play triangle (Reels) */}
+          <Link href="/feed" title="Reels" style={{
+            color: isActive('/feed') ? '#FFFFFF' : '#8E8E93',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textDecoration: 'none',
+            transition: 'all 0.15s ease',
+            filter: isActive('/feed') ? 'drop-shadow(0 0 6px rgba(255, 255, 255, 0.5))' : 'none'
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="16" rx="4.5" />
+              <polygon points="10 8.5 16 12 10 15.5" fill="currentColor" />
+            </svg>
+          </Link>
+
+          {/* 3. 4-circles icon: Competitions */}
+          <Link href="/competitions" title="Competitions" style={{
+            color: isActive('/competitions') ? '#FFFFFF' : '#8E8E93',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textDecoration: 'none',
+            transition: 'all 0.15s ease',
+            filter: isActive('/competitions') ? 'drop-shadow(0 0 6px rgba(255, 255, 255, 0.5))' : 'none'
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="7" cy="7" r="2.8" fill={isActive('/competitions') ? '#FFFFFF' : 'none'} />
+              <circle cx="17" cy="7" r="2.8" fill={isActive('/competitions') ? '#FFFFFF' : 'none'} />
+              <circle cx="7" cy="17" r="2.8" fill={isActive('/competitions') ? '#FFFFFF' : 'none'} />
+              <circle cx="17" cy="17" r="2.8" fill={isActive('/competitions') ? '#FFFFFF' : 'none'} />
+            </svg>
+          </Link>
+
+          {/* 4. Create Plus Button (Exact Figma squircle button) */}
+          <Link href="/create" title="Create" style={{
+            textDecoration: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <div style={{
+              width: '42px',
+              height: '34px',
+              borderRadius: '12px',
+              backgroundColor: isActive('/create') ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.16)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: '56px',
-              height: '56px',
-              borderRadius: '50%',
-              padding: 0,
-              boxShadow: isMenuOpen ? '0 0 24px rgba(59, 130, 246, 0.7)' : '0 4px 12px rgba(59, 130, 246, 0.4)',
-              zIndex: 10000,
-              position: 'relative',
-              transition: 'all 0.3s ease',
-              touchAction: 'none'
-            }}
-          >
-            <Plus size={32} color="#ffffff" strokeWidth={2.5} style={{
-              transform: isMenuOpen ? 'rotate(45deg)' : 'none',
-              transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-            }} />
-          </button>
-        </div>
-        
-        <Link href="/competitions" className={`nav-item ${isActive('/competitions') ? 'active' : ''}`} prefetch={true}>
-          <Trophy size={26} strokeWidth={isActive('/competitions') ? 2.5 : 2} />
-          <span>Competitions</span>
-        </Link>
-        
-        <Link href="/ranking" className={`nav-item ${isActive('/ranking') ? 'active' : ''}`} prefetch={true}>
-          <BarChart2 size={26} strokeWidth={isActive('/ranking') ? 2.5 : 2} />
-          <span>Ranking</span>
-        </Link>
-      </div>
+              color: '#FFFFFF',
+              transition: 'all 0.18s ease',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </div>
+          </Link>
 
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .nav-blurred .nav-item {
-          filter: blur(4px);
-          opacity: 0.5;
-          pointer-events: none;
-        }
-        .nav-item {
-          transition: filter 0.3s ease, opacity 0.3s ease;
-        }
-        .radial-option {
-          cursor: pointer;
-        }
-      `}</style>
+          {/* 5. Chat / Message speech bubble */}
+          <Link href="/messages" title="Messages" style={{
+            color: isActive('/messages') ? '#FFFFFF' : '#8E8E93',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textDecoration: 'none',
+            transition: 'all 0.15s ease',
+            filter: isActive('/messages') ? 'drop-shadow(0 0 6px rgba(255, 255, 255, 0.5))' : 'none'
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+            </svg>
+          </Link>
+        </div>
+
+        {/* 6. User Circular Avatar with dark rim (matching Figma) */}
+        <Link href={currentUser ? `/user/${currentUser.id}` : '/login'} title="Profile" style={{
+          textDecoration: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            width: '46px',
+            height: '46px',
+            borderRadius: '50%',
+            backgroundColor: '#0F0F12',
+            padding: '3px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.7)',
+            border: pathname?.startsWith('/user') ? '2px solid #FFFFFF' : '1.5px solid rgba(255, 255, 255, 0.15)',
+            transition: 'all 0.15s ease'
+          }}>
+            <div style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              backgroundColor: '#1E1E22',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {currentUser?.avatarData ? (
+                <img src={currentUser.avatarData} alt={currentUser.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : currentUser ? (
+                <ProfilePicture user={currentUser} size={40} showStatus={false} />
+              ) : (
+                <span style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 700 }}>U</span>
+              )}
+            </div>
+          </div>
+        </Link>
+      </nav>
     </>
   );
 }

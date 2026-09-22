@@ -2,13 +2,29 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import ThemeToggle from './ThemeToggle';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Home, Search, Users, MessageCircle, Trophy, Bell, User, Plus, BarChart2 } from 'lucide-react';
-import ProfilePicture from './ProfilePicture';
+import {
+  Home,
+  PlaySquare,
+  LayoutGrid,
+  PlusSquare,
+  MessageCircle,
+  Bell,
+  Globe,
+  Share2,
+  Settings
+} from 'lucide-react';
 
-export default function Sidebar({ unreadCount = 0, currentUser = null, joinedCommunities = [], networkUsers = [] }: { unreadCount?: number, currentUser?: any, joinedCommunities?: any[], networkUsers?: any[] }) {
+export default function Sidebar({
+  unreadCount = 0,
+  currentUser = null
+}: {
+  unreadCount?: number;
+  currentUser?: any;
+  joinedCommunities?: any[];
+  networkUsers?: any[];
+}) {
   const pathname = usePathname();
   const [displayUnread, setDisplayUnread] = useState(unreadCount);
 
@@ -20,183 +36,178 @@ export default function Sidebar({ unreadCount = 0, currentUser = null, joinedCom
     }
   }, [pathname, unreadCount]);
 
-  if (pathname?.startsWith('/login')) {
+  // Hide sidebar on full-screen /feed or auth pages
+  if (pathname?.startsWith('/login') || pathname?.startsWith('/create') || pathname?.startsWith('/feed')) {
     return null;
   }
 
-  const getStroke = (path: string) => pathname?.startsWith(path) ? 2.5 : 2;
+  const isActive = (path: string) => {
+    if (path === '/home') return pathname === '/home' || pathname === '/';
+    return pathname?.startsWith(path);
+  };
+
+  const navItems = [
+    { href: '/home', label: 'Home', icon: Home },
+    { href: '/feed', label: 'Feed', icon: PlaySquare },
+    { href: '/search', label: 'Explore', icon: LayoutGrid },
+    { href: '/create', label: 'Create', icon: PlusSquare },
+    { href: '/messages', label: 'Messages', icon: MessageCircle },
+    { href: '/notifications', label: 'Notification', icon: Bell, badge: displayUnread },
+  ];
+
+  const secondaryItems = [
+    { href: '/communities', label: 'Communities', icon: Globe },
+    { href: '/network', label: 'Network', icon: Share2 },
+  ];
 
   return (
-    <nav className="sidebar">
-      <Link href="/feed" className="logo-container">
-        <Image 
-          src="/amerigam-logo-transparent.png" 
-          alt="Amerigam" 
-          width={40} 
-          height={18} 
-          style={{ objectFit: 'contain' }}
-        />
-      </Link>
-      
-      <div className="nav-links">
-        <Link href="/feed" className={pathname === '/feed' ? 'active' : ''}>
-          <span className="icon"><Home size={26} strokeWidth={pathname === '/feed' ? 2.5 : 2} /></span> 
-          <span className="text">Home</span>
-        </Link>
-        
-        <Link href="/search" className={pathname === '/search' ? 'active' : ''}>
-          <span className="icon"><Search size={26} strokeWidth={pathname === '/search' ? 2.5 : 2} /></span> 
-          <span className="text">Search / Explore</span>
-        </Link>
-
-        <Link href="/network" className={pathname === '/network' ? 'active' : ''}>
-          <span className="icon"><Users size={26} strokeWidth={pathname === '/network' ? 2.5 : 2} /></span> 
-          <span className="text">Communities / Network</span>
-        </Link>
-
-        <Link href="/messages" className={pathname?.startsWith('/messages') ? 'active' : ''}>
-          <span className="icon"><MessageCircle size={26} strokeWidth={getStroke('/messages')} /></span> 
-          <span className="text">Messages</span>
-        </Link>
-
-        <Link href="/competitions" className={pathname?.startsWith('/competitions') ? 'active' : ''}>
-          <span className="icon"><Trophy size={26} strokeWidth={getStroke('/competitions')} /></span> 
-          <span className="text">Competitions</span>
-        </Link>
-
-        <Link href="/notifications" className={pathname === '/notifications' ? 'active' : ''}>
-          <span className="icon" style={{ position: 'relative' }}>
-            <Bell size={26} strokeWidth={pathname === '/notifications' ? 2.5 : 2} />
-            {displayUnread > 0 && (
-              <span style={{
-                position: 'absolute', top: '-4px', right: '-4px',
-                background: 'var(--accent-pink)', color: 'white', fontSize: '10px',
-                fontWeight: 'bold', padding: '2px 5px', borderRadius: '10px',
-                border: '2px solid var(--surface-0)'
-              }}>
-                {displayUnread > 99 ? '99+' : displayUnread}
-              </span>
-            )}
-          </span> 
-          <span className="text">Notifications</span>
-        </Link>
-
-        <Link href="/ranking" className={pathname?.startsWith('/ranking') ? 'active' : ''}>
-          <span className="icon"><BarChart2 size={26} strokeWidth={getStroke('/ranking')} /></span> 
-          <span className="text">Your Ranking</span>
-        </Link>
-
-        {/* COMMUNITIES PREVIEW */}
-        <div style={{ marginTop: '24px', paddingLeft: '24px' }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: '#71717A', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Communities</div>
-          {joinedCommunities && joinedCommunities.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {joinedCommunities.map((cm: any) => (
-                <Link key={cm.community.id} href={`/communities/${cm.community.id}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#27272A', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                    <Users size={14} color="#A1A1AA" />
-                  </div>
-                  <span style={{ color: '#F4F4F5', fontSize: '15px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cm.community.name}</span>
-                </Link>
-              ))}
-              <Link href="/communities" style={{ color: '#1D9BF0', fontSize: '14px', fontWeight: 500, textDecoration: 'none', marginTop: '4px' }}>View All</Link>
-            </div>
-          ) : (
-            <Link href="/communities?tab=foryou" style={{ color: '#1D9BF0', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Discover Communities</Link>
-          )}
-        </div>
-
-        {/* NETWORK PREVIEW */}
-        <div style={{ marginTop: '24px', paddingLeft: '24px' }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: '#71717A', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Your Network</div>
-          {networkUsers && networkUsers.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {networkUsers.map((nu: any) => (
-                <Link key={nu.following.id} href={`/user/${nu.following.id}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#27272A', overflow: 'hidden' }}>
-                    {nu.following.profilePictureUrl ? <img src={nu.following.profilePictureUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
-                  </div>
-                  <span style={{ color: '#F4F4F5', fontSize: '15px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nu.following.name || nu.following.username}</span>
-                </Link>
-              ))}
-              <Link href="/network" style={{ color: '#1D9BF0', fontSize: '14px', fontWeight: 500, textDecoration: 'none', marginTop: '4px' }}>View All</Link>
-            </div>
-          ) : (
-            <Link href="/network?tab=foryou" style={{ color: '#1D9BF0', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Find people in your field</Link>
-          )}
-        </div>
-
-
-        <Link href="/profile" className={pathname?.startsWith('/profile') ? 'active' : ''}>
-          <span className="icon">
-            {currentUser ? (
-              <ProfilePicture user={currentUser} size={26} showStatus={false} />
-            ) : (
-              <User size={26} strokeWidth={getStroke('/profile')} />
-            )}
-          </span> 
-          <span className="text">Profile</span>
-        </Link>
-
-        <Link href="/create" style={{
-          marginTop: 'var(--space-4)',
-          background: '#ffffff',
-          color: '#000000',
-          fontWeight: 600,
-          borderRadius: 'var(--radius-full)',
-          padding: '14px',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '8px',
-          textDecoration: 'none',
-          transition: 'opacity 0.2s'
-        }}
-        
-        
-        >
-          <span className="text">Create</span>
-          <span className="icon" style={{ display: 'none' }}><Plus size={24} strokeWidth={2.5} /></span>
+    <aside style={{
+      width: '230px',
+      height: '100vh',
+      backgroundColor: '#000000',
+      borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+      padding: '24px 16px 20px 20px',
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'sticky',
+      top: 0,
+      zIndex: 40,
+      flexShrink: 0,
+      boxSizing: 'border-box'
+    }}>
+      {/* Top Logo */}
+      <div style={{ marginBottom: '28px', paddingLeft: '4px' }}>
+        <Link href="/home" style={{ display: 'flex', alignItems: 'center' }}>
+          <Image
+            src="/amerigam-logo-transparent.png"
+            alt="Amerigam"
+            width={112}
+            height={26}
+            style={{ objectFit: 'contain' }}
+            priority
+          />
         </Link>
       </div>
 
-      <div className="theme-toggle-container" style={{ 
-        marginTop: 'auto', 
-        paddingTop: 'var(--space-5)', 
-        borderTop: '1px solid var(--border-color)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px'
-      }}>
-        {currentUser && (
-          <Link href="/login/test-accounts" style={{
-            fontSize: '11px',
-            color: '#A1A1AA',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '8px',
-            padding: '8px 10px',
-            textAlign: 'center',
-            textDecoration: 'none',
+      {/* Main Nav Items */}
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {navItems.map(({ href, label, icon: Icon, badge }) => {
+          const active = isActive(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                padding: '10px 12px',
+                borderRadius: '12px',
+                textDecoration: 'none',
+                color: active ? '#FFFFFF' : '#A1A1AA',
+                fontWeight: active ? 700 : 500,
+                fontSize: '15px',
+                transition: 'all 0.15s ease',
+                position: 'relative'
+              }}
+              onMouseEnter={(e) => {
+                if (!active) e.currentTarget.style.color = '#FFFFFF';
+              }}
+              onMouseLeave={(e) => {
+                if (!active) e.currentTarget.style.color = '#A1A1AA';
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                <Icon size={20} strokeWidth={active ? 2.3 : 1.8} color={active ? '#FFFFFF' : '#A1A1AA'} />
+                {badge != null && badge > 0 && (
+                  <span style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-8px',
+                    backgroundColor: '#EF4444',
+                    color: '#FFFFFF',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    padding: '1px 5px',
+                    borderRadius: '999px',
+                    border: '1.5px solid #000000'
+                  }}>
+                    {badge > 99 ? '99+' : badge}
+                  </span>
+                )}
+              </span>
+              <span>{label}</span>
+            </Link>
+          );
+        })}
+
+        {/* Divider Line */}
+        <div style={{
+          height: '1px',
+          backgroundColor: 'rgba(255, 255, 255, 0.08)',
+          margin: '12px 4px'
+        }} />
+
+        {/* Secondary Items: Communites & Network */}
+        {secondaryItems.map(({ href, label, icon: Icon }) => {
+          const active = isActive(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                padding: '10px 12px',
+                borderRadius: '12px',
+                textDecoration: 'none',
+                color: active ? '#FFFFFF' : '#A1A1AA',
+                fontWeight: active ? 700 : 500,
+                fontSize: '15px',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!active) e.currentTarget.style.color = '#FFFFFF';
+              }}
+              onMouseLeave={(e) => {
+                if (!active) e.currentTarget.style.color = '#A1A1AA';
+              }}
+            >
+              <Icon size={20} strokeWidth={active ? 2.3 : 1.8} color={active ? '#FFFFFF' : '#A1A1AA'} />
+              <span>{label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Bottom Settings Link */}
+      <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+        <Link
+          href="/settings"
+          style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            fontWeight: 500,
-            transition: 'background 0.2s ease'
-          }} className="hoverable-card-glass">
-            <Users size={14} /> Switch test account
-          </Link>
-        )}
-        <ThemeToggle />
+            gap: '16px',
+            padding: '10px 12px',
+            borderRadius: '12px',
+            textDecoration: 'none',
+            color: isActive('/settings') ? '#FFFFFF' : '#A1A1AA',
+            fontWeight: isActive('/settings') ? 700 : 500,
+            fontSize: '15px',
+            transition: 'all 0.15s ease'
+          }}
+          onMouseEnter={(e) => {
+            if (!isActive('/settings')) e.currentTarget.style.color = '#FFFFFF';
+          }}
+          onMouseLeave={(e) => {
+            if (!isActive('/settings')) e.currentTarget.style.color = '#A1A1AA';
+          }}
+        >
+          <Settings size={20} strokeWidth={isActive('/settings') ? 2.3 : 1.8} />
+          <span>Setting</span>
+        </Link>
       </div>
-
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .sidebar .text { display: none !important; }
-          .sidebar .icon { display: flex !important; }
-        }
-      `}</style>
-    </nav>
+    </aside>
   );
 }

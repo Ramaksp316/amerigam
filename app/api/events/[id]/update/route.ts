@@ -28,15 +28,30 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const {
       name,
       description,
+      shortDescription,
       category,
+      tags,
+      coverImage,
+      paymentQrCode,
+      upiId,
       eventLevel,
       locationType,
       venue,
       startDate,
       endDate,
+      registrationStart,
+      registrationEnd,
+      entryFee,
+      currency,
+      participantLimit,
+      minTeamSize,
+      maxTeamSize,
       requireApproval,
       allowTeams,
-      requireSubmissions
+      requireSubmissions,
+      eligibility,
+      rules,
+      prizePool
     } = body;
 
     const updatedEvent = await prisma.event.update({
@@ -44,15 +59,29 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       data: {
         name: name || event.name,
         description: description || event.description,
+        shortDescription: shortDescription !== undefined ? shortDescription : event.shortDescription,
         category: category || event.category,
-        eventLevel: eventLevel || event.eventLevel,
+        tags: tags !== undefined ? tags : event.tags,
+        coverImage: coverImage !== undefined ? coverImage : event.coverImage,
+        paymentQrCode: paymentQrCode !== undefined ? paymentQrCode : event.paymentQrCode,
+        upiId: upiId !== undefined ? upiId : event.upiId,
         locationType: locationType || event.locationType,
         venue: venue !== undefined ? venue : event.venue,
         startDate: startDate ? new Date(startDate) : event.startDate,
         endDate: endDate ? new Date(endDate) : event.endDate,
+        registrationStart: registrationStart ? new Date(registrationStart) : event.registrationStart,
+        registrationEnd: registrationEnd ? new Date(registrationEnd) : event.registrationEnd,
+        entryFee: entryFee !== undefined ? parseFloat(entryFee) : event.entryFee,
+        currency: currency || event.currency,
+        participantLimit: participantLimit !== undefined ? (participantLimit ? parseInt(participantLimit) : null) : event.participantLimit,
+        minTeamSize: minTeamSize !== undefined ? (minTeamSize ? parseInt(minTeamSize) : null) : event.minTeamSize,
+        maxTeamSize: maxTeamSize !== undefined ? (maxTeamSize ? parseInt(maxTeamSize) : null) : event.maxTeamSize,
         requireApproval: requireApproval !== undefined ? requireApproval : event.requireApproval,
         allowTeams: allowTeams !== undefined ? allowTeams : event.allowTeams,
-        requireSubmissions: requireSubmissions !== undefined ? requireSubmissions : event.requireSubmissions
+        requireSubmissions: requireSubmissions !== undefined ? requireSubmissions : event.requireSubmissions,
+        eligibility: eligibility !== undefined ? eligibility : event.eligibility,
+        rules: rules !== undefined ? rules : event.rules,
+        prizePool: prizePool !== undefined ? prizePool : event.prizePool,
       }
     });
 

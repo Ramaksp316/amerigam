@@ -10,6 +10,8 @@ import ProfilePicture from '../components/ProfilePicture';
 import CustomVideoPlayer from '../components/CustomVideoPlayer';
 import ImageLightbox from '../components/ImageLightbox';
 import PostActionButtons from '../components/PostActionButtons';
+import DesktopRightSidebar from '../components/DesktopRightSidebar';
+import DesktopFeedTop from '../components/DesktopFeedTop';
 
 export default async function FeedPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const cookieStore = await cookies();
@@ -179,7 +181,19 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   }
 
   return (
-    <div style={{ backgroundColor: '#000000', minHeight: '100vh', width: '100%', maxWidth: '600px', margin: '0 auto', overflowX: 'hidden' }}>
+    <div className="home-page-wrapper">
+      <style dangerouslySetInnerHTML={{ __html: `
+        .home-page-wrapper { display: flex; width: 100%; min-height: 100vh; }
+        .home-feed-col { flex: 1; width: 100%; max-width: 600px; margin: 0 auto; background-color: #000; min-height: 100vh; }
+        .desktop-feed-grid { display: block; }
+        @media (min-width: 1024px) {
+          .home-feed-col { max-width: 700px; border-right: 1px solid #27272A; margin: 0; }
+          .desktop-feed-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; padding: 0 24px; }
+          .desktop-feed-post-wrap { border: 1px solid #333; border-radius: 12px; margin-bottom: 16px; }
+          .desktop-feed-post-wrap > div { border-bottom: none !important; }
+        }
+      `}} />
+      <div className="home-feed-col">
       {/* Mobile Sticky Header */}
       <div style={{
         position: 'sticky',
@@ -273,7 +287,9 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
         </div>
       </div>
 
-      <div className="feed-stream" style={{ paddingBottom: '20px' }}>
+      <DesktopFeedTop />
+      <div className="desktop-feed-grid">
+        <div className="feed-stream" style={{ paddingBottom: '20px' }}>
         {posts.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px', color: '#71717A' }}>
             {currentTab === 'network' ? (
@@ -306,7 +322,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
           }
 
           return (
-            <div key={post.id} style={{
+            <div key={post.id} className="desktop-feed-post-wrap" style={{
               padding: '12px 16px',
               borderBottom: '1px solid #27272A',
               display: 'flex',
@@ -339,9 +355,12 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                     </div>
                   </div>
                   
-                  <button style={{ background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', padding: '0 4px', marginTop: '2px' }}>
-                    <MoreHorizontal size={20} />
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <button className="desktop-only" style={{ background: '#00588A', color: '#FFF', border: 'none', borderRadius: '24px', padding: '6px 16px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', letterSpacing: '0.5px' }}>Follow</button>
+                    <button style={{ background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', padding: '0 4px', marginTop: '2px' }}>
+                      <MoreHorizontal size={20} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -398,7 +417,17 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
             </div>
           );
         })}
+              </div>
+        
+        {/* Headlines Column (Desktop Only) */}
+        <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingTop: '12px' }}>
+          <div style={{ aspectRatio: '1/1', backgroundColor: '#1A1A1B', borderRadius: '12px', width: '100%' }}></div>
+          <div style={{ aspectRatio: '1/1', backgroundColor: '#1A1A1B', borderRadius: '12px', width: '100%' }}></div>
+        </div>
       </div>
+      </div>
+      
+      <DesktopRightSidebar currentUser={currentUser} joinedCommunities={[]} networkUsers={[]} />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { completeCreatorOnboarding } from './actions';
 import { createClient } from '@/utils/supabase/client';
+import AvatarCropUpload from '../components/AvatarCropUpload';
 
 const CREATOR_TYPES = ['Tech Creator', 'Lifestyle Creator', 'Gaming Creator', 'Fashion Creator', 'Food Creator', 'Travel Creator', 'Educational Creator', 'Entertainment Creator', 'Sports Creator', 'Beauty Creator', 'Other'];
 
@@ -19,25 +20,22 @@ export default function CreatorOnboarding({ initialData }: { initialData: { name
   const [niche, setNiche] = useState('');
   const [bio, setBio] = useState('');
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setAvatarUploading(true);
-    try {
-      const supabase = createClient();
-      const fileName = `avatar-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '')}`;
-      const { data, error: ue } = await supabase.storage.from('uploads').upload(fileName, file, { contentType: file.type });
-      if (ue) throw ue;
-      const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(data.path);
-      setAvatarUrl(publicUrl);
-    } catch { setError('Photo upload failed.'); }
-    finally { setAvatarUploading(false); }
-  };
-
   const handleFinish = () => {
     setError('');
     startTransition(async () => {
-      const result = await completeCreatorOnboarding({ username, bio, avatarUrl: avatarUrl || undefined, creatorType, niche });
+      let finalAvatarUrl = avatarUrl;
+      if (avatarUrl && avatarUrl.startsWith('data:')) {
+        const supabase = createClient();
+        const response = await fetch(avatarUrl);
+        const blob = await response.blob();
+        const fileName = `avatar-${Date.now()}.jpg`;
+        const { data, error } = await supabase.storage.from('uploads').upload(fileName, blob, { contentType: 'image/jpeg' });
+        if (data && !error) {
+          const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
+          finalAvatarUrl = urlData.publicUrl;
+        }
+      }
+      const result = await completeCreatorOnboarding({ username, bio, avatarUrl: finalAvatarUrl || undefined, creatorType, niche });
       if (result?.error) setError(result.error);
     });
   };
@@ -58,13 +56,9 @@ export default function CreatorOnboarding({ initialData }: { initialData: { name
           <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 6px 0' }}>Creator Profile</h2>
           <p style={{ color: '#71717A', fontSize: '14px', margin: '0 0 24px 0' }}>Set up your creator identity.</p>
 
-          <label htmlFor="creator-avatar" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
-            <div style={{ width: 96, height: 96, borderRadius: '50%', background: avatarUrl ? 'transparent' : 'rgba(255,255,255,0.06)', border: '2px dashed rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-              {avatarUrl ? <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '32px' }}>🎥</span>}
-            </div>
-            <span style={{ marginTop: '8px', fontSize: '13px', color: '#71717A' }}>{avatarUploading ? 'Uploading…' : 'Add profile photo'}</span>
-          </label>
-          <input id="creator-avatar" type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
+            <AvatarCropUpload onImageReady={(base64) => setAvatarUrl(base64)} placeholder="🎥" label="Add profile photo" />
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <input className="onboarding-input" placeholder="Creator / Display Name" value={displayName} onChange={e => setDisplayName(e.target.value)} />

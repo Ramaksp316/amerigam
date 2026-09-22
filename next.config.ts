@@ -17,6 +17,7 @@ function getLocalIPs() {
 const localIPs = getLocalIPs();
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   typescript: {
     ignoreBuildErrors: true,
   },

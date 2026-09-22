@@ -58,29 +58,75 @@ export default function PostActionButtons({
     }}>
       <LikeButton postId={postId} initialHasLiked={hasLiked} initialLikesCount={likesCount} />
 
-      <Link href={`/post/${postId}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-        <button style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', outline: 'none' }}>
-          <MessageCircle size={18} strokeWidth={2} /> {commentsCount > 0 ? commentsCount : ''}
+      <Link href={`/post/${postId}`} style={{ textDecoration: 'none', color: 'inherit', WebkitTapHighlightColor: 'transparent' }}>
+        <button style={{ 
+          background: 'transparent', border: 'none', color: 'inherit', 
+          display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', 
+          fontSize: '13px', outline: 'none', padding: '4px',
+          transition: 'transform 0.1s ease',
+          WebkitTapHighlightColor: 'transparent'
+        }}
+        onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
+        onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        onTouchStart={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
+        onTouchEnd={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <MessageCircle size={18} strokeWidth={2} /> 
+          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{commentsCount > 0 ? commentsCount : ''}</span>
         </button>
       </Link>
       
       <button 
-        onClick={handleRepost}
-        style={{ background: 'transparent', border: 'none', color: isReposted ? '#10B981' : 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', outline: 'none' }}
+        onClick={(e) => {
+          handleRepost(e);
+          e.currentTarget.style.transform = 'scale(1.2)';
+          setTimeout(() => { if(e.currentTarget) e.currentTarget.style.transform = 'scale(1)'; }, 150);
+        }}
+        style={{ 
+          background: 'transparent', border: 'none', 
+          color: isReposted ? '#10B981' : 'inherit', 
+          display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', 
+          fontSize: '13px', outline: 'none', padding: '4px',
+          transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease',
+          WebkitTapHighlightColor: 'transparent'
+        }}
       >
         <Repeat2 size={18} strokeWidth={2} />
       </button>
 
       <button 
-        onClick={handleShare}
-        style={{ background: 'transparent', border: 'none', color: isShared ? '#1D9BF0' : 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', outline: 'none' }}
+        onClick={(e) => {
+          handleShare(e);
+          e.currentTarget.style.transform = 'scale(1.2)';
+          setTimeout(() => { if(e.currentTarget) e.currentTarget.style.transform = 'scale(1)'; }, 150);
+        }}
+        style={{ 
+          background: 'transparent', border: 'none', 
+          color: isShared ? '#1D9BF0' : 'inherit', 
+          display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', 
+          fontSize: '13px', outline: 'none', padding: '4px',
+          transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease',
+          WebkitTapHighlightColor: 'transparent'
+        }}
       >
         <Send size={18} strokeWidth={2} />
       </button>
 
       <button 
-        onClick={handleBookmark}
-        style={{ background: 'transparent', border: 'none', color: isBookmarked ? '#1D9BF0' : 'inherit', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', outline: 'none' }}
+        onClick={(e) => {
+          handleBookmark(e);
+          e.currentTarget.style.transform = 'scale(1.2)';
+          setTimeout(() => { if(e.currentTarget) e.currentTarget.style.transform = 'scale(1)'; }, 150);
+        }}
+        style={{ 
+          background: 'transparent', border: 'none', 
+          color: isBookmarked ? '#1D9BF0' : 'inherit', 
+          display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', 
+          fontSize: '13px', outline: 'none', padding: '4px',
+          transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease',
+          WebkitTapHighlightColor: 'transparent'
+        }}
       >
         <Bookmark size={18} strokeWidth={2} fill={isBookmarked ? '#1D9BF0' : 'none'} />
       </button>

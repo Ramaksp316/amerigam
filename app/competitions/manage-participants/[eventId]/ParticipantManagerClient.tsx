@@ -43,13 +43,15 @@ export default function ParticipantManagerClient({ event }: { event: any }) {
 
   const getPaymentStatusUI = (r: any) => {
     if (event.entryFee === 0) return <span style={{ color: '#10b981', fontSize: '12px' }}>Free Entry</span>;
-    if (!r.payment) return <span style={{ color: '#f59e0b', fontSize: '12px' }}>Payment Pending</span>;
+    if (!r.payment) return <span style={{ color: '#f59e0b', fontSize: '12px' }}>Payment Not Initiated</span>;
     if (r.payment.status === 'SUCCESS') return <span style={{ color: '#10b981', fontSize: '12px' }}>Paid</span>;
-    return <span style={{ color: '#ef4444', fontSize: '12px' }}>Payment Failed</span>;
+    if (r.payment.status === 'PENDING') return <span style={{ color: '#f59e0b', fontSize: '12px' }}>Verification Pending</span>;
+    return <span style={{ color: '#ef4444', fontSize: '12px' }}>Verification Pending</span>;
   };
 
   const canAccept = (r: any) => {
-    if (event.entryFee > 0 && (!r.payment || r.payment.status !== 'SUCCESS')) return false;
+    // For paid events: allow accept if payment is SUCCESS or PENDING (UTR submitted, organizer can verify)
+    if (event.entryFee > 0 && (!r.payment || r.payment.status === 'FAILED')) return false;
     return r.status === 'PENDING' || r.status === 'REJECTED';
   };
 
@@ -180,7 +182,7 @@ export default function ParticipantManagerClient({ event }: { event: any }) {
                       </div>
                       <div>
                         <div style={{ color: '#94a3b8', marginBottom: '2px' }}>Applied On</div>
-                        <div>{new Date(r.createdAt).toLocaleDateString()}</div>
+                        <div>{new Date(r.joinedAt).toLocaleDateString()}</div>
                       </div>
                       <div>
                         <div style={{ color: '#94a3b8', marginBottom: '2px' }}>Eligibility</div>
@@ -190,6 +192,13 @@ export default function ParticipantManagerClient({ event }: { event: any }) {
                         <div style={{ color: '#94a3b8', marginBottom: '2px' }}>Profile</div>
                         <Link href={`/user/${r.userId}`} style={{ color: '#3b82f6', textDecoration: 'none' }}>View Profile</Link>
                       </div>
+                      
+                      {r.payment && r.payment.transactionId && (
+                      <div style={{ gridColumn: 'span 2', backgroundColor: 'rgba(59, 130, 246, 0.05)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                        <div style={{ color: '#94a3b8', marginBottom: '2px', fontSize: '12px' }}>Transaction ID (Payment)</div>
+                        <div style={{ fontFamily: 'monospace', color: '#FFF', fontSize: '14px' }}>{r.payment.transactionId}</div>
+                      </div>
+                      )}
                     </div>
                     
                     {r.rejectionReason && (

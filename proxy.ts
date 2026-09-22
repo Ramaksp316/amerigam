@@ -12,24 +12,9 @@ export async function proxy(request: NextRequest) {
     return await updateSession(request)
   }
 
-  const { device } = userAgent(request)
-  const isDesktopComingSoonPage = pathname === '/desktop'
-  
-  // device.type is undefined for desktop browsers
-  const isDesktop = device.type !== 'mobile' && device.type !== 'tablet'
-
-  // Allow auth/onboarding pages on all device types (no device restriction)
+  // Removed Desktop restriction because we now support Desktop layout
+  // (Left the variables in case they are used later)
   const isPublicPath = PUBLIC_PATHS.some(p => pathname.startsWith(p)) || pathname === '/'
-
-  if (isDesktop && !isDesktopComingSoonPage) {
-    if (!pathname.startsWith('/api') && !pathname.startsWith('/_next')) {
-      return NextResponse.redirect(new URL('/desktop', request.url))
-    }
-  }
-
-  if (!isDesktop && isDesktopComingSoonPage) {
-    return NextResponse.redirect(new URL('/', request.url))
-  }
 
   // For onboarding route, skip further checks (avoid redirect loop)
   if (pathname.startsWith('/onboarding') || isPublicPath) {

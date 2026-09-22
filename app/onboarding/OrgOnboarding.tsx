@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { completeOrgOnboarding } from './actions';
 import { createClient } from '@/utils/supabase/client';
+import AvatarCropUpload from '../components/AvatarCropUpload';
 
 const ORG_TYPES = ['Sports Organization', 'Hackathon Organizer', 'Academic Institution', 'Government Body', 'NGO / Non-profit', 'Corporate Event Organizer', 'Cultural Organization', 'Gaming Tournament', 'Skill Competition', 'Other'];
 
@@ -20,27 +21,24 @@ export default function OrgOnboarding({ initialData }: { initialData: { name: st
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('');
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setLogoUploading(true);
-    try {
-      const supabase = createClient();
-      const fileName = `logo-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '')}`;
-      const { data, error: ue } = await supabase.storage.from('uploads').upload(fileName, file, { contentType: file.type });
-      if (ue) throw ue;
-      const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(data.path);
-      setLogoUrl(publicUrl);
-    } catch { setError('Logo upload failed.'); }
-    finally { setLogoUploading(false); }
-  };
-
   const handleFinish = () => {
     setError('');
     startTransition(async () => {
+      let finalAvatarUrl = logoUrl;
+      if (logoUrl && logoUrl.startsWith('data:')) {
+        const supabase = createClient();
+        const response = await fetch(logoUrl);
+        const blob = await response.blob();
+        const fileName = `logo-${Date.now()}.jpg`;
+        const { data, error } = await supabase.storage.from('uploads').upload(fileName, blob, { contentType: 'image/jpeg' });
+        if (data && !error) {
+          const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
+          finalAvatarUrl = urlData.publicUrl;
+        }
+      }
       const result = await completeOrgOnboarding({
         username, orgName, bio,
-        avatarUrl: logoUrl || undefined,
+        avatarUrl: finalAvatarUrl || undefined,
         orgType,
         location: city ? `${city}, ${country}`.trim().replace(/^, /, '') : country,
         country,
@@ -65,13 +63,9 @@ export default function OrgOnboarding({ initialData }: { initialData: { name: st
           <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 6px 0' }}>Organization Profile</h2>
           <p style={{ color: '#71717A', fontSize: '14px', margin: '0 0 24px 0' }}>Set up your organization's presence on Amerigam. Organizations can create and host competitions.</p>
 
-          <label htmlFor="org-logo" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
-            <div style={{ width: 96, height: 96, borderRadius: '16px', background: logoUrl ? 'transparent' : 'rgba(255,255,255,0.06)', border: '2px dashed rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-              {logoUrl ? <img src={logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '32px' }}>🏆</span>}
-            </div>
-            <span style={{ marginTop: '8px', fontSize: '13px', color: '#71717A' }}>{logoUploading ? 'Uploading…' : 'Add organization logo'}</span>
-          </label>
-          <input id="org-logo" type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
+            <AvatarCropUpload onImageReady={(base64) => setLogoUrl(base64)} placeholder="🏆" label="Add organization logo" />
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <input className="onboarding-input" placeholder="Organization Name" value={orgName} onChange={e => setOrgName(e.target.value)} />

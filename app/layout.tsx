@@ -7,6 +7,7 @@ import PWAInstallPrompt from './components/PWAInstallPrompt';
 import ActiveStatusTracker from './components/ActiveStatusTracker';
 import MobileBottomNav from './components/MobileBottomNav';
 import MobileDrawer from './components/MobileDrawer';
+import NavigationProgressBar from './components/NavigationProgressBar';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 
@@ -70,27 +71,36 @@ export default async function RootLayout({
   let networkUsers: any[] = [];
   
   if (userId) {
-    unreadCount = await prisma.notification.count({
-      where: { userId, isRead: false }
-    });
-    currentUser = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, name: true, username: true, avatarData: true, status: true, lastSeen: true, accountType: true }
-    });
+    const [unread, user] = await Promise.all([
+      prisma.notification.count({
+        where: { userId, isRead: false }
+      }),
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, name: true, username: true, avatarData: true, status: true, lastSeen: true, accountType: true }
+      })
+    ]);
+
+    unreadCount = unread;
+    currentUser = user;
 
     if (currentUser?.accountType === 'PERSONAL') {
-      joinedCommunities = await prisma.communityMember.findMany({
-        where: { userId },
-        include: { community: true },
-        orderBy: { joinedAt: 'desc' },
-        take: 5
-      });
-      networkUsers = await prisma.follow.findMany({
-        where: { followerId: userId, following: { accountType: 'PERSONAL' } },
-        include: { following: true },
-        orderBy: { createdAt: 'desc' },
-        take: 5
-      });
+      const [comms, follows] = await Promise.all([
+        prisma.communityMember.findMany({
+          where: { userId },
+          include: { community: true },
+          orderBy: { joinedAt: 'desc' },
+          take: 5
+        }),
+        prisma.follow.findMany({
+          where: { followerId: userId, following: { accountType: 'PERSONAL' } },
+          include: { following: true },
+          orderBy: { createdAt: 'desc' },
+          take: 5
+        })
+      ]);
+      joinedCommunities = comms;
+      networkUsers = follows;
     }
   }
 
@@ -98,6 +108,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} ${caveat.variable}`}>
         <ThemeProvider>
+          <NavigationProgressBar />
           <ActiveStatusTracker userId={userId} />
           <div className="mobile-only">
             <MobileDrawer currentUser={currentUser} joinedCommunities={joinedCommunities} networkUsers={networkUsers} />

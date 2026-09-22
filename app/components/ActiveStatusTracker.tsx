@@ -1,21 +1,38 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { pingActiveStatus } from '../actions/activeStatus';
 
 export default function ActiveStatusTracker({ userId }: { userId: string | undefined }) {
+  const isPinging = useRef(false);
+
   useEffect(() => {
     if (!userId) return;
 
-    // Ping immediately on mount
-    pingActiveStatus(userId);
+    const checkAndPing = () => {
+      if (isPinging.current) return;
+      try {
+        const lastPing = sessionStorage.getItem('amg_last_active_ping');
+        const now = Date.now();
+        // Only ping if at least 2 minutes (120 seconds) have passed
+        if (!lastPing || now - Number(lastPing) > 120 * 1000) {
+          sessionStorage.setItem('amg_last_active_ping', String(now));
+          isPinging.current = true;
+          pingActiveStatus(userId).finally(() => {
+            isPinging.current = false;
+          });
+        }
+      } catch (e) {}
+    };
 
-    // Update status every 45 seconds
-    const interval = setInterval(() => {
-      pingActiveStatus(userId);
-    }, 45 * 1000);
+    // Check with slight delay so page navigation completes first without database lock
+    const initialTimer = setTimeout(checkAndPing, 3000);
+    const interval = setInterval(checkAndPing, 90 * 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+    };
   }, [userId]);
 
   return null;

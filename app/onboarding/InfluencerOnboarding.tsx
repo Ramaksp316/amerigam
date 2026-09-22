@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { completeInfluencerOnboarding } from './actions';
 import { createClient } from '@/utils/supabase/client';
+import AvatarCropUpload from '../components/AvatarCropUpload';
 
 const INFLUENCER_TYPES = ['Nano (1K–10K)', 'Micro (10K–100K)', 'Macro (100K–1M)', 'Celebrity (1M+)'];
 const NICHES = ['Fashion', 'Lifestyle', 'Technology', 'Food & Cooking', 'Travel', 'Fitness & Health', 'Beauty', 'Gaming', 'Business & Finance', 'Entertainment', 'Sports', 'Education', 'Photography', 'Music', 'Other'];
@@ -20,25 +21,22 @@ export default function InfluencerOnboarding({ initialData }: { initialData: { n
   const [mainNiche, setMainNiche] = useState('');
   const [bio, setBio] = useState('');
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setAvatarUploading(true);
-    try {
-      const supabase = createClient();
-      const fileName = `avatar-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '')}`;
-      const { data, error: ue } = await supabase.storage.from('uploads').upload(fileName, file, { contentType: file.type });
-      if (ue) throw ue;
-      const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(data.path);
-      setAvatarUrl(publicUrl);
-    } catch { setError('Photo upload failed.'); }
-    finally { setAvatarUploading(false); }
-  };
-
   const handleFinish = () => {
     setError('');
     startTransition(async () => {
-      const result = await completeInfluencerOnboarding({ username, bio, avatarUrl: avatarUrl || undefined, influencerType, mainNiche });
+      let finalAvatarUrl = avatarUrl;
+      if (avatarUrl && avatarUrl.startsWith('data:')) {
+        const supabase = createClient();
+        const response = await fetch(avatarUrl);
+        const blob = await response.blob();
+        const fileName = `avatar-${Date.now()}.jpg`;
+        const { data, error } = await supabase.storage.from('uploads').upload(fileName, blob, { contentType: 'image/jpeg' });
+        if (data && !error) {
+          const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
+          finalAvatarUrl = urlData.publicUrl;
+        }
+      }
+      const result = await completeInfluencerOnboarding({ username, bio, avatarUrl: finalAvatarUrl || undefined, influencerType, mainNiche });
       if (result?.error) setError(result.error);
     });
   };
@@ -59,13 +57,9 @@ export default function InfluencerOnboarding({ initialData }: { initialData: { n
           <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 6px 0' }}>Influencer Profile</h2>
           <p style={{ color: '#71717A', fontSize: '14px', margin: '0 0 24px 0' }}>Set up your public identity.</p>
 
-          <label htmlFor="influencer-avatar" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
-            <div style={{ width: 96, height: 96, borderRadius: '50%', background: avatarUrl ? 'transparent' : 'rgba(255,255,255,0.06)', border: '2px dashed rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-              {avatarUrl ? <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '32px' }}>⭐</span>}
-            </div>
-            <span style={{ marginTop: '8px', fontSize: '13px', color: '#71717A' }}>{avatarUploading ? 'Uploading…' : 'Add profile photo'}</span>
-          </label>
-          <input id="influencer-avatar" type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
+            <AvatarCropUpload onImageReady={(base64) => setAvatarUrl(base64)} placeholder="⭐" label="Add profile photo" />
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <input className="onboarding-input" placeholder="Display Name" value={displayName} onChange={e => setDisplayName(e.target.value)} />

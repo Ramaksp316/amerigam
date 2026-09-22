@@ -321,9 +321,11 @@ model Event {
   registrationEnd   DateTime?
 
   // Custom added for UI
-  coverImage String?
-  prizePool  String?
-  entryFee   Float?  @default(0)
+  coverImage    String?
+  paymentQrCode String?
+  upiId         String?
+  prizePool     String?
+  entryFee      Float?  @default(0)
   currency   String? @default("INR")
 
   // Toggles

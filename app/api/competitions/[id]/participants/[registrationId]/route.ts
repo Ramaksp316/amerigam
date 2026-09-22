@@ -37,8 +37,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const updated = await prisma.eventRegistration.update({
       where: { id: registrationId },
-      data: updateData
+      data: updateData,
+      include: { payment: true }
     });
+
+    // When organizer accepts, also mark payment as SUCCESS
+    if (status === 'APPROVED' && updated.payment && updated.payment.status !== 'SUCCESS') {
+      await prisma.eventPayment.update({
+        where: { id: updated.payment.id },
+        data: { status: 'SUCCESS' }
+      });
+    }
 
     return NextResponse.json({ success: true, registration: updated });
   } catch (error: any) {

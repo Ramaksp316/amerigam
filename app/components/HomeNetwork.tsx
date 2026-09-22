@@ -29,22 +29,24 @@ export default async function HomeNetwork({ userId, currentUser }: { userId: str
     if (followingIds.includes(user.id)) return { user, score: -1, reasons: [] }; // Don't suggest people already followed
 
     let score = 0;
-    let reasons = [];
-    const matchText = (user.mainIdentity || '') + ' ' + (user.bio || '');
+    let reasons: string[] = [];
+    const mainIdentity = user.personalProfile?.mainIdentity || '';
+    const bio = user.bio || '';
+    const matchText = mainIdentity + ' ' + bio;
     
     const userTerms = [
-      user.mainIdentity,
-      ...(user.skills ? JSON.parse(user.skills) : [])
+      mainIdentity,
+      ...(user.personalProfile?.skills ? JSON.parse(user.personalProfile.skills) : [])
     ].filter(Boolean);
 
     userKeywords.forEach(kw => {
       if (matchText.toLowerCase().includes(kw)) { score++; }
       userTerms.forEach(t => {
-        if (t.toLowerCase().includes(kw)) { score++; reasons.push('Shared skill'); }
+        if (typeof t === 'string' && t.toLowerCase().includes(kw)) { score++; reasons.push('Shared skill'); }
       });
     });
 
-    if (user.mainIdentity && user.mainIdentity === currentUser.mainIdentity) {
+    if (mainIdentity && mainIdentity === currentUser.personalProfile?.mainIdentity) {
       score += 2;
       reasons.push('Same field');
     }
@@ -55,7 +57,7 @@ export default async function HomeNetwork({ userId, currentUser }: { userId: str
     .map(item => ({ ...item.user, relevanceContext: item.reasons[0] || 'Relevant to your field' }));
 
   if (usersToDisplay.length === 0) {
-    usersToDisplay = allUsers.filter(u => !followingIds.includes(u.id));
+    usersToDisplay = allUsers.filter(u => !followingIds.includes(u.id)) as any[];
   }
 
   return (
@@ -63,9 +65,9 @@ export default async function HomeNetwork({ userId, currentUser }: { userId: str
       <div style={{ padding: '0 16px', marginTop: '16px' }}>
         <h2 style={{ color: 'white', fontSize: '13px', fontWeight: 700, margin: '0 0 16px 0', letterSpacing: '0.5px' }}>SUGGESTED FOR YOUR NETWORK</h2>
         
-        {usersToDisplay.slice(0, 10).map(person => {
+        {usersToDisplay.slice(0, 10).map((person: any) => {
           const isVerified = person.followers && person.followers.length > 100;
-          let identityLine = person.mainIdentity || 'Amerigam Member';
+          let identityLine = person.personalProfile?.mainIdentity || 'Amerigam Member';
           if (person.outgoingConnections && person.outgoingConnections.length > 0) {
             const conn = person.outgoingConnections[0];
             identityLine = `${conn.role.replace('_', ' ')} @ ${conn.target?.name || conn.target?.username || ''}`;
@@ -73,10 +75,12 @@ export default async function HomeNetwork({ userId, currentUser }: { userId: str
 
           return (
             <div key={person.id} style={{ display: 'flex', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid #27272A', gap: '12px' }}>
-              <Link href={`/user/${person.id}`} style={{ flexShrink: 0, width: '50px', height: '50px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#27272A' }}>
-                {person.profilePictureUrl ? (
-                  <img src={person.profilePictureUrl} style={{width:'100%', height:'100%', objectFit:'cover'}} />
-                ) : null}
+              <Link href={`/user/${person.id}`} style={{ flexShrink: 0, width: '50px', height: '50px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#27272A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {person.avatarData ? (
+                  <img src={person.avatarData.startsWith('http') || person.avatarData.startsWith('data:') ? person.avatarData : `data:image/jpeg;base64,${person.avatarData}`} style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                ) : (
+                  <span style={{ color: '#fff', fontSize: '18px', fontWeight: 600 }}>{(person.name || person.username || 'U').charAt(0).toUpperCase()}</span>
+                )}
               </Link>
               
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>

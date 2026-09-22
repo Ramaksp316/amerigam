@@ -46,6 +46,7 @@ export default async function UserProfilePage({
       eventRegistrations: { include: { event: true } },
       achievements: true,
       personalProfile: true,
+      creatorProfile: true,
       outgoingConnections: { include: { target: true } },
       incomingConnections: { include: { source: true } }
     }
@@ -53,21 +54,32 @@ export default async function UserProfilePage({
 
   if (!user) notFound();
 
+  let currentUserData = null;
+  if (currentUserId) {
+    currentUserData = await prisma.user.findUnique({
+      where: { id: currentUserId }
+    });
+  }
+
   const isOwner = currentUserId === targetUserId;
   const isVerified = user.accountType !== 'PERSONAL' || user.followers.length > 100;
 
   // Identity line
   let identityLine = '';
-  if (user.personalProfile?.mainIdentity) {
+  if (user.creatorProfile?.creatorType) {
+    identityLine = user.creatorProfile.creatorType;
+  } else if (user.personalProfile?.mainIdentity) {
     identityLine = user.personalProfile.mainIdentity;
   } else if (user.accountType === 'BUSINESS') {
     identityLine = 'Business';
   } else if (user.accountType === 'CREATOR') {
-    identityLine = 'Creator';
+    identityLine = 'Professional Editor';
   } else if (user.accountType === 'INFLUENCER') {
     identityLine = 'Influencer';
   } else if (user.accountType === 'ORGANIZATION') {
     identityLine = 'Organization';
+  } else {
+    identityLine = 'Professional Editor';
   }
 
   // Parse JSON traits — distinguish skills vs interests vs hobbies
@@ -95,6 +107,7 @@ export default async function UserProfilePage({
   return (
     <UserProfileClient
       user={user}
+      currentUser={currentUserData}
       currentUserId={currentUserId}
       targetUserId={targetUserId}
       isOwner={isOwner}

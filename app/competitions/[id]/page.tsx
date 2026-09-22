@@ -3,18 +3,33 @@ import { notFound, redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronLeft, Share, MapPin, Calendar, Users, Trophy, IndianRupee, Clock, Building2, UserCircle2, ChevronRight } from 'lucide-react';
-import BackButton from '../../components/BackButton';
+import {
+  MapPin,
+  Calendar,
+  Clock,
+  Trophy,
+  ShieldCheck,
+  CheckCircle2,
+  Ticket,
+  Headphones,
+  LayoutGrid,
+  ChevronRight,
+  Sparkles
+} from 'lucide-react';
+import AppRightSidebar from '../../components/AppRightSidebar';
 
-export default async function CompetitionDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export const dynamic = 'force-dynamic';
+
+export default async function CompetitionDetailPage({
+  params
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
 
-  if (!userId) {
-    redirect('/login');
-  }
+  if (!userId) redirect('/login');
 
-  // Await the params to avoid Next.js sync params access warning in Next 15 (if applicable) or to be safe
   const resolvedParams = await params;
   const eventId = resolvedParams.id;
 
@@ -22,366 +37,653 @@ export default async function CompetitionDetailPage({ params }: { params: Promis
     where: { id: eventId },
     include: {
       creator: {
-        select: { id: true, name: true, avatarData: true, username: true }
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          avatarData: true,
+          amerigamPoints: true,
+          _count: { select: { followers: true, following: true } }
+        }
       },
       _count: {
         select: { registrations: true }
-      },
-      results: {
-        include: {
-          user: {
-            select: { id: true, name: true, avatarData: true, username: true }
-          }
-        },
-        orderBy: { rank: 'asc' }
       }
     }
   });
 
   if (!event) return notFound();
 
-  // Determine Status
-  const now = new Date();
-  const regStart = event.registrationStart ? new Date(event.registrationStart) : null;
-  const regEnd = event.registrationEnd ? new Date(event.registrationEnd) : null;
-  const compStart = new Date(event.startDate);
-  const compEnd = new Date(event.endDate);
-
-  const isRegistrationOpen = regStart && regEnd && now >= regStart && now <= regEnd;
-  const isCompleted = now > compEnd;
-  const isLive = now >= compStart && now <= compEnd;
-  
-  let statusText = 'Upcoming';
-  let statusColor = '#F59E0B';
-  let canParticipate = false;
-  let btnText = 'Participate';
-
-  let actionLink = '#';
-
-  if (isCompleted) {
-    statusText = 'Completed';
-    statusColor = '#EF4444';
-    btnText = 'Results available later';
-  } else if (isLive) {
-    statusText = 'Live Now';
-    statusColor = '#10B981';
-    btnText = 'Event is Live';
-  } else if (isRegistrationOpen) {
-    const hoursLeft = Math.floor((regEnd!.getTime() - now.getTime()) / (1000 * 60 * 60));
-    if (hoursLeft < 48) {
-      statusText = 'Ending Soon';
-      statusColor = '#EF4444';
-    } else {
-      statusText = 'Registration Open';
-      statusColor = '#3B82F6';
+  // Check if current user is registered
+  const userRegistration = await prisma.eventRegistration.findUnique({
+    where: {
+      userId_eventId: { userId, eventId }
     }
-    canParticipate = true;
-    actionLink = `/competitions/${event.id}/apply`;
-  } else if (regEnd && now > regEnd && now < compStart) {
-    statusText = 'Registration Closed';
-    statusColor = '#6B7280';
-    btnText = 'Registration Closed';
-  }
-
-  // Check if registered
-  const registration = await prisma.eventRegistration.findUnique({
-    where: { userId_eventId: { userId, eventId } },
-    include: { payment: true }
   });
 
-  const isCreator = event.creatorId === userId;
+  // Date and Time formatting
+  const startDate = new Date(event.startDate);
+  const formattedDate = startDate.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  }).toUpperCase();
+  const formattedTime = startDate.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  }).replace(' ', '');
 
-  if (isCreator) {
-    btnText = 'Manage Participants';
-    actionLink = `/competitions/manage-participants/${event.id}`;
-    canParticipate = true;
-  } else if (registration) {
-    canParticipate = false;
-    if (registration.status === 'PENDING' && registration.payment?.status === 'PENDING') {
-      btnText = 'Complete Payment';
-      actionLink = `/competitions/payment/${registration.id}`;
-      // Highlight button a bit more for pending
-      canParticipate = true; // allow click
-    } else {
-      if (registration.status === 'APPROVED') {
-        if (registration.qualificationStatus === 'QUALIFIED') btnText = 'Qualified';
-        else if (registration.qualificationStatus === 'NON_QUALIFIED') btnText = 'Not Qualified';
-        else btnText = 'Registered';
-      } else if (registration.status === 'REJECTED') {
-        btnText = 'Not Accepted';
-      } else {
-        btnText = 'Application Pending';
-      }
-      actionLink = `/competitions/${event.id}/manage`;
-      canParticipate = true; // allow click to go to manage page
-    }
-  }
+  // Address
+  const fullAddress =
+    event.venue ||
+    (event.city ? `${event.city}, ${event.state || 'Gujarat'}` : 'SURAT - Opp VR Mall, Dumas Rd, Magdalla, Surat, Gujarat 395007');
+
+  // Tags
+  const eventTags = event.tags
+    ? event.tags.split(',').map((t) => t.trim())
+    : [event.category || 'Running', 'New Friends', 'Your Potential', 'Sports'];
+
+  // Organizer details
+  const organizerName = event.creator?.name || event.creator?.username || 'jubelmorac';
+  const organizerHandle = `@${event.creator?.username || 'jubelmorac'}`;
+  const organizerAvatar = event.creator?.avatarData;
+  const organizerFollowers = event.creator?._count?.followers ? `${event.creator._count.followers}` : '101K';
+  const organizerAP = event.creator?.amerigamPoints || 5003;
+  const organizerNetwork = event.creator?._count?.following ? `${event.creator._count.following}` : '13K';
+
+  // Ticket Pricing
+  const priceDisplay = event.entryFee && event.entryFee > 0 ? `$${event.entryFee.toFixed(2)}/150AP` : '$60.00/150AP';
+  const winnerPrize = event.prizePool || '$500';
 
   return (
-    <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', paddingBottom: '100px', backgroundColor: '#000000', color: '#FFFFFF', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      {/* Hero Section */}
-      <div style={{ position: 'relative', width: '100%', height: '240px', backgroundColor: '#111' }}>
-        {event.coverImage && (
-          <Image src={event.coverImage} alt={event.name} fill style={{ objectFit: 'cover', opacity: 0.8 }} />
-        )}
-        <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 10 }}>
-          <BackButton fallback="/competitions" />
-        </div>
-        <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
-          <button style={{ width: '36px', height: '36px', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: '50%', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF' }}>
-            <Share size={18} />
-          </button>
-        </div>
-        <div style={{ position: 'absolute', bottom: '16px', left: '16px', right: '16px' }}>
-          <div style={{ display: 'inline-block', backgroundColor: statusColor, color: '#FFF', fontSize: '12px', fontWeight: 700, padding: '4px 10px', borderRadius: '12px', marginBottom: '8px' }}>
-            {statusText}
-          </div>
-          <h1 style={{ fontSize: '24px', fontWeight: 800, margin: 0, letterSpacing: '-0.5px', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{event.name}</h1>
-        </div>
-      </div>
+    <div style={{
+      width: '100%',
+      minHeight: '100vh',
+      backgroundColor: '#000000',
+      color: '#FFFFFF',
+      display: 'flex',
+      justifyContent: 'flex-start',
+      overflowX: 'hidden'
+    }}>
+      {/* 3-COLUMN WRAPPER (Fluid layout, zero horizontal overflow) */}
+      <div style={{
+        width: '100%',
+        minWidth: 0,
+        display: 'flex',
+        minHeight: '100vh',
+        overflowX: 'hidden'
+      }}>
+        {/* Center Main Content Area */}
+        <div style={{
+          flex: 1,
+          minWidth: 0,
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          padding: '24px 28px 100px 28px',
+          boxSizing: 'border-box',
+          overflowX: 'hidden'
+        }}>
 
-      <div style={{ padding: '20px' }}>
-        {/* Core Info */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '32px', height: '32px', backgroundColor: '#1F1F22', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Calendar size={16} color="#3B82F6" />
-            </div>
-            <div>
-              <div style={{ fontSize: '11px', color: '#A1A1AA', fontWeight: 500 }}>Competition Date</div>
-              <div style={{ fontSize: '13px', fontWeight: 600 }}>{compStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '32px', height: '32px', backgroundColor: '#1F1F22', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MapPin size={16} color="#3B82F6" />
-            </div>
-            <div>
-              <div style={{ fontSize: '11px', color: '#A1A1AA', fontWeight: 500 }}>Location</div>
-              <div style={{ fontSize: '13px', fontWeight: 600, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{event.locationType === 'ONLINE' ? 'Online' : event.venue}</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '32px', height: '32px', backgroundColor: '#1F1F22', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <IndianRupee size={16} color="#3B82F6" />
-            </div>
-            <div>
-              <div style={{ fontSize: '11px', color: '#A1A1AA', fontWeight: 500 }}>Entry Fee</div>
-              <div style={{ fontSize: '13px', fontWeight: 600 }}>{event.entryFee ? `₹${event.entryFee}` : 'Free'}</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '32px', height: '32px', backgroundColor: '#1F1F22', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Users size={16} color="#3B82F6" />
-            </div>
-            <div>
-              <div style={{ fontSize: '11px', color: '#A1A1AA', fontWeight: 500 }}>Participants</div>
-              <div style={{ fontSize: '13px', fontWeight: 600 }}>{event._count.registrations} {event.participantLimit ? `/ ${event.participantLimit}` : ''}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons & Result */}
-        {event.resultStatus === 'PUBLISHED' && registration && !isCreator && (
-          <div style={{ backgroundColor: '#1F1F22', padding: '16px', borderRadius: '12px', marginBottom: '32px', border: '1px solid #3F3F46', textAlign: 'center' }}>
-            <div style={{ fontSize: '13px', color: '#A1A1AA', marginBottom: '8px', fontWeight: 600 }}>Your Result</div>
-            {(() => {
-              const uRes = event.results.find((r: any) => r.userId === userId);
-              if (uRes) {
-                let rText = `Top 10 - #${uRes.rank}`;
-                let rColor = '#FFF';
-                if (uRes.rank === 1) { rText = '#1 — Winner'; rColor = '#F59E0B'; }
-                else if (uRes.rank === 2) { rText = '#2 — Runner-up'; rColor = '#94A3B8'; }
-                else if (uRes.rank === 3) { rText = '#3 — Third Place'; rColor = '#B45309'; }
-                return <div style={{ fontSize: '20px', fontWeight: 800, color: rColor }}>{rText}</div>;
-              } else {
-                return <div style={{ fontSize: '18px', fontWeight: 700, color: '#A1A1AA' }}>Did not place</div>;
-              }
-            })()}
-          </div>
-        )}
-
-        {isCreator ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
-              <Link href={`/create?type=competition&edit=${event.id}`} style={{
-                display: 'block',
-                width: '100%',
-                backgroundColor: '#2563EB',
-                color: '#FFFFFF',
-                padding: '16px',
-                textAlign: 'center',
-                borderRadius: '12px',
-                fontWeight: 700,
-                fontSize: '16px',
-                textDecoration: 'none'
-              }}>
-                Edit Competition
-              </Link>
-              <Link href={`/competitions/manage-participants/${event.id}`} style={{
-                display: 'block',
-                width: '100%',
-                backgroundColor: '#1F1F22',
-                color: '#FFFFFF',
-                padding: '16px',
-                textAlign: 'center',
-                borderRadius: '12px',
-                fontWeight: 700,
-                fontSize: '16px',
-                textDecoration: 'none'
-              }}>
-                Manage Participants
-              </Link>
-            <Link href={`/competitions/${event.id}/results/manage`} style={{
-              display: 'block',
-              width: '100%',
-              backgroundColor: '#1F1F22',
-              color: '#FFFFFF',
-              border: '1px solid #3F3F46',
-              textAlign: 'center',
-              padding: '16px',
-              borderRadius: '12px',
-              fontWeight: 700,
-              fontSize: '16px',
-              textDecoration: 'none'
-            }}>
-              Manage Results
-            </Link>
-          </div>
-        ) : (
-          <Link href={actionLink} style={{
-            display: 'block',
-            width: '100%',
-            backgroundColor: canParticipate ? '#1D9BF0' : '#1F1F22',
-            color: canParticipate ? '#FFFFFF' : '#A1A1AA',
-            textAlign: 'center',
-            padding: '16px',
-            borderRadius: '12px',
-            fontWeight: 700,
-            fontSize: '16px',
-            textDecoration: 'none',
-            marginBottom: '32px',
-            pointerEvents: canParticipate ? 'auto' : 'none'
+          {/* ========================================================
+              EVENT TITLE (e.g. WAR-E-Man)
+             ======================================================== */}
+          <h1 style={{
+            fontSize: '28px',
+            fontWeight: 800,
+            color: '#FFFFFF',
+            marginBottom: '20px',
+            letterSpacing: '-0.5px'
           }}>
-            {btnText}
-          </Link>
-        )}
+            {event.name}
+          </h1>
 
-        {/* Separator */}
-        <div style={{ height: '1px', backgroundColor: '#1F1F22', marginBottom: '24px' }} />
-
-        {/* Results Section */}
-        {event.resultStatus === 'PUBLISHED' && event.results && event.results.length > 0 && (
-          <div style={{ marginBottom: '32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-              <Trophy size={20} color="#F59E0B" />
-              <h2 style={{ fontSize: '18px', fontWeight: 800, margin: 0, color: '#F59E0B' }}>Official Results</h2>
+          {/* ========================================================
+              TOP SECTION: POSTER + EVENT QUICK DETAILS + ORGANIZER
+             ======================================================== */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(200px, 240px) 1fr minmax(200px, 240px)',
+            gap: '20px',
+            alignItems: 'start',
+            marginBottom: '36px'
+          }}>
+            {/* 1. Event Cover Poster */}
+            <div style={{
+              width: '240px',
+              height: '350px',
+              borderRadius: '20px',
+              backgroundColor: '#1E1E22',
+              overflow: 'hidden',
+              position: 'relative',
+              boxShadow: '0 16px 40px rgba(0, 0, 0, 0.75)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              flexShrink: 0
+            }}>
+              <img
+                src={event.coverImage || '/images/competitions/poster_comp_3.png'}
+                alt={event.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+              {/* Amerigam Watermark icon */}
+              <div style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                opacity: 0.85,
+                zIndex: 2,
+                pointerEvents: 'none'
+              }}>
+                <img
+                  src="/amerigam-logo-transparent.png"
+                  alt="logo"
+                  style={{ width: '22px', height: '12px', objectFit: 'contain' }}
+                />
+              </div>
             </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {event.results.map((res: any) => {
-                let badgeColor = '#3F3F46';
-                let badgeText = res.type.replace('_', ' ');
-                if (res.rank === 1) badgeColor = '#F59E0B'; // Gold
-                else if (res.rank === 2) badgeColor = '#94A3B8'; // Silver
-                else if (res.rank === 3) badgeColor = '#B45309'; // Bronze
-                else badgeText = `Top 10 - #${res.rank}`;
 
-                const isTop3 = res.rank <= 3;
+            {/* 2. Quick Details: Location, Pills, Prize, Book Tickets */}
+            <div style={{
+              flex: 1,
+              minWidth: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              paddingTop: '2px'
+            }}>
+              {/* Location String */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <MapPin size={16} color="#FFFFFF" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span style={{ fontSize: '12px', color: '#D4D4D8', lineHeight: '1.4' }}>
+                  {fullAddress}
+                </span>
+              </div>
 
-                return (
-                  <Link href={`/user/${res.user.id}`} key={res.id} style={{
+              {/* Date & Time Badge Pills (Side-by-Side without wrapping) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  backgroundColor: '#1E1E22',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '8px',
+                  padding: '6px 14px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#FFFFFF'
+                }}>
+                  <Calendar size={13} color="#A1A1AA" />
+                  <span>{formattedDate}</span>
+                </div>
+
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  backgroundColor: '#1E1E22',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '8px',
+                  padding: '6px 14px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#FFFFFF'
+                }}>
+                  <Clock size={13} color="#A1A1AA" />
+                  <span>{formattedTime}</span>
+                </div>
+              </div>
+
+              {/* Tag Pills */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {eventTags.map((tag, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      backgroundColor: '#18181B',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '6px',
+                      padding: '5px 12px',
+                      fontSize: '11px',
+                      color: '#D4D4D8'
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              {/* Winner Prize */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '13px',
+                fontWeight: 700,
+                color: '#FACC15',
+                marginTop: '2px'
+              }}>
+                <span style={{ fontSize: '15px' }}>🏆</span>
+                <span>Winner Price-{winnerPrize}</span>
+              </div>
+
+              {/* Price & Book Tickets Button */}
+              <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+                <div style={{ fontSize: '11px', color: '#71717A', marginBottom: '2px' }}>
+                  Price
+                </div>
+                <div style={{ fontSize: '16px', fontWeight: 800, color: '#FFFFFF', marginBottom: '12px' }}>
+                  {priceDisplay}
+                </div>
+
+                {userRegistration ? (
+                  <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '16px',
-                    backgroundColor: isTop3 ? 'rgba(245, 158, 11, 0.1)' : '#0A0A0A',
-                    border: `1px solid ${isTop3 ? 'rgba(245, 158, 11, 0.2)' : '#1F1F22'}`,
-                    borderRadius: '12px',
-                    padding: '16px',
-                    textDecoration: 'none'
+                    justifyContent: 'center',
+                    gap: '8px',
+                    backgroundColor: '#065F46',
+                    color: '#FFFFFF',
+                    borderRadius: '999px',
+                    height: '42px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    border: '1px solid #10B981'
                   }}>
-                    <div style={{
-                      width: isTop3 ? '48px' : '36px',
-                      height: isTop3 ? '48px' : '36px',
-                      borderRadius: '50%',
-                      overflow: 'hidden',
-                      position: 'relative',
-                      backgroundColor: '#1F1F22'
-                    }}>
-                      {res.user.avatarData && res.user.avatarData.startsWith('http') ? (
-                        <Image src={res.user.avatarData} alt={res.user.name || ''} fill style={{ objectFit: 'cover' }} />
-                      ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <UserCircle2 size={isTop3 ? 20 : 16} color="#FFF" />
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '12px', fontWeight: 800, color: badgeColor, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-                        {badgeText}
-                      </div>
-                      <div style={{ fontSize: isTop3 ? '16px' : '15px', fontWeight: 700, color: '#FFF' }}>{res.user.name}</div>
-                    </div>
+                    <CheckCircle2 size={16} />
+                    <span>Ticket Booked</span>
+                  </div>
+                ) : (
+                  <Link
+                    href={`/competitions/${event.id}/apply`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: '#000000',
+                      color: '#FFFFFF',
+                      border: '1.5px solid #EAB308',
+                      borderRadius: '999px',
+                      height: '42px',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                      transition: 'all 0.15s ease',
+                      boxShadow: '0 4px 16px rgba(234, 179, 8, 0.2)'
+                    }}
+                  >
+                    Book Tickets
                   </Link>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* About */}
-        <div style={{ marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>About</h2>
-          <div style={{ fontSize: '14px', color: '#D4D4D8', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
-            {event.description}
-          </div>
-        </div>
-
-        {/* Eligibility & Info */}
-        <div style={{ marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Eligibility & Rules</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#0A0A0A', border: '1px solid #1F1F22', borderRadius: '12px', padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-              <span style={{ color: '#A1A1AA' }}>Participation</span>
-              <span style={{ fontWeight: 600 }}>{event.allowTeams ? 'Individual or Team' : 'Individual Only'}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-              <span style={{ color: '#A1A1AA' }}>Category</span>
-              <span style={{ fontWeight: 600 }}>{event.category}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-              <span style={{ color: '#A1A1AA' }}>Scope</span>
-              <span style={{ fontWeight: 600 }}>{event.eventLevel}</span>
-            </div>
-            {event.prizePool && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', margin: '4px 0 0 0', paddingTop: '12px', borderTop: '1px solid #1F1F22' }}>
-                <span style={{ color: '#A1A1AA', display: 'flex', alignItems: 'center', gap: '6px' }}><Trophy size={14} color="#F59E0B" /> Prize Pool</span>
-                <span style={{ fontWeight: 700, color: '#F59E0B' }}>{event.prizePool}</span>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
 
-        {/* Organization */}
-        <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Organized by</h2>
-          <Link href={`/user/${event.creator.id}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: '#0A0A0A', border: '1px solid #1F1F22', borderRadius: '12px', padding: '16px', textDecoration: 'none' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}>
-              {event.creator.avatarData && event.creator.avatarData.startsWith('http') ? (
-                <Image src={event.creator.avatarData} alt={event.creator.name || 'Org'} fill style={{ objectFit: 'cover' }} />
-              ) : (
-                <div style={{ width: '100%', height: '100%', backgroundColor: '#1F1F22', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Building2 size={24} color="#71717A" />
+            {/* 3. The Organizer Card (Top Right) */}
+            <div style={{
+              width: '240px',
+              backgroundColor: '#16161A',
+              borderRadius: '22px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              padding: '18px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.5)',
+              flexShrink: 0
+            }}>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', textAlign: 'center' }}>
+                The Organizer
+              </div>
+
+              {/* Organizer Avatar & Handle */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                <div style={{
+                  width: '52px',
+                  height: '52px',
+                  borderRadius: '50%',
+                  backgroundColor: '#27272A',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px solid rgba(255, 255, 255, 0.15)'
+                }}>
+                  <img
+                    src={organizerAvatar || '/images/competitions/gallery_thumb1.png'}
+                    alt={organizerName}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
                 </div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', marginTop: '2px' }}>
+                  {organizerHandle}
+                </div>
+                <div style={{ fontSize: '10px', color: '#71717A' }}>
+                  The Organizer
+                </div>
+              </div>
+
+              {/* Stats Row: Followers | AP | Network */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-around',
+                textAlign: 'center',
+                borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                padding: '8px 0'
+              }}>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#FFFFFF' }}>{organizerFollowers}</div>
+                  <div style={{ fontSize: '9px', color: '#71717A' }}>Followers</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#FFFFFF' }}>{organizerAP}</div>
+                  <div style={{ fontSize: '9px', color: '#71717A' }}>AP</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#FFFFFF' }}>{organizerNetwork}</div>
+                  <div style={{ fontSize: '9px', color: '#71717A' }}>Network</div>
+                </div>
+              </div>
+
+              {/* Work Experience */}
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#FFFFFF', marginBottom: '4px' }}>
+                  Work Experience
+                </div>
+                <p style={{ fontSize: '10px', color: '#A1A1AA', lineHeight: '1.4', margin: 0 }}>
+                  Experienced in planning and coordinating events from concept to completion. Skilled in managing event schedules, coordinating with clients and vendors, handling registrations, and ensuring smooth event operations. Strong communication, organizational, and problem-solving and memorable events.
+                </p>
+              </div>
+
+              {/* FastTicket Trust Badges */}
+              <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '10px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#FFFFFF', textAlign: 'center', marginBottom: '8px' }}>
+                  FastTicket Your Reliable<br />Ticket Partner
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '2px' }}>
+                    <ShieldCheck size={16} color="#22C55E" />
+                    <span style={{ fontSize: '9px', fontWeight: 700, color: '#FFFFFF' }}>Secure Checkout</span>
+                    <span style={{ fontSize: '8px', color: '#71717A' }}>Fast & Secured Payment</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '2px' }}>
+                    <CheckCircle2 size={16} color="#22C55E" />
+                    <span style={{ fontSize: '9px', fontWeight: 700, color: '#FFFFFF' }}>Instant confirmation</span>
+                    <span style={{ fontSize: '8px', color: '#71717A' }}>Refund guarantee option</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '2px' }}>
+                    <Ticket size={16} color="#EAB308" />
+                    <span style={{ fontSize: '9px', fontWeight: 700, color: '#FFFFFF' }}>Official Ticket</span>
+                    <span style={{ fontSize: '8px', color: '#71717A' }}>Used by over 10M+ people</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '2px' }}>
+                    <Headphones size={16} color="#EAB308" />
+                    <span style={{ fontSize: '9px', fontWeight: 700, color: '#FFFFFF' }}>24/7 Customer Service</span>
+                    <span style={{ fontSize: '8px', color: '#71717A' }}>Reliable & Dedicated support</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ========================================================
+              ABOUT COMPETITION
+             ======================================================== */}
+          <div style={{ marginBottom: '36px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#FFFFFF', marginBottom: '14px' }}>
+              About Competition
+            </h2>
+            <div style={{
+              fontSize: '13px',
+              color: '#D4D4D8',
+              lineHeight: '1.6',
+              whiteSpace: 'pre-line'
+            }}>
+              {event.description || (
+                `${event.name} is a premier competition designed around discipline, athletic ability, technique, reflexes, stamina, and sportsmanship. The main idea of the competition is to bring participants together in a controlled sporting environment where they can demonstrate their skills against opponents of similar experience.\n\nThe competition begins with a registration and verification stage, where participants provide their details and previous training. Before competing, participants are placed into appropriate categories based on age, weight, and experience level. This helps make the matches balanced and fair.`
               )}
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '15px', fontWeight: 700, color: '#FFF' }}>{event.creator.name}</div>
-              <div style={{ fontSize: '13px', color: '#A1A1AA' }}>@{event.creator.username}</div>
+          </div>
+
+          {/* ========================================================
+              COMPETITION LOCATION & PHOTO GALLERY + ORGANIZER CARD
+             ======================================================== */}
+          <div style={{ marginBottom: '36px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#FFFFFF', marginBottom: '14px' }}>
+              Competition Location
+            </h2>
+
+            {/* Location Callout Bar with Get Direction */}
+            <div style={{
+              backgroundColor: '#18181B',
+              borderRadius: '12px',
+              padding: '12px 18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              marginBottom: '16px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(234, 179, 8, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <MapPin size={18} color="#EAB308" />
+                </div>
+                <span style={{ fontSize: '12px', color: '#E4E4E7' }}>
+                  {fullAddress}
+                </span>
+              </div>
+
+              <a
+                href={`https://maps.google.com/?q=${encodeURIComponent(fullAddress)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#FFFFFF',
+                  backgroundColor: 'transparent',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '999px',
+                  padding: '6px 14px',
+                  textDecoration: 'none',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                Get Direction
+              </a>
             </div>
-            <ChevronRight size={18} color="#71717A" />
-          </Link>
+
+            {/* 2-Column Split: Photo Gallery (Left) + The Organizer (Right) matching Figma media_1790074840365.png */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 240px',
+              gap: '20px',
+              alignItems: 'start'
+            }}>
+              {/* Left Column: 5-Photo Gallery Grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '46% 54%',
+                gap: '10px',
+                height: '310px',
+                borderRadius: '20px',
+                overflow: 'hidden'
+              }}>
+                {/* Left Large Photo */}
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: '#18181B',
+                  overflow: 'hidden',
+                  borderRadius: '12px'
+                }}>
+                  <img
+                    src="/images/competitions/gallery_hero.png"
+                    alt="Track"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+
+                {/* Right 2x2 Grid */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gridTemplateRows: '1fr 1fr',
+                  gap: '8px',
+                  height: '100%'
+                }}>
+                  <div style={{ overflow: 'hidden', backgroundColor: '#18181B', borderRadius: '10px' }}>
+                    <img
+                      src="/images/competitions/gallery_thumb1.png"
+                      alt="Training"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </div>
+
+                  <div style={{ overflow: 'hidden', backgroundColor: '#18181B', borderRadius: '10px' }}>
+                    <img
+                      src="/images/competitions/gallery_thumb2.png"
+                      alt="Sprinters"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </div>
+
+                  <div style={{ overflow: 'hidden', backgroundColor: '#18181B', borderRadius: '10px' }}>
+                    <img
+                      src="/images/competitions/gallery_thumb3.png"
+                      alt="Agility"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </div>
+
+                  {/* +11 More Overlay Photo */}
+                  <div style={{
+                    position: 'relative',
+                    overflow: 'hidden',
+                    backgroundColor: '#18181B',
+                    borderRadius: '10px'
+                  }}>
+                    <img
+                      src="/images/competitions/gallery_thumb4.png"
+                      alt="Runners"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      inset: 0,
+                      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      color: '#FFFFFF',
+                      fontSize: '13px',
+                      fontWeight: 700
+                    }}>
+                      <LayoutGrid size={15} color="#FFFFFF" />
+                      <span>11 More</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: The Organizer Card (matching Figma) */}
+              <div style={{
+                width: '240px',
+                backgroundColor: '#16161A',
+                borderRadius: '22px',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                padding: '18px 14px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '14px',
+                boxShadow: '0 8px 30px rgba(0, 0, 0, 0.5)',
+                flexShrink: 0
+              }}>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', textAlign: 'center' }}>
+                  The Organizer
+                </div>
+
+                {/* Organizer Avatar & Handle */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                  <div style={{
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '50%',
+                    backgroundColor: '#27272A',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '2px solid rgba(255, 255, 255, 0.15)'
+                  }}>
+                    <img
+                      src={organizerAvatar || '/images/competitions/gallery_thumb1.png'}
+                      alt={organizerName}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', marginTop: '2px' }}>
+                    {organizerHandle}
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#71717A' }}>
+                    The Organizer
+                  </div>
+                </div>
+
+                {/* Stats Row: Followers | AP | Network */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-around',
+                  textAlign: 'center',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                  padding: '8px 0'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#FFFFFF' }}>{organizerFollowers}</div>
+                    <div style={{ fontSize: '9px', color: '#71717A' }}>Followers</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#FFFFFF' }}>{organizerAP}</div>
+                    <div style={{ fontSize: '9px', color: '#71717A' }}>AP</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#FFFFFF' }}>{organizerNetwork}</div>
+                    <div style={{ fontSize: '9px', color: '#71717A' }}>Network</div>
+                  </div>
+                </div>
+
+                {/* Work Experience */}
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#FFFFFF', marginBottom: '4px' }}>
+                    Work Experience
+                  </div>
+                  <p style={{ fontSize: '10px', color: '#A1A1AA', lineHeight: '1.4', margin: 0 }}>
+                    Experienced in planning and coordinating events from concept to completion. Skilled in managing event schedules, coordinating with clients and vendors, handling registrations, and ensuring smooth event operations. Strong communication, organizational, and problem-solving and memorable events.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
         </div>
-        
+
+        {/* Right Rail: User Profile Card & Joined Competitions */}
+        <AppRightSidebar userId={userId} mode="competitions" />
       </div>
     </div>
   );

@@ -200,10 +200,10 @@ export async function createOrganizationInline(data: {
       }
     });
   } else if (data.accountType === 'ORGANIZATION') {
-    await prisma.orgProfile.create({
+    await prisma.organizationProfile.create({
       data: {
         userId: newOrg.id,
-        organizationType: data.industry, // Re-using industry as type for simplicity
+        orgType: data.industry || null,
       }
     });
   }

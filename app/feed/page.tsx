@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import ReelFeedClient from '../components/ReelFeedClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function FeedPage() {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
@@ -34,26 +36,48 @@ export default async function FeedPage() {
     ].filter(Boolean).map(k => String(k).toLowerCase());
   }
 
-  // Fetch only video posts with 9:16 aspect ratio
+  // Fetch video posts: prioritize 9:16 vertical reels
   const allReels = await prisma.post.findMany({
     where: {
       mediaType: 'video',
-      aspectRatio: '9:16',
-      mediaUrl: { not: null }
+      mediaUrl: { not: null },
+      OR: [
+        { aspectRatio: '9:16' },
+        { aspectRatio: null }
+      ]
     },
     include: {
       author: {
-        select: { id: true, name: true, username: true, avatarData: true, accountType: true, personalProfile: true }
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          avatarData: true,
+          accountType: true,
+          personalProfile: true,
+          followers: {
+            where: { followerId: userId }
+          }
+        }
       },
       _count: {
         select: { likes: true, comments: true }
       },
       likes: {
-        where: { userId } // Check if current user liked it
+        where: { userId } // Check if current logged-in user liked it
+      },
+      comments: {
+        include: {
+          author: {
+            select: { id: true, name: true, username: true, avatarData: true }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 30
       }
     },
     orderBy: { createdAt: 'desc' },
-    take: 100 // Pool to score
+    take: 100 // Pool of reels to score
   });
 
   const scoredReels = allReels.map(reel => {
@@ -89,11 +113,16 @@ export default async function FeedPage() {
   const reels = scoredReels
     .sort((a, b) => b.score - a.score)
     .map(item => item.reel)
-    .slice(0, 20);
+    .slice(0, 60);
 
   return (
-    <div suppressHydrationWarning style={{ backgroundColor: '#000000', height: '100dvh', width: '100%', maxWidth: '600px', margin: '0 auto', overflow: 'hidden', position: 'relative' }}>
-      <ReelFeedClient reels={reels} currentUserId={userId} />
+    <div className="reel-feed-container" suppressHydrationWarning>
+      <ReelFeedClient
+        reels={reels}
+        currentUserId={userId}
+        currentUserAvatar={fullUser.avatarData}
+        currentUserName={fullUser.name || fullUser.username || 'You'}
+      />
     </div>
   );
 }

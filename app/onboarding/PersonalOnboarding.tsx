@@ -4,6 +4,7 @@ import { useState, useTransition, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { completePersonalOnboarding, checkUsernameAvailability, searchOrganizations, createOrganizationInline } from './actions';
 import { createClient } from '@/utils/supabase/client';
+import AvatarCropUpload from '../components/AvatarCropUpload';
 
 const TOTAL_STEPS = 5;
 
@@ -119,25 +120,6 @@ export default function PersonalOnboarding({ initialData }: { initialData: { nam
     }
   };
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { setError('Profile photo must be under 5MB.'); return; }
-    setAvatarUploading(true);
-    try {
-      const supabase = createClient();
-      const fileName = `avatar-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '')}`;
-      const { data, error: uploadError } = await supabase.storage.from('uploads').upload(fileName, file, { contentType: file.type });
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(data.path);
-      setAvatarUrl(publicUrl);
-    } catch (err: any) {
-      setError('Failed to upload photo. Please try again.');
-    } finally {
-      setAvatarUploading(false);
-    }
-  };
-
   const addSkill = (val: string) => {
     const trimmed = val.trim();
     if (trimmed && !skills.includes(trimmed) && skills.length < 15) {
@@ -156,10 +138,23 @@ export default function PersonalOnboarding({ initialData }: { initialData: { nam
   const handleFinish = () => {
     setError('');
     startTransition(async () => {
+      let finalAvatarUrl = avatarUrl;
+      if (avatarUrl && avatarUrl.startsWith('data:')) {
+        const supabase = createClient();
+        const response = await fetch(avatarUrl);
+        const blob = await response.blob();
+        const fileName = `avatar-${Date.now()}.jpg`;
+        const { data, error } = await supabase.storage.from('uploads').upload(fileName, blob, { contentType: 'image/jpeg' });
+        if (data && !error) {
+          const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
+          finalAvatarUrl = urlData.publicUrl;
+        }
+      }
+
       const result = await completePersonalOnboarding({
         username,
         bio,
-        avatarUrl: avatarUrl || undefined,
+        avatarUrl: finalAvatarUrl || undefined,
         city, state, country,
         field: selectedField,
         profession: selectedRole || customRole || undefined,
@@ -204,28 +199,7 @@ export default function PersonalOnboarding({ initialData }: { initialData: { nam
 
           {/* Avatar upload */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
-            <label htmlFor="avatar-upload" style={{ cursor: 'pointer' }}>
-              <div style={{
-                width: 96, height: 96, borderRadius: '50%',
-                background: avatarUrl ? 'transparent' : 'rgba(255,255,255,0.08)',
-                border: '2px dashed rgba(255,255,255,0.2)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                overflow: 'hidden', position: 'relative'
-              }}>
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <span style={{ fontSize: '32px' }}>📷</span>
-                )}
-                {avatarUploading && (
-                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'white' }}>Uploading…</div>
-                )}
-              </div>
-            </label>
-            <input id="avatar-upload" type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
-            <span style={{ marginTop: '8px', fontSize: '13px', color: '#71717A' }}>
-              {avatarUrl ? 'Tap to change' : 'Add profile photo (optional)'}
-            </span>
+            <AvatarCropUpload onImageReady={(base64) => setAvatarUrl(base64)} placeholder="📸" label="Add profile photo" />
           </div>
 
           {/* Username */}

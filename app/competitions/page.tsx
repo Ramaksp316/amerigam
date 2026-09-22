@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import CompetitionsClient from './CompetitionsClient';
+import AppRightSidebar from '../components/AppRightSidebar';
 
 export default async function CompetitionsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const resolvedSearchParams = await searchParams;
@@ -131,11 +132,33 @@ export default async function CompetitionsPage({ searchParams }: { searchParams:
     .map(item => item.event)
     .slice(0, 10);
 
-  // Top Events: Prioritize popularity, but boost with personalization score
-  const topEvents = [...scoredEvents]
-    .sort((a, b) => (b.popularity + b.score * 10) - (a.popularity + a.score * 10))
-    .map(item => item.event)
-    .slice(0, 15);
+  // Top Events: Fetch flagship Figma events explicitly first
+  const flagshipNames = ['Behind You - Running RR', 'Tried-Jump', 'WAR-E-Man', 'Trocfy'];
+  const flagshipEvents = await prisma.event.findMany({
+    where: {
+      name: { in: flagshipNames }
+    },
+    include: {
+      creator: {
+        select: { id: true, name: true, avatarData: true }
+      },
+      _count: {
+        select: { registrations: true }
+      }
+    }
+  });
+
+  const orderedFlagships = flagshipNames
+    .map(name => flagshipEvents.find(e => e.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(e.name.toLowerCase())))
+    .filter(Boolean);
+
+  const topEventsCombined = [
+    ...orderedFlagships,
+    ...scoredEvents
+      .sort((a, b) => (b.popularity + b.score * 10) - (a.popularity + a.score * 10))
+      .map(item => item.event)
+      .filter(e => !orderedFlagships.some(fe => fe && fe.id === e.id))
+  ].slice(0, 15);
 
   // Fetch Current User's registrations to pass state down
   const userRegistrations = await prisma.eventRegistration.findMany({
@@ -164,15 +187,36 @@ export default async function CompetitionsPage({ searchParams }: { searchParams:
   };
 
   return (
-    <CompetitionsClient 
-      followingEvents={followingEvents}
-      suggestedEvents={suggestedEvents}
-      topEvents={topEvents}
-      searchResults={searchResults}
-      initialSearchQuery={searchQuery}
-      rankingData={rankingData}
-      currentUser={currentUser}
-      registeredEventIds={registeredEventIds}
-    />
+    <div style={{
+      width: '100%',
+      minHeight: '100vh',
+      backgroundColor: '#000000',
+      color: '#FFFFFF',
+      display: 'flex',
+      justifyContent: 'flex-start',
+      overflowX: 'hidden'
+    }}>
+      {/* 3-COLUMN WRAPPER (Fluid layout, zero horizontal overflow) */}
+      <div style={{
+        width: '100%',
+        minWidth: 0,
+        display: 'flex',
+        minHeight: '100vh',
+        overflowX: 'hidden'
+      }}>
+        <CompetitionsClient 
+          followingEvents={followingEvents}
+          suggestedEvents={suggestedEvents}
+          topEvents={topEventsCombined}
+          searchResults={searchResults}
+          initialSearchQuery={searchQuery}
+          rankingData={rankingData}
+          currentUser={currentUser}
+          registeredEventIds={registeredEventIds}
+        />
+        {/* Right Rail: User Profile Card & Joined Competitions */}
+        <AppRightSidebar userId={userId} mode="competitions" />
+      </div>
+    </div>
   );
 }

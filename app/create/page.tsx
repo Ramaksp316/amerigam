@@ -14,7 +14,12 @@ export default async function CreatePage({ searchParams }: { searchParams: Promi
   }
 
   const currentUser = await prisma.user.findUnique({
-    where: { id: userId }
+    where: { id: userId },
+    include: {
+      personalProfile: true,
+      businessProfile: true,
+      creatorProfile: true,
+    }
   });
 
   if (!currentUser) redirect('/login');
@@ -32,20 +37,14 @@ export default async function CreatePage({ searchParams }: { searchParams: Promi
     );
   }
 
-  const isPostFlow = type === 'post' || type === 'status' || type === 'project' || type === 'story';
+  const isPostFlow = type === 'post' || type === 'status' || type === 'project' || type === 'story' || type === 'reel' || type === 'blog';
 
   return (
-    <div style={{ maxWidth: '680px', margin: '0 auto', animation: 'fadeIn 0.2s ease', height: '100dvh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#000000' }}>
       {isPostFlow ? (
-        <CreatePostForm currentUser={currentUser} isReel={false} isStory={type === 'story'} communityId={communityId} />
+        <CreatePostForm currentUser={currentUser} isReel={type === 'reel'} isStory={type === 'story'} communityId={communityId} />
       ) : (
-        <div className="glass-card" style={{ padding: 'var(--space-6)', minHeight: '80vh' }}>
-          {type === 'reel' && (
-            <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: 'var(--space-4)' }}>Reels</h2>
-              <p style={{ color: 'var(--text-secondary)' }}>This feature is coming soon!</p>
-            </div>
-          )}
+        <div className="glass-card" style={{ maxWidth: '680px', margin: '40px auto', padding: 'var(--space-6)', minHeight: '80vh' }}>
           {type === 'competition' && (
              <>
                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px', paddingBottom: '16px' }}>
