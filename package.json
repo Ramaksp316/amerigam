@@ -6,7 +6,8 @@
     "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "deploy": "node scripts/deploy-live.js"
   },
   "dependencies": {
     "@giphy/js-fetch-api": "^5.8.0",

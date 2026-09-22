@@ -1,13 +1,15 @@
 const { Client } = require('ssh2');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
-const HOST = '168.144.126.4';
-const USERNAME = 'root';
+const HOST = process.env.VPS_HOST || '168.144.126.4';
+const USERNAME = process.env.VPS_USER || 'root';
 const SSH_KEY_PATH = path.join(process.env.USERPROFILE || 'C:\\Users\\Admin', '.ssh', 'id_rsa');
 const SSH_PUB_PATH = path.join(process.env.USERPROFILE || 'C:\\Users\\Admin', '.ssh', 'id_rsa.pub');
 
 const inputPassword = process.argv[2] || process.env.VPS_PASSWORD || null;
+
 
 async function executeCommand(conn, cmd) {
   return new Promise((resolve, reject) => {
