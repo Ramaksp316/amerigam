@@ -140,7 +140,7 @@ export default async function CommunitiesPage() {
           {/* ========================================================
               TOP SEARCH BAR (Pill shape, centered matching Figma)
              ======================================================== */}
-          <div style={{
+          <div className="responsive-search-pill" style={{
             height: '64px',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             display: 'flex',
@@ -183,7 +183,7 @@ export default async function CommunitiesPage() {
           </div>
 
           {/* MAIN PAGE BODY */}
-          <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <div className="responsive-page-container">
 
             {/* ========================================================
                 SECTION 1: MINE COMMUNITY (2-Column Capsule Pills)
@@ -199,11 +199,7 @@ export default async function CommunitiesPage() {
                 Mine Community
               </h2>
 
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                gap: '12px'
-              }}>
+              <div className="communities-mine-responsive-grid">
                 {[0, 1, 2, 3, 4, 5].map((idx) => {
                   const comm = mineCommunities[idx] || allCommunities[idx];
                   const linkUrl = comm ? `/communities/${comm.id}` : '#';
@@ -276,11 +272,7 @@ export default async function CommunitiesPage() {
                 Top Community
               </h2>
 
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-                gap: '14px'
-              }}>
+              <div className="communities-top-responsive-grid">
                 {/* Card 1: Welcome Gamers (Crimson Red with black circle & white Amerigam logo) */}
                 <Link
                   href={allCommunities.find(c => c.name.toLowerCase().includes('gamer')) ? `/communities/${allCommunities.find(c => c.name.toLowerCase().includes('gamer'))?.id}` : '#'}
@@ -486,11 +478,7 @@ export default async function CommunitiesPage() {
                 Suggested Community
               </h2>
 
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-                gap: '14px'
-              }}>
+              <div className="communities-top-responsive-grid">
                 {[
                   { bg: '#3F6E5D' },
                   { bg: '#2A5979' },

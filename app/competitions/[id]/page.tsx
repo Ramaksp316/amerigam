@@ -115,11 +115,10 @@ export default async function CompetitionDetailPage({
         overflowX: 'hidden'
       }}>
         {/* Center Main Content Area */}
-        <div style={{
+        <div className="responsive-page-container" style={{
           flex: 1,
           minWidth: 0,
           borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-          padding: '24px 28px 100px 28px',
           boxSizing: 'border-box',
           overflowX: 'hidden'
         }}>
@@ -140,15 +139,9 @@ export default async function CompetitionDetailPage({
           {/* ========================================================
               TOP SECTION: POSTER + EVENT QUICK DETAILS + ORGANIZER
              ======================================================== */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(200px, 240px) 1fr minmax(200px, 240px)',
-            gap: '20px',
-            alignItems: 'start',
-            marginBottom: '36px'
-          }}>
+          <div className="comp-detail-hero-grid" style={{ marginBottom: '36px' }}>
             {/* 1. Event Cover Poster */}
-            <div style={{
+            <div className="comp-detail-poster-wrap" style={{
               width: '240px',
               height: '350px',
               borderRadius: '20px',
@@ -318,7 +311,7 @@ export default async function CompetitionDetailPage({
             </div>
 
             {/* 3. The Organizer Card (Top Right) */}
-            <div style={{
+            <div className="comp-detail-organizer-wrap" style={{
               width: '240px',
               backgroundColor: '#16161A',
               borderRadius: '22px',
@@ -506,14 +499,9 @@ export default async function CompetitionDetailPage({
             </div>
 
             {/* 2-Column Split: Photo Gallery (Left) + The Organizer (Right) matching Figma media_1790074840365.png */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 240px',
-              gap: '20px',
-              alignItems: 'start'
-            }}>
+            <div className="comp-detail-bottom-grid">
               {/* Left Column: 5-Photo Gallery Grid */}
-              <div style={{
+              <div className="comp-detail-gallery-grid" style={{
                 display: 'grid',
                 gridTemplateColumns: '46% 54%',
                 gap: '10px',
@@ -522,7 +510,7 @@ export default async function CompetitionDetailPage({
                 overflow: 'hidden'
               }}>
                 {/* Left Large Photo */}
-                <div style={{
+                <div className="comp-detail-gallery-hero" style={{
                   width: '100%',
                   height: '100%',
                   backgroundColor: '#18181B',
@@ -537,7 +525,7 @@ export default async function CompetitionDetailPage({
                 </div>
 
                 {/* Right 2x2 Grid */}
-                <div style={{
+                <div className="comp-detail-gallery-thumbs" style={{
                   display: 'grid',
                   gridTemplateColumns: '1fr 1fr',
                   gridTemplateRows: '1fr 1fr',

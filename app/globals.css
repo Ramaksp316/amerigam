@@ -1535,3 +1535,189 @@ body:has(.reel-feed-container) .main-content,
   transform: translateY(-3px);
 }
 
+/* ========================================================
+   RESPONSIVE MOBILE & DESKTOP SYSTEM
+   ======================================================== */
+
+/* Competitions Grid */
+.competitions-responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .competitions-responsive-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+}
+
+/* Communities Grids */
+.communities-top-responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .communities-top-responsive-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+}
+
+.communities-mine-responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .communities-mine-responsive-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+}
+
+.communities-suggested-responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .communities-suggested-responsive-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+}
+
+/* Competition Detail Hero */
+.comp-detail-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(200px, 240px) 1fr minmax(200px, 240px);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .comp-detail-hero-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 24px !important;
+    width: 100% !important;
+  }
+  .comp-detail-poster-wrap {
+    width: 100% !important;
+    max-width: 320px !important;
+    margin: 0 auto !important;
+  }
+  .comp-detail-organizer-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+.comp-detail-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .comp-detail-bottom-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+    width: 100% !important;
+  }
+  .comp-detail-gallery-grid {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+  }
+  .comp-detail-gallery-hero {
+    height: 200px !important;
+  }
+  .comp-detail-gallery-thumbs {
+    height: 180px !important;
+  }
+}
+
+/* Page Containers */
+.responsive-page-container {
+  padding: 24px 28px 80px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+@media (max-width: 768px) {
+  .responsive-page-container {
+    padding: 16px 14px 100px 14px !important;
+    gap: 24px !important;
+  }
+  .responsive-search-pill {
+    padding: 0 14px !important;
+    height: 56px !important;
+  }
+}
+
+/* Floating Bottom Dock Nav */
+.floating-dock-nav {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.floating-dock-pill {
+  background-color: #0F0F12;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  height: 52px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.floating-dock-profile {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #0F0F12;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.8);
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .floating-dock-nav {
+    bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;
+    gap: 8px !important;
+  }
+  .floating-dock-pill {
+    height: 48px !important;
+    padding: 0 16px !important;
+    gap: 18px !important;
+  }
+  .floating-dock-profile {
+    width: 38px !important;
+    height: 38px !important;
+  }
+}
+
+

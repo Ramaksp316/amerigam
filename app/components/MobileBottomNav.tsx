@@ -35,31 +35,9 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
     <>
 
       {/* Floating Bottom Navigation Dock matching Figma dock (figma_dock_crop.png) */}
-      <nav aria-label="Bottom Navigation" style={{
-        position: 'fixed',
-        bottom: '22px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        pointerEvents: 'auto'
-      }}>
+      <nav className="floating-dock-nav" aria-label="Bottom Navigation">
         {/* Dark Pill Dock */}
-        <div style={{
-          backgroundColor: '#0F0F12',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: '999px',
-          height: '52px',
-          padding: '0 24px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '26px',
-          boxShadow: '0 12px 36px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.15)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)'
-        }}>
+        <div className="floating-dock-pill">
           {/* 1. Home icon: rounded roof outline */}
           <Link href="/home" title="Home" style={{
             color: isActive('/home') ? '#FFFFFF' : '#8E8E93',
@@ -158,15 +136,8 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
           alignItems: 'center',
           justifyContent: 'center'
         }}>
-          <div style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: '50%',
-            backgroundColor: '#0F0F12',
+          <div className="floating-dock-profile" style={{
             padding: '3px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             boxShadow: '0 8px 24px rgba(0,0,0,0.7)',
             border: pathname?.startsWith('/user') ? '2px solid #FFFFFF' : '1.5px solid rgba(255, 255, 255, 0.15)',
             transition: 'all 0.15s ease'

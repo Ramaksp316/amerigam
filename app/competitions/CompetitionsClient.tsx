@@ -165,7 +165,7 @@ export default function CompetitionsClient({
     }}>
           
           {/* 1. TOP CENTER SEARCH PILL (Exact Figma match) */}
-          <div style={{
+          <div className="responsive-search-pill" style={{
             height: '64px',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             display: 'flex',
@@ -210,7 +210,7 @@ export default function CompetitionsClient({
           </div>
 
           {/* MAIN PAGE BODY */}
-          <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <div className="responsive-page-container">
 
             {/* ========================================================
                 SECTION 1: "Competition for you"
@@ -226,12 +226,8 @@ export default function CompetitionsClient({
                 Competition for you
               </h2>
 
-              {/* 4 Cards Grid with Visual Depth & Chamak */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-                gap: '14px'
-              }}>
+              {/* Responsive Cards Grid */}
+              <div className="competitions-responsive-grid">
                 {featuredCompetitions.map((comp) => (
                   <Link
                     key={comp.id}
@@ -389,11 +385,7 @@ export default function CompetitionsClient({
               </h2>
 
               {/* 4 Charcoal Skeleton Placeholder Cards matching Figma */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-                gap: '14px'
-              }}>
+              <div className="competitions-responsive-grid">
                 {[0, 1, 2, 3].map((idx) => {
                   const linkedComp = otherCompetitions[idx] || featuredCompetitions[idx];
                   const linkHref = linkedComp?.id ? `/competitions/${linkedComp.id}` : '#';
