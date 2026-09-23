@@ -731,3 +731,23 @@ model CommunityMessage {
   sender      User      @relation(fields: [senderId], references: [id])
   community   Community @relation(fields: [communityId], references: [id])
 }
+
+// =========================================
+// Developer Mission Control
+// =========================================
+
+model DevErrorLog {
+  id          String   @id @default(uuid())
+  digest      String?  // Next.js error digest code e.g. "3402044146"
+  message     String   // Error message
+  stack       String?  // Stack trace
+  url         String?  // Which page triggered the error
+  userId      String?  // Which user was affected (if known)
+  userEmail   String?  // User email for quick ref
+  userAgent   String?  // Browser/device info
+  resolved    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt(sort: Desc)])
+  @@index([resolved])
+}
