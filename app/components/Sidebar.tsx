@@ -36,8 +36,8 @@ export default function Sidebar({
     }
   }, [pathname, unreadCount]);
 
-  // Hide sidebar on full-screen /feed, /notifications, /ranking or auth pages
-  if (pathname?.startsWith('/login') || pathname?.startsWith('/create') || pathname?.startsWith('/feed') || pathname?.startsWith('/notifications') || pathname?.startsWith('/ranking')) {
+  // Hide sidebar on full-screen /feed, /notifications, /ranking, /dev-board or auth pages
+  if (pathname?.startsWith('/login') || pathname?.startsWith('/create') || pathname?.startsWith('/feed') || pathname?.startsWith('/notifications') || pathname?.startsWith('/ranking') || pathname?.startsWith('/dev-board')) {
     return null;
   }
 

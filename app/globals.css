@@ -2747,5 +2747,19 @@ body:has(.reel-feed-container) .main-content,
   }
 }
 
+/* ─── DEVELOPER MISSION CONTROL (FULL-SCREEN STANDALONE) ─── */
+body:has(.dev-board-root) .app-layout,
+.app-layout:has(.dev-board-root),
+body:has(.dev-board-root) .main-content,
+.main-content:has(.dev-board-root) {
+  max-width: 100vw !important;
+  width: 100vw !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: block !important;
+}
 
-
+body:has(.dev-board-root) .floating-dock-nav,
+.floating-dock-nav:has(.dev-board-root) {
+  display: none !important;
+}

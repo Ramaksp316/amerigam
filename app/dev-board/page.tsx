@@ -48,7 +48,7 @@ export default function DevBoardLoginPage() {
   };
 
   return (
-    <div style={{
+    <div className="dev-board-root" style={{
       minHeight: '100vh',
       backgroundColor: '#050507',
       display: 'flex',

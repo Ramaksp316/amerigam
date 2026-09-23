@@ -28,7 +28,7 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
   };
 
   const isIndividualChat = pathname?.startsWith('/messages/') && pathname !== '/messages';
-  if (isIndividualChat || isCommunityPage || pathname?.includes('/apply')) return null;
+  if (isIndividualChat || isCommunityPage || pathname?.includes('/apply') || pathname?.startsWith('/dev-board')) return null;
 
   if (pathname?.startsWith('/messages/') && pathname !== '/messages/') {
     return null;

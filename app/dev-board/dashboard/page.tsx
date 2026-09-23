@@ -315,7 +315,7 @@ export default function DevDashboard() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#06060A', color: '#FAFAFA', fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div className="dev-board-root" style={{ minHeight: '100vh', backgroundColor: '#06060A', color: '#FAFAFA', fontFamily: "'Inter', system-ui, sans-serif" }}>
 
       {/* ── Push Notification Toasts ── */}
       <div style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '8px' }}>
