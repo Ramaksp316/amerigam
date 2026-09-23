@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { completeCreatorOnboarding } from './actions';
 import { createClient } from '@/utils/supabase/client';
 import AvatarCropUpload from '../components/AvatarCropUpload';
+import { uploadBase64 } from '@/lib/upload';
 
 const CREATOR_TYPES = ['Tech Creator', 'Lifestyle Creator', 'Gaming Creator', 'Fashion Creator', 'Food Creator', 'Travel Creator', 'Educational Creator', 'Entertainment Creator', 'Sports Creator', 'Beauty Creator', 'Other'];
 
@@ -25,14 +26,10 @@ export default function CreatorOnboarding({ initialData }: { initialData: { name
     startTransition(async () => {
       let finalAvatarUrl = avatarUrl;
       if (avatarUrl && avatarUrl.startsWith('data:')) {
-        const supabase = createClient();
-        const response = await fetch(avatarUrl);
-        const blob = await response.blob();
-        const fileName = `avatar-${Date.now()}.jpg`;
-        const { data, error } = await supabase.storage.from('uploads').upload(fileName, blob, { contentType: 'image/jpeg' });
-        if (data && !error) {
-          const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
-          finalAvatarUrl = urlData.publicUrl;
+        try {
+          finalAvatarUrl = await uploadBase64(avatarUrl, 'avatars');
+        } catch (e) {
+          console.error('Failed to upload avatar to server:', e);
         }
       }
       const result = await completeCreatorOnboarding({ username, bio, avatarUrl: finalAvatarUrl || undefined, creatorType, niche });

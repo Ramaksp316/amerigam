@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { completeOrgOnboarding } from './actions';
 import { createClient } from '@/utils/supabase/client';
 import AvatarCropUpload from '../components/AvatarCropUpload';
+import { uploadBase64 } from '@/lib/upload';
 
 const ORG_TYPES = ['Sports Organization', 'Hackathon Organizer', 'Academic Institution', 'Government Body', 'NGO / Non-profit', 'Corporate Event Organizer', 'Cultural Organization', 'Gaming Tournament', 'Skill Competition', 'Other'];
 
@@ -26,14 +27,10 @@ export default function OrgOnboarding({ initialData }: { initialData: { name: st
     startTransition(async () => {
       let finalAvatarUrl = logoUrl;
       if (logoUrl && logoUrl.startsWith('data:')) {
-        const supabase = createClient();
-        const response = await fetch(logoUrl);
-        const blob = await response.blob();
-        const fileName = `logo-${Date.now()}.jpg`;
-        const { data, error } = await supabase.storage.from('uploads').upload(fileName, blob, { contentType: 'image/jpeg' });
-        if (data && !error) {
-          const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
-          finalAvatarUrl = urlData.publicUrl;
+        try {
+          finalAvatarUrl = await uploadBase64(logoUrl, 'avatars');
+        } catch (e) {
+          console.error('Failed to upload logo to server:', e);
         }
       }
       const result = await completeOrgOnboarding({

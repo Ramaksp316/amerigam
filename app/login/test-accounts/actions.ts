@@ -24,8 +24,9 @@ export async function directTestLogin(userId: string) {
   cookieStore.set('userId', user.id, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 60 * 24 * 30, // 30 days
     path: '/',
+    sameSite: 'lax',
   });
 
   // 4. Redirect to feed

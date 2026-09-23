@@ -52,8 +52,9 @@ export async function login(formData: FormData) {
     cookieStore.set('userId', dbUser.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: 60 * 60 * 24 * 30, // 30 days
       path: '/',
+      sameSite: 'lax',
     })
 
     revalidatePath('/home')
@@ -123,8 +124,9 @@ export async function signup(formData: FormData) {
     cookieStore.set('userId', data.user.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: 60 * 60 * 24 * 30, // 30 days
       path: '/',
+      sameSite: 'lax',
     })
   }
 

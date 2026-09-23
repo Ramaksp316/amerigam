@@ -6,16 +6,51 @@ import { Settings, LogOut, UserCircle } from 'lucide-react';
 import ProfileFormClient from './ProfileFormClient';
 import DeleteAccountButton from './DeleteAccountButton';
 
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+
+function saveBase64Avatar(dataUri: string): string {
+  if (!dataUri || !dataUri.startsWith('data:')) return dataUri;
+  try {
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    const matches = dataUri.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    let buffer: Buffer;
+    let ext = '.jpg';
+    if (matches && matches.length === 3) {
+      const mime = matches[1];
+      if (mime.includes('png')) ext = '.png';
+      else if (mime.includes('webp')) ext = '.webp';
+      buffer = Buffer.from(matches[2], 'base64');
+    } else {
+      buffer = Buffer.from(dataUri, 'base64');
+    }
+    const randomId = crypto.randomBytes(8).toString('hex');
+    const fileName = `${Date.now()}-${randomId}${ext}`;
+    fs.writeFileSync(path.join(uploadDir, fileName), buffer);
+    return `/uploads/avatars/${fileName}`;
+  } catch (err) {
+    console.error('Failed to save avatar image to disk:', err);
+    return dataUri;
+  }
+}
+
 async function updateProfile(formData: FormData) {
   'use server';
   const name = formData.get('name') as string;
   const bio = formData.get('bio') as string;
   const portfolioUrl = formData.get('portfolioUrl') as string;
-  const avatarData = formData.get('avatarData') as string;
+  let avatarData = formData.get('avatarData') as string;
   const status = formData.get('status') as string;
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
   if (userId) {
+    if (avatarData && avatarData.startsWith('data:')) {
+      avatarData = saveBase64Avatar(avatarData);
+    }
     await prisma.user.update({
       where: { id: userId },
       data: { name, bio, portfolioUrl, avatarData, status },

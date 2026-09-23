@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronRight, ChevronLeft, CheckCircle2, UploadCloud, X, Image as ImageIcon } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
+import { uploadMedia } from '@/lib/upload';
 
 const STEPS = [
   "Basic Info",
@@ -161,16 +162,7 @@ export default function CreateEventForm() {
       
       if (formData.paymentQrFile) {
         if (formData.paymentQrFile.size > 50 * 1024 * 1024) throw new Error('QR must be less than 50MB.');
-        const fileName = `${Date.now()}-qr-${formData.paymentQrFile.name.replace(/[^a-zA-Z0-9.\\-_]/g, '') || 'upload'}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('uploads')
-          .upload(fileName, formData.paymentQrFile, { contentType: formData.paymentQrFile.type });
-
-        if (uploadError) throw new Error(`Upload error: ${uploadError.message}`);
-
-        const { data: publicUrlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
-        qrUrl = publicUrlData.publicUrl;
+        qrUrl = await uploadMedia(formData.paymentQrFile, 'qrs');
       }
 
       if (coverImageFile) {
@@ -180,28 +172,7 @@ export default function CreateEventForm() {
           setIsDrafting(false);
           return;
         }
-        
-        const fileName = `${Date.now()}-${coverImageFile.name.replace(/[^a-zA-Z0-9.\-_]/g, '') || 'upload'}`;
-        const { data, error } = await supabase.storage
-            .from('uploads')
-            .upload(fileName, coverImageFile, {
-              contentType: coverImageFile.type,
-            });
-            
-        if (error) {
-          console.error('Storage upload error:', error);
-          setErrorMsg('Failed to upload cover image. Please try again.');
-          setLoading(false);
-          setIsDrafting(false);
-          return;
-        }
-
-        if (data) {
-          const { data: publicUrlData } = supabase.storage
-              .from('uploads')
-              .getPublicUrl(fileName);
-          mediaUrl = publicUrlData.publicUrl;
-        }
+        mediaUrl = await uploadMedia(coverImageFile, 'events');
       }
 
       const payload = {

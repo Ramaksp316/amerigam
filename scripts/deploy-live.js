@@ -163,6 +163,10 @@ async function runDeploy() {
     console.log('\n📦 Generating Prisma Client on server...');
     await executeCommand(conn, `cd "${projectDir}" && npx prisma generate`);
 
+    // Ensure uploads directories exist with proper write permissions for Next.js & Nginx
+    console.log('\n📁 Ensuring uploads directories and permissions on server...');
+    await executeCommand(conn, `cd "${projectDir}" && mkdir -p public/uploads/{posts,videos,avatars,events,general,banners,qrs} && chmod -R 777 public/uploads`);
+
     // 5. Build Next.js application
     console.log('\n🔨 Building Next.js application on production server...');
     await executeCommand(conn, `cd "${projectDir}" && npm run build`);

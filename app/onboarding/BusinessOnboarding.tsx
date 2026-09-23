@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { completeBusinessOnboarding } from './actions';
 import { createClient } from '@/utils/supabase/client';
 import AvatarCropUpload from '../components/AvatarCropUpload';
+import { uploadBase64 } from '@/lib/upload';
 
 const INDUSTRIES = ['Technology', 'Fashion & Apparel', 'Food & Beverage', 'Healthcare', 'Finance', 'Education', 'Real Estate', 'Manufacturing', 'Retail & E-commerce', 'Media & Entertainment', 'Agriculture', 'Transportation', 'Hospitality', 'Sports', 'Other'];
 const STAGES = ['Idea Stage', 'Early Startup', 'Growth Stage', 'Established', 'Enterprise'];
@@ -29,14 +30,10 @@ export default function BusinessOnboarding({ initialData }: { initialData: { nam
     startTransition(async () => {
       let finalAvatarUrl = logoUrl;
       if (logoUrl && logoUrl.startsWith('data:')) {
-        const supabase = createClient();
-        const response = await fetch(logoUrl);
-        const blob = await response.blob();
-        const fileName = `logo-${Date.now()}.jpg`;
-        const { data, error } = await supabase.storage.from('uploads').upload(fileName, blob, { contentType: 'image/jpeg' });
-        if (data && !error) {
-          const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
-          finalAvatarUrl = urlData.publicUrl;
+        try {
+          finalAvatarUrl = await uploadBase64(logoUrl, 'avatars');
+        } catch (e) {
+          console.error('Failed to upload logo to server:', e);
         }
       }
       const result = await completeBusinessOnboarding({ username, businessName, bio, avatarUrl: finalAvatarUrl || undefined, location: city ? `${city}, ${country}`.trim().replace(/^, /, '') : country, country, industry, stage, website });

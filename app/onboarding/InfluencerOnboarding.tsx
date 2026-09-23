@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { completeInfluencerOnboarding } from './actions';
 import { createClient } from '@/utils/supabase/client';
 import AvatarCropUpload from '../components/AvatarCropUpload';
+import { uploadBase64 } from '@/lib/upload';
 
 const INFLUENCER_TYPES = ['Nano (1K–10K)', 'Micro (10K–100K)', 'Macro (100K–1M)', 'Celebrity (1M+)'];
 const NICHES = ['Fashion', 'Lifestyle', 'Technology', 'Food & Cooking', 'Travel', 'Fitness & Health', 'Beauty', 'Gaming', 'Business & Finance', 'Entertainment', 'Sports', 'Education', 'Photography', 'Music', 'Other'];
@@ -26,14 +27,10 @@ export default function InfluencerOnboarding({ initialData }: { initialData: { n
     startTransition(async () => {
       let finalAvatarUrl = avatarUrl;
       if (avatarUrl && avatarUrl.startsWith('data:')) {
-        const supabase = createClient();
-        const response = await fetch(avatarUrl);
-        const blob = await response.blob();
-        const fileName = `avatar-${Date.now()}.jpg`;
-        const { data, error } = await supabase.storage.from('uploads').upload(fileName, blob, { contentType: 'image/jpeg' });
-        if (data && !error) {
-          const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
-          finalAvatarUrl = urlData.publicUrl;
+        try {
+          finalAvatarUrl = await uploadBase64(avatarUrl, 'avatars');
+        } catch (e) {
+          console.error('Failed to upload avatar to server:', e);
         }
       }
       const result = await completeInfluencerOnboarding({ username, bio, avatarUrl: finalAvatarUrl || undefined, influencerType, mainNiche });

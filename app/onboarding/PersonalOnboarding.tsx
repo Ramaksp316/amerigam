@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { completePersonalOnboarding, checkUsernameAvailability, searchOrganizations, createOrganizationInline } from './actions';
 import { createClient } from '@/utils/supabase/client';
 import AvatarCropUpload from '../components/AvatarCropUpload';
+import { uploadBase64 } from '@/lib/upload';
 
 const TOTAL_STEPS = 5;
 
@@ -140,14 +141,10 @@ export default function PersonalOnboarding({ initialData }: { initialData: { nam
     startTransition(async () => {
       let finalAvatarUrl = avatarUrl;
       if (avatarUrl && avatarUrl.startsWith('data:')) {
-        const supabase = createClient();
-        const response = await fetch(avatarUrl);
-        const blob = await response.blob();
-        const fileName = `avatar-${Date.now()}.jpg`;
-        const { data, error } = await supabase.storage.from('uploads').upload(fileName, blob, { contentType: 'image/jpeg' });
-        if (data && !error) {
-          const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
-          finalAvatarUrl = urlData.publicUrl;
+        try {
+          finalAvatarUrl = await uploadBase64(avatarUrl, 'avatars');
+        } catch (e) {
+          console.error('Failed to upload avatar to server:', e);
         }
       }
 

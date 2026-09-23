@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { Image as ImageIcon, X } from 'lucide-react';
+import { uploadMedia } from '@/lib/upload';
 
 export default function EditEventForm({ event }: { event: any }) {
   const [loading, setLoading] = useState(false);
@@ -59,18 +60,12 @@ export default function EditEventForm({ event }: { event: any }) {
     try {
       if (coverImageFile) {
         if (coverImageFile.size > 50 * 1024 * 1024) throw new Error('Cover image must be less than 50MB.');
-        const fileName = `${Date.now()}-${coverImageFile.name.replace(/[^a-zA-Z0-9.\\-_]/g, '') || 'upload'}`;
-        const { error } = await supabase.storage.from('uploads').upload(fileName, coverImageFile, { contentType: coverImageFile.type });
-        if (error) throw new Error(`Cover upload error: ${error.message}`);
-        mediaUrl = supabase.storage.from('uploads').getPublicUrl(fileName).data.publicUrl;
+        mediaUrl = await uploadMedia(coverImageFile, 'events');
       }
 
       if (paymentQrFile) {
         if (paymentQrFile.size > 50 * 1024 * 1024) throw new Error('QR image must be less than 50MB.');
-        const fileName = `${Date.now()}-qr-${paymentQrFile.name.replace(/[^a-zA-Z0-9.\\-_]/g, '') || 'upload'}`;
-        const { error } = await supabase.storage.from('uploads').upload(fileName, paymentQrFile, { contentType: paymentQrFile.type });
-        if (error) throw new Error(`QR upload error: ${error.message}`);
-        qrUrl = supabase.storage.from('uploads').getPublicUrl(fileName).data.publicUrl;
+        qrUrl = await uploadMedia(paymentQrFile, 'qrs');
       }
 
       const data = {

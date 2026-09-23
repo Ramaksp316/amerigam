@@ -100,6 +100,8 @@ model User {
 
   @@index([accountType, amerigamPoints(sort: Desc)])
   @@index([country, state, city, district])
+  @@index([lastSeen(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
 
   conversations1   Conversation[] @relation("conversationUser1")
   conversations2   Conversation[] @relation("conversationUser2")
@@ -197,6 +199,10 @@ model Post {
   comments    Comment[]
   likes       Like[]
   createdAt   DateTime  @default(now())
+
+  @@index([authorId])
+  @@index([createdAt(sort: Desc)])
+  @@index([category])
 }
 
 model Comment {
@@ -207,6 +213,9 @@ model Comment {
   postId    String
   post      Post     @relation(fields: [postId], references: [id])
   createdAt DateTime @default(now())
+
+  @@index([postId])
+  @@index([authorId])
 }
 
 model Like {
@@ -216,6 +225,9 @@ model Like {
   postId    String
   post      Post     @relation(fields: [postId], references: [id])
   createdAt DateTime @default(now())
+
+  @@index([postId])
+  @@index([userId])
 }
 
 model Follow {
@@ -227,6 +239,8 @@ model Follow {
   createdAt   DateTime @default(now())
 
   @@unique([followerId, followingId])
+  @@index([followingId])
+  @@index([followerId])
 }
 
 model Message {
@@ -241,6 +255,10 @@ model Message {
   isRead         Boolean      @default(false)
   createdAt      DateTime     @default(now())
   isEdited       Boolean      @default(false)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([receiverId])
 }
 
 // =========================================
@@ -262,6 +280,9 @@ model Community {
   tasks       CommunityTask[]
   notes       CommunityNote[]
   createdAt   DateTime          @default(now())
+
+  @@index([creatorId])
+  @@index([category])
 }
 
 model CommunityMember {
@@ -273,6 +294,8 @@ model CommunityMember {
   joinedAt    DateTime  @default(now())
 
   @@unique([userId, communityId])
+  @@index([communityId])
+  @@index([userId])
 }
 
 model CommunityPost {
@@ -285,6 +308,10 @@ model CommunityPost {
   author      User      @relation(fields: [authorId], references: [id])
   community   Community @relation(fields: [communityId], references: [id])
   createdAt   DateTime  @default(now())
+
+  @@index([communityId])
+  @@index([authorId])
+  @@index([createdAt(sort: Desc)])
 }
 
 model CommunityTask {
@@ -301,6 +328,10 @@ model CommunityTask {
   assignee  User?     @relation("assignedTasks", fields: [assigneeId], references: [id])
   creator   User      @relation("createdTasks", fields: [creatorId], references: [id])
   createdAt DateTime  @default(now())
+
+  @@index([communityId])
+  @@index([assigneeId])
+  @@index([creatorId])
 }
 
 // =========================================
@@ -369,6 +400,11 @@ model Event {
   createdAt    DateTime      @default(now())
   resultStatus String        @default("NOT_STARTED")
   results      EventResult[]
+
+  @@index([creatorId])
+  @@index([competitionId])
+  @@index([createdAt(sort: Desc)])
+  @@index([category])
 }
 
 model EventRegistration {
@@ -395,6 +431,9 @@ model EventRegistration {
   eventResults EventResult[]
 
   @@unique([userId, eventId])
+  @@index([eventId])
+  @@index([userId])
+  @@index([teamId])
 }
 
 model EventCheckIn {
@@ -463,6 +502,8 @@ model Achievement {
   badgeIcon   String? // Emoji or image URL
   user        User     @relation(fields: [userId], references: [id])
   earnedAt    DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Notification {
@@ -476,6 +517,9 @@ model Notification {
   isRead    Boolean  @default(false)
   link      String? // Destination URL
   createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([actorId])
 }
 
 model PushSubscription {
@@ -486,6 +530,8 @@ model PushSubscription {
   p256dh    String
   auth      String
   createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model CommunityNote {
@@ -717,6 +763,9 @@ model Story {
   author      User     @relation(fields: [authorId], references: [id])
   createdAt   DateTime @default(now())
   expiresAt   DateTime
+
+  @@index([authorId])
+  @@index([expiresAt])
 }
 
 
@@ -730,6 +779,9 @@ model CommunityMessage {
 
   sender      User      @relation(fields: [senderId], references: [id])
   community   Community @relation(fields: [communityId], references: [id])
+
+  @@index([communityId, createdAt])
+  @@index([senderId])
 }
 
 // =========================================

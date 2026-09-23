@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '../../utils/supabase/client';
 import { createPost } from './actions';
+import { uploadMedia } from '@/lib/upload';
 import {
   ArrowLeft,
   ChevronDown,
@@ -129,32 +130,11 @@ export default function CreatePostForm({
     let uploadedUrl = '';
     let uploadedType = mediaType || '';
 
-    // Upload media to Supabase storage if file is present
+    // Upload media to DigitalOcean VPS storage if file is present
     if (mediaFile) {
       try {
-        const fileExt = mediaFile.name.split('.').pop() || 'file';
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-
         setUploadProgress(40);
-        const { data, error } = await supabase.storage
-          .from('uploads')
-          .upload(fileName, mediaFile, {
-            contentType: mediaFile.type,
-          });
-
-        if (error) {
-          console.error('Storage upload error:', error);
-          setErrorMsg('Failed to upload media. Please try again.');
-          setIsUploading(false);
-          return;
-        }
-
-        if (data) {
-          const { data: publicUrlData } = supabase.storage
-            .from('uploads')
-            .getPublicUrl(fileName);
-          uploadedUrl = publicUrlData.publicUrl;
-        }
+        uploadedUrl = await uploadMedia(mediaFile, mediaType === 'video' ? 'videos' : 'posts');
       } catch (err: any) {
         setErrorMsg('Media upload failed: ' + (err.message || 'Unknown error'));
         setIsUploading(false);
