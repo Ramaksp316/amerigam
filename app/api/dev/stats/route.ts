@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
       prisma.user.count({
         where: {
           lastSeen: {
-            gte: new Date(Date.now() - 5 * 60 * 1000), // last 5 minutes
+            gte: new Date(Date.now() - 3 * 60 * 1000), // last 3 minutes (matches activeStatusTracker ping)
           },
         },
       }),

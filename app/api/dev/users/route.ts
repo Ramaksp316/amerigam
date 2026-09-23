@@ -71,9 +71,59 @@ export async function DELETE(req: NextRequest) {
   try {
     const { userId } = await req.json();
     if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
-    await prisma.user.delete({ where: { id: userId } });
+
+    await prisma.$transaction(async (tx) => {
+      // 1. Notifications
+      await tx.notification.deleteMany({ where: { OR: [{ userId }, { actorId: userId }] } }).catch(() => {});
+      // 2. Push subscriptions
+      await tx.pushSubscription.deleteMany({ where: { userId } }).catch(() => {});
+      // 3. Messages & Conversations
+      await tx.message.deleteMany({ where: { OR: [{ senderId: userId }, { receiverId: userId }] } }).catch(() => {});
+      await tx.conversation.deleteMany({ where: { OR: [{ user1Id: userId }, { user2Id: userId }] } }).catch(() => {});
+      // 4. Follows
+      await tx.follow.deleteMany({ where: { OR: [{ followerId: userId }, { followingId: userId }] } }).catch(() => {});
+      // 5. Likes & Comments
+      await tx.like.deleteMany({ where: { userId } }).catch(() => {});
+      await tx.comment.deleteMany({ where: { authorId: userId } }).catch(() => {});
+      // 6. Posts & Stories
+      await tx.post.deleteMany({ where: { authorId: userId } }).catch(() => {});
+      await tx.story.deleteMany({ where: { authorId: userId } }).catch(() => {});
+      // 7. Community interactions
+      await tx.communityMessage.deleteMany({ where: { senderId: userId } }).catch(() => {});
+      await tx.communityPost.deleteMany({ where: { authorId: userId } }).catch(() => {});
+      await tx.communityTask.deleteMany({ where: { OR: [{ creatorId: userId }, { assignedToId: userId }] } }).catch(() => {});
+      await tx.communityMember.deleteMany({ where: { userId } }).catch(() => {});
+      await tx.community.deleteMany({ where: { creatorId: userId } }).catch(() => {});
+      // 8. Event relations
+      await tx.eventRegistration.deleteMany({ where: { userId } }).catch(() => {});
+      await tx.eventCheckIn.deleteMany({ where: { scannedById: userId } }).catch(() => {});
+      await tx.eventEvaluation.deleteMany({ where: { judgeId: userId } }).catch(() => {});
+      await tx.eventTeam.deleteMany({ where: { captainId: userId } }).catch(() => {});
+      await tx.event.deleteMany({ where: { creatorId: userId } }).catch(() => {});
+      // 9. Challenges & Transactions
+      await tx.challenge.deleteMany({ where: { OR: [{ challengerId: userId }, { challengedId: userId }] } }).catch(() => {});
+      await tx.apTransaction.deleteMany({ where: { userId } }).catch(() => {});
+      await tx.achievement.deleteMany({ where: { userId } }).catch(() => {});
+      await tx.competitionEntity.deleteMany({ where: { userId } }).catch(() => {});
+      await tx.competition.deleteMany({ where: { creatorId: userId } }).catch(() => {});
+      await tx.competitionModel.deleteMany({ where: { creatorId: userId } }).catch(() => {});
+      // 10. Profiles & Connections
+      await tx.personalProfile.deleteMany({ where: { userId } }).catch(() => {});
+      await tx.businessProfile.deleteMany({ where: { userId } }).catch(() => {});
+      await tx.creatorProfile.deleteMany({ where: { userId } }).catch(() => {});
+      await tx.influencerProfile.deleteMany({ where: { userId } }).catch(() => {});
+      await tx.organizationProfile.deleteMany({ where: { userId } }).catch(() => {});
+      await tx.entityConnection.deleteMany({ where: { OR: [{ sourceId: userId }, { targetId: userId }] } }).catch(() => {});
+      // 11. Dev error logs
+      await tx.devErrorLog.deleteMany({ where: { userId } }).catch(() => {});
+
+      // Finally delete the user
+      await tx.user.delete({ where: { id: userId } });
+    });
+
     return NextResponse.json({ success: true });
-  } catch (err) {
-    return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
+  } catch (err: any) {
+    console.error('Failed to delete user:', err);
+    return NextResponse.json({ error: err?.message || 'Failed to delete user' }, { status: 500 });
   }
 }

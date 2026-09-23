@@ -115,6 +115,7 @@ export default function DevDashboard() {
   const [healthLoading, setHealthLoading] = useState(false);
   const [activityLog, setActivityLog] = useState<{ msg: string; type: string; ts: string; id: string }[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
+  const [recentUsers, setRecentUsers] = useState<any[]>([]);
   const [users, setUsers] = useState<DevUser[]>([]);
   const [usersTotal, setUsersTotal] = useState(0);
   const [usersPage, setUsersPage] = useState(1);
@@ -234,8 +235,9 @@ export default function DevDashboard() {
         const data: ActivityEvent = JSON.parse(e.data);
         switch (data.type) {
           case 'snapshot':
-            setOnlineUsers(data.users || []);
-            addActivity(`📡 Connected to live stream — ${data.users?.length || 0} users tracked`, 'info');
+            setOnlineUsers((data as any).onlineUsers || data.users || []);
+            setRecentUsers((data as any).recentUsers || []);
+            addActivity(`📡 Connected to live stream — ${(data as any).onlineUsers?.length || 0} online now`, 'info');
             break;
           case 'new_signup':
             addActivity(data.message || `✨ New signup: ${data.user?.username}`, 'signup');
@@ -284,16 +286,25 @@ export default function DevDashboard() {
       return;
     }
     try {
-      await fetch('/api/dev/users', {
+      const res = await fetch('/api/dev/users', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
       });
+      const data = await res.json();
       setDeleteConfirm(null);
+      if (!res.ok || !data.success) {
+        showNotification('❌ Delete Failed', data.error || 'Could not delete user');
+        addActivity(`❌ Failed to delete user: ${data.error || 'Server error'}`, 'error');
+        return;
+      }
+      showNotification('✅ User Deleted', 'User and all related records deleted.');
       loadUsers(usersPage, usersSearch);
       loadStats();
       addActivity(`🗑 User deleted: ${userId}`, 'warn');
-    } catch {}
+    } catch (err: any) {
+      showNotification('❌ Delete Failed', err?.message || 'Network error');
+    }
   };
 
   const handleResolveError = async (id: string) => {
@@ -552,38 +563,44 @@ export default function DevDashboard() {
 
             {/* Online Users Panel */}
             <div>
-              <h2 style={{ fontSize: '14px', fontWeight: 700, color: '#A1A1AA', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 14px 0' }}>
-                🟢 Active Users ({onlineUsers.length})
-              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 14px 0' }}>
+                <h2 style={{ fontSize: '14px', fontWeight: 700, color: '#A1A1AA', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>
+                  🟢 Online Right Now ({onlineUsers.length})
+                </h2>
+                <span style={{ fontSize: '11px', color: '#52525B' }}>Live (last 3m)</span>
+              </div>
               <div style={{
                 background: 'rgba(255,255,255,0.02)',
                 border: '1px solid rgba(255,255,255,0.06)',
                 borderRadius: '16px',
-                height: '500px',
+                maxHeight: '220px',
                 overflowY: 'auto',
                 padding: '8px',
+                marginBottom: '16px',
               }}>
                 {onlineUsers.length === 0 && (
-                  <div style={{ textAlign: 'center', color: '#3F3F46', marginTop: '60px', fontSize: '13px' }}>
-                    No active users right now
+                  <div style={{ textAlign: 'center', color: '#52525B', padding: '24px 10px', fontSize: '13px' }}>
+                    <div style={{ fontSize: '20px', marginBottom: '6px' }}>💤</div>
+                    No users online right now
                   </div>
                 )}
-                {onlineUsers.map((u, i) => (
+                {onlineUsers.map((u) => (
                   <div key={u.id} style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '10px',
-                    padding: '10px 12px',
+                    padding: '8px 12px',
                     borderRadius: '10px',
                     marginBottom: '4px',
-                    background: i === 0 ? 'rgba(99,102,241,0.06)' : 'transparent',
+                    background: 'rgba(34,197,94,0.06)',
+                    border: '1px solid rgba(34,197,94,0.15)',
                     transition: 'background 0.2s',
                   }}>
                     <div style={{
-                      width: '32px', height: '32px', borderRadius: '50%',
+                      width: '30px', height: '30px', borderRadius: '50%',
                       background: `hsl(${(u.username || '').charCodeAt(0) * 15}, 50%, 30%)`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '13px', fontWeight: 700, color: '#FAFAFA', flexShrink: 0,
+                      fontSize: '12px', fontWeight: 700, color: '#FAFAFA', flexShrink: 0,
                     }}>
                       {(u.name || u.username || '?')[0].toUpperCase()}
                     </div>
@@ -591,19 +608,51 @@ export default function DevDashboard() {
                       <div style={{ fontSize: '13px', fontWeight: 600, color: '#FAFAFA' }}>
                         @{u.username || u.name || 'user'}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#52525B' }}>
-                        {u.city || u.country || 'Unknown'} · {timeAgo(u.lastSeen)}
+                      <div style={{ fontSize: '11px', color: '#22C55E' }}>
+                        {u.city || u.country || 'Location hidden'} · Active now
                       </div>
                     </div>
                     <span style={{
                       width: '7px', height: '7px', borderRadius: '50%',
-                      background: u.status === 'ONLINE' ? '#22C55E' : '#52525B',
-                      boxShadow: u.status === 'ONLINE' ? '0 0 6px rgba(34,197,94,0.5)' : 'none',
+                      background: '#22C55E',
+                      boxShadow: '0 0 8px rgba(34,197,94,0.8)',
                       flexShrink: 0,
+                      animation: 'pulse 1.5s infinite',
                     }} />
                   </div>
                 ))}
               </div>
+
+              {/* Recently Active in Past 24h */}
+              {recentUsers.length > 0 && (
+                <div style={{ marginBottom: '16px' }}>
+                  <h3 style={{ fontSize: '12px', fontWeight: 700, color: '#71717A', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px 0' }}>
+                    🕒 Recently Active (Past 24h)
+                  </h3>
+                  <div style={{
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.04)',
+                    borderRadius: '12px',
+                    padding: '6px 10px',
+                    maxHeight: '180px',
+                    overflowY: 'auto',
+                  }}>
+                    {recentUsers.map(u => (
+                      <div key={u.id} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '6px 4px',
+                        borderBottom: '1px solid rgba(255,255,255,0.03)',
+                        fontSize: '12px',
+                      }}>
+                        <span style={{ color: '#D4D4D8' }}>@{u.username || u.name}</span>
+                        <span style={{ color: '#52525B', fontSize: '11px' }}>{timeAgo(u.lastSeen)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Recent Signups */}
               {stats?.recentSignups && stats.recentSignups.length > 0 && (

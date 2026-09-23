@@ -20,10 +20,11 @@ export async function GET(req: NextRequest) {
         } catch {}
       };
 
-      // Send initial snapshot
-      const recentActivity = await prisma.user.findMany({
+      // Send initial snapshot of truly online users (active within last 3 minutes)
+      const activeThreshold = new Date(Date.now() - 3 * 60 * 1000);
+      const onlineUsers = await prisma.user.findMany({
+        where: { lastSeen: { gte: activeThreshold } },
         orderBy: { lastSeen: 'desc' },
-        take: 20,
         select: {
           id: true,
           username: true,
@@ -37,7 +38,34 @@ export async function GET(req: NextRequest) {
         },
       });
 
-      send({ type: 'snapshot', users: recentActivity, timestamp: new Date().toISOString() });
+      // Recently seen users in last 24 hours (not currently online)
+      const recentUsers = await prisma.user.findMany({
+        where: {
+          lastSeen: {
+            lt: activeThreshold,
+            gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+          },
+        },
+        orderBy: { lastSeen: 'desc' },
+        take: 10,
+        select: {
+          id: true,
+          username: true,
+          name: true,
+          status: true,
+          lastSeen: true,
+          city: true,
+          country: true,
+        },
+      });
+
+      send({
+        type: 'snapshot',
+        onlineUsers,
+        recentUsers,
+        users: onlineUsers,
+        timestamp: new Date().toISOString(),
+      });
 
       // Poll for changes every 5 seconds
       let lastCheck = new Date();
@@ -63,23 +91,23 @@ export async function GET(req: NextRequest) {
             });
           }
 
-          // Recently active users (last 10 seconds)
+          // Real-time active users (active within last 3 minutes)
+          const currentActive = new Date(Date.now() - 3 * 60 * 1000);
           const activeUsers = await prisma.user.findMany({
-            where: { lastSeen: { gt: new Date(Date.now() - 10000) } },
+            where: { lastSeen: { gte: currentActive } },
+            orderBy: { lastSeen: 'desc' },
             select: {
               id: true, username: true, name: true, status: true,
               lastSeen: true, city: true, country: true,
             },
           });
 
-          if (activeUsers.length > 0) {
-            send({
-              type: 'active_pulse',
-              users: activeUsers,
-              count: activeUsers.length,
-              timestamp: new Date().toISOString(),
-            });
-          }
+          send({
+            type: 'active_pulse',
+            users: activeUsers,
+            count: activeUsers.length,
+            timestamp: new Date().toISOString(),
+          });
 
           // New errors
           const newErrors = await prisma.devErrorLog.findMany({
