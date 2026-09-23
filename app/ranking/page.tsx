@@ -237,12 +237,9 @@ export default async function RankingPage({
                     filter: 'drop-shadow(0 4px 12px rgba(37, 99, 235, 0.4))'
                   }}>
                     <img
-                      src="/images/figma/badge_164_318.svg"
+                      src="/images/figma/badge_164_318.png"
                       alt="Rank 1 Emblem"
                       style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/images/figma/badge_164_318.png';
-                      }}
                     />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -329,12 +326,9 @@ export default async function RankingPage({
                     filter: 'drop-shadow(0 4px 12px rgba(22, 163, 74, 0.4))'
                   }}>
                     <img
-                      src="/images/figma/badge_164_290.svg"
+                      src="/images/figma/badge_164_290.png"
                       alt="Rank 2 Emblem"
                       style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/images/figma/badge_164_290.png';
-                      }}
                     />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -419,12 +413,9 @@ export default async function RankingPage({
                     filter: 'drop-shadow(0 4px 12px rgba(234, 179, 8, 0.4))'
                   }}>
                     <img
-                      src="/images/figma/badge_164_309.svg"
+                      src="/images/figma/badge_164_309.png"
                       alt="Rank 3 Emblem"
                       style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/images/figma/badge_164_309.png';
-                      }}
                     />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -539,12 +530,9 @@ export default async function RankingPage({
                       justifyContent: 'center'
                     }}>
                       <img
-                        src="/images/figma/badge_164_290.svg"
+                        src="/images/figma/badge_164_290.png"
                         alt="badge"
                         style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/images/figma/badge_164_290.png';
-                        }}
                       />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -617,12 +605,9 @@ export default async function RankingPage({
                       justifyContent: 'center'
                     }}>
                       <img
-                        src="/images/figma/badge_164_318.svg"
+                        src="/images/figma/badge_164_318.png"
                         alt="badge"
                         style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/images/figma/badge_164_318.png';
-                        }}
                       />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
