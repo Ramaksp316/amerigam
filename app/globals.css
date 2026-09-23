@@ -2411,6 +2411,28 @@ body:has(.reel-feed-container) .main-content,
   box-shadow: 0 0 16px rgba(255, 255, 255, 0.35);
 }
 
+.explore-subnav-link {
+  font-size: 15px;
+  font-weight: 500;
+  color: #71717A;
+  text-decoration: none;
+  transition: color 0.15s ease;
+  letter-spacing: 0.2px;
+}
+.explore-subnav-link:hover {
+  color: #FFFFFF;
+}
+
+.explore-view-all-link {
+  font-size: 11px;
+  color: #71717A;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.explore-view-all-link:hover {
+  color: #FFFFFF;
+}
+
 .explore-search-input:focus {
   outline: none;
 }

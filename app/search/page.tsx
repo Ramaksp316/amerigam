@@ -268,16 +268,7 @@ export default async function SearchPage({
           {/* Inactive Tab: Network */}
           <Link
             href="/network"
-            style={{
-              fontSize: '15px',
-              fontWeight: 500,
-              color: '#71717A',
-              textDecoration: 'none',
-              transition: 'color 0.15s ease',
-              letterSpacing: '0.2px'
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = '#71717A')}
+            className="explore-subnav-link"
           >
             Network
           </Link>
@@ -748,9 +739,7 @@ export default async function SearchPage({
             </h2>
             <Link
               href="/search"
-              style={{ fontSize: '11px', color: '#71717A', textDecoration: 'none', transition: 'color 0.15s' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#71717A')}
+              className="explore-view-all-link"
             >
               View all
             </Link>
@@ -886,9 +875,7 @@ export default async function SearchPage({
             </h2>
             <Link
               href="/network"
-              style={{ fontSize: '11px', color: '#71717A', textDecoration: 'none', transition: 'color 0.15s' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#71717A')}
+              className="explore-view-all-link"
             >
               View all
             </Link>
