@@ -134,10 +134,20 @@ export default async function AppRightSidebar({
 
             {/* Stats Row: 11 Rank | 1001 AP | 9.3 Rating */}
             <div style={{ display: 'flex', gap: '8px', fontSize: '11px', whiteSpace: 'nowrap' }}>
-              <div>
+              <Link
+                href="/ranking"
+                style={{
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  cursor: 'pointer'
+                }}
+              >
                 <span style={{ fontWeight: 700, color: '#FFFFFF' }}>{userRank}</span>{' '}
                 <span style={{ color: '#71717A' }}>Rank</span>
-              </div>
+              </Link>
               <div>
                 <span style={{ fontWeight: 700, color: '#FFFFFF' }}>{apPoints}</span>{' '}
                 <span style={{ color: '#71717A' }}>AP</span>

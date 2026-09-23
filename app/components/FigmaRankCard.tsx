@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 interface FigmaRankCardProps {
   rank?: number | string;
@@ -28,20 +29,21 @@ export default function FigmaRankCard({
       fontFamily: 'inherit',
       userSelect: 'none'
     }}>
-      {/* Top Body Card matching media_1790141404798.jpg */}
-      <div style={{
-        width: '100%',
-        backgroundColor: '#18181B',
-        borderRadius: '24px',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        boxShadow: '0 16px 36px rgba(0, 0, 0, 0.6)',
-        padding: '20px',
-        boxSizing: 'border-box',
-        display: 'flex',
-        gap: '16px',
-        alignItems: 'flex-start',
-        position: 'relative'
-      }}>
+      {/* Top Body Card matching media_1790141404798.jpg - Clickable link to /ranking */}
+      <Link href="/ranking" style={{ textDecoration: 'none', color: 'inherit', display: 'block', cursor: 'pointer' }}>
+        <div style={{
+          width: '100%',
+          backgroundColor: '#18181B',
+          borderRadius: '24px',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: '0 16px 36px rgba(0, 0, 0, 0.6)',
+          padding: '20px',
+          boxSizing: 'border-box',
+          display: 'flex',
+          gap: '16px',
+          alignItems: 'flex-start',
+          position: 'relative'
+        }}>
         {/* Left Green Emblem Badge */}
         <div style={{
           width: '74px',
@@ -94,6 +96,7 @@ export default function FigmaRankCard({
           </p>
         </div>
       </div>
+      </Link>
 
       {/* Connected Bridge Notch (media_1790141404798.jpg) */}
       <div style={{
