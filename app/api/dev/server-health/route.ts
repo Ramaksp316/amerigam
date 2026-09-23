@@ -1,87 +1,87 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isDevAuthenticatedFromRequest } from '@/lib/dev-auth';
-import { Client } from 'ssh2';
+import os from 'os';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 export const dynamic = 'force-dynamic';
-
-function sshExec(conn: Client, cmd: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    conn.exec(cmd, (err, stream) => {
-      if (err) return reject(err);
-      let out = '';
-      stream.on('data', (d: Buffer) => { out += d.toString(); });
-      stream.on('close', () => resolve(out));
-      stream.stderr.on('data', () => {});
-    });
-  });
-}
 
 export async function GET(req: NextRequest) {
   if (!isDevAuthenticatedFromRequest(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  return new Promise<NextResponse>((resolve) => {
-    const conn = new Client();
+  try {
+    // 1. RAM Calculation
+    const totalMem = Math.round(os.totalmem() / (1024 * 1024));
+    const freeMem = Math.round(os.freemem() / (1024 * 1024));
+    const usedMem = totalMem - freeMem;
+    const memPct = totalMem > 0 ? Math.round((usedMem / totalMem) * 100) : 0;
 
-    const timeout = setTimeout(() => {
-      conn.end();
-      resolve(NextResponse.json({
-        error: 'SSH timeout',
-        cpu: null, ram: null, disk: null, pm2: null,
-      }, { status: 200 }));
-    }, 10000);
-
-    conn.on('ready', async () => {
-      try {
-        const [cpuRaw, ramRaw, diskRaw, pm2Raw] = await Promise.all([
-          sshExec(conn, "top -bn1 | grep 'Cpu(s)' | awk '{print $2+$4}'"),
-          sshExec(conn, "free -m | awk '/Mem:/ {printf \"%.1f %.1f\", $3, $2}'"),
-          sshExec(conn, "df -h / | awk 'NR==2 {print $3, $4, $5}'"),
-          sshExec(conn, 'pm2 jlist 2>/dev/null'),
-        ]);
-
-        const cpu = parseFloat(cpuRaw.trim()) || 0;
-        const [ramUsed, ramTotal] = ramRaw.trim().split(' ').map(parseFloat);
-        const [diskUsed, diskAvail, diskPct] = diskRaw.trim().split(' ');
-
-        let pm2Processes = [];
-        try {
-          pm2Processes = JSON.parse(pm2Raw.trim()).map((p: any) => ({
-            name: p.name,
-            status: p.pm2_env?.status,
-            pid: p.pid,
-            uptime: p.pm2_env?.pm_uptime,
-            restarts: p.pm2_env?.restart_time,
-            cpu: p.monit?.cpu,
-            memory: Math.round((p.monit?.memory || 0) / 1024 / 1024),
-          }));
-        } catch {}
-
-        clearTimeout(timeout);
-        conn.end();
-
-        resolve(NextResponse.json({
-          cpu: Math.round(cpu),
-          ram: { used: ramUsed, total: ramTotal, pct: Math.round((ramUsed / ramTotal) * 100) },
-          disk: { used: diskUsed, available: diskAvail, pct: diskPct },
-          pm2: pm2Processes,
-          timestamp: new Date().toISOString(),
-        }));
-      } catch (err) {
-        clearTimeout(timeout);
-        conn.end();
-        resolve(NextResponse.json({ error: 'Failed to fetch health', cpu: null, ram: null, disk: null, pm2: null }));
+    // 2. CPU Calculation
+    let cpu = 0;
+    try {
+      if (process.platform === 'linux') {
+        const { stdout } = await execAsync("top -bn1 | grep 'Cpu(s)' | awk '{print $2+$4}'", { timeout: 3000 });
+        cpu = Math.round(parseFloat(stdout.trim()) || 0);
+      } else {
+        const load = os.loadavg()[0] || 0;
+        const cpus = os.cpus().length || 1;
+        cpu = Math.min(100, Math.round((load / cpus) * 100));
       }
-    }).on('error', (err) => {
-      clearTimeout(timeout);
-      resolve(NextResponse.json({ error: err.message, cpu: null, ram: null, disk: null, pm2: null }));
-    }).connect({
-      host: process.env.VPS_HOST || '168.144.126.4',
-      port: 22,
-      username: process.env.VPS_USER || 'root',
-      password: process.env.VPS_PASSWORD,
-      readyTimeout: 8000,
+    } catch {
+      const load = os.loadavg()[0] || 0;
+      const cpus = os.cpus().length || 1;
+      cpu = Math.min(100, Math.round((load / cpus) * 100));
+    }
+
+    // 3. Disk Calculation
+    let disk = { used: 'N/A', available: 'N/A', pct: '0%' };
+    try {
+      if (process.platform === 'linux') {
+        const { stdout } = await execAsync("df -h / | awk 'NR==2 {print $3, $4, $5}'", { timeout: 3000 });
+        const parts = stdout.trim().split(/\s+/);
+        if (parts.length >= 3) {
+          disk = { used: parts[0], available: parts[1], pct: parts[2] };
+        }
+      }
+    } catch {}
+
+    // 4. PM2 Status
+    let pm2Processes: any[] = [];
+    try {
+      const { stdout } = await execAsync('pm2 jlist', { timeout: 4000 });
+      pm2Processes = JSON.parse(stdout.trim()).map((p: any) => ({
+        name: p.name,
+        status: p.pm2_env?.status,
+        pid: p.pid,
+        uptime: p.pm2_env?.pm_uptime,
+        restarts: p.pm2_env?.restart_time,
+        cpu: p.monit?.cpu,
+        memory: Math.round((p.monit?.memory || 0) / (1024 * 1024)),
+      }));
+    } catch {}
+
+    return NextResponse.json({
+      cpu,
+      ram: {
+        used: usedMem,
+        total: totalMem,
+        pct: memPct,
+      },
+      disk,
+      pm2: pm2Processes,
+      timestamp: new Date().toISOString(),
     });
-  });
+  } catch (err: any) {
+    return NextResponse.json({
+      error: err?.message || 'Failed to fetch health',
+      cpu: null,
+      ram: null,
+      disk: null,
+      pm2: null,
+    });
+  }
 }

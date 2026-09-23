@@ -64,7 +64,7 @@ async function runDeploy() {
     if (status) {
       console.log('Staging changes...');
       execSync('git add -A', { stdio: 'inherit' });
-      const commitMsg = 'feat: redesign Messages page and direct chat matching Figma 16 & 17';
+      const commitMsg = process.argv[3] || 'feat: update developer mission control and server health';
       console.log(`Committing: ${commitMsg}`);
       execSync(`git commit -m "${commitMsg}"`, { stdio: 'inherit' });
     }
@@ -154,6 +154,14 @@ async function runDeploy() {
 
     // Pull latest code from GitHub main
     await executeCommand(conn, `cd "${projectDir}" && git fetch origin main && git reset --hard origin/main`);
+
+    // Ensure VPS .env contains DEV_BOARD_PIN and DEV_BOARD_SECRET
+    console.log('\n🔐 Syncing dev-board environment variables on server...');
+    await executeCommand(conn, `cd "${projectDir}" && (grep -q "DEV_BOARD_PIN" .env 2>/dev/null || printf '\\nDEV_BOARD_PIN="Amerigam316@@@RK"\\nDEV_BOARD_SECRET="amg_dev_2026_s3cr3t_k3y"\\n' >> .env)`);
+
+    // Run prisma generate on server
+    console.log('\n📦 Generating Prisma Client on server...');
+    await executeCommand(conn, `cd "${projectDir}" && npx prisma generate`);
 
     // 5. Build Next.js application
     console.log('\n🔨 Building Next.js application on production server...');
