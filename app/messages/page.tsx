@@ -22,7 +22,6 @@ export default async function InboxPage({
   const targetUserId = params.userId;
 
   if (targetUserId && targetUserId !== userId) {
-    // Check if conversation exists
     let conversation = await prisma.conversation.findFirst({
       where: {
         OR: [
@@ -109,7 +108,7 @@ export default async function InboxPage({
     };
   });
 
-  // Fetch contacts for the "New Message" modal
+  // Fetch contacts for "New Message" modal
   const follows = await prisma.follow.findMany({
     where: { followerId: userId },
     include: {
@@ -129,9 +128,34 @@ export default async function InboxPage({
   const availableContacts = follows.map((f) => f.following);
 
   return (
-    <div className="w-full h-full min-h-[calc(100vh-62px)] md:h-[calc(100vh-20px)] flex flex-col md:flex-row bg-[#000000] overflow-hidden">
+    <div
+      className="messages-root-layout"
+      style={{
+        display: 'flex',
+        width: '100%',
+        height: '100vh',
+        maxHeight: '100vh',
+        overflow: 'hidden',
+        backgroundColor: '#000000',
+        color: '#FFFFFF'
+      }}
+    >
       {/* Left Pane: Conversation Sidebar */}
-      <div className="w-full md:w-80 lg:w-[350px] shrink-0 h-full flex flex-col border-r border-white/5 pb-20 md:pb-0">
+      <div
+        className="messages-sidebar-panel"
+        style={{
+          width: '340px',
+          minWidth: '300px',
+          maxWidth: '380px',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: '#000000',
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          flexShrink: 0,
+          boxSizing: 'border-box'
+        }}
+      >
         <ConversationSidebar
           conversations={conversations}
           currentUserId={userId}
@@ -139,9 +163,35 @@ export default async function InboxPage({
         />
       </div>
 
-      {/* Right Pane (Desktop Only): Figma 17.png Empty State Illustration inside dark rounded card */}
-      <div className="hidden md:flex flex-1 h-full p-4 lg:p-6 overflow-hidden">
-        <div className="w-full h-full bg-[#18191c] border border-white/5 rounded-[28px] overflow-hidden flex items-center justify-center shadow-2xl">
+      {/* Right Pane (Desktop): Figma 17.png Empty State Illustration inside dark rounded card */}
+      <div
+        className="messages-main-container"
+        style={{
+          flex: 1,
+          height: '100%',
+          padding: '16px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          backgroundColor: '#000000',
+          boxSizing: 'border-box'
+        }}
+      >
+        <div
+          className="messages-card-shell"
+          style={{
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#16171B',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '28px',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxSizing: 'border-box'
+          }}
+        >
           <EmptyStateIllustration />
         </div>
       </div>

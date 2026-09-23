@@ -167,9 +167,34 @@ export default async function ConversationPage({
   const availableContacts = follows.map((f) => f.following);
 
   return (
-    <div className="w-full h-screen md:h-[calc(100vh-20px)] flex bg-[#000000] overflow-hidden">
-      {/* Left Pane (Desktop Only): Conversation Sidebar */}
-      <div className="hidden md:flex md:w-80 lg:w-[350px] shrink-0 h-full flex-col border-r border-white/5">
+    <div
+      className="messages-root-layout"
+      style={{
+        display: 'flex',
+        width: '100%',
+        height: '100vh',
+        maxHeight: '100vh',
+        overflow: 'hidden',
+        backgroundColor: '#000000',
+        color: '#FFFFFF'
+      }}
+    >
+      {/* Left Pane (Desktop): Conversation Sidebar */}
+      <div
+        className="messages-sidebar-panel"
+        style={{
+          width: '340px',
+          minWidth: '300px',
+          maxWidth: '380px',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: '#000000',
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          flexShrink: 0,
+          boxSizing: 'border-box'
+        }}
+      >
         <ConversationSidebar
           conversations={conversations}
           activeConversationId={id}
@@ -178,8 +203,20 @@ export default async function ConversationPage({
         />
       </div>
 
-      {/* Right Pane (Desktop: inside rounded card container; Mobile: full-screen) */}
-      <div className="flex-1 h-full w-full p-0 md:p-4 lg:p-6 overflow-hidden flex flex-col">
+      {/* Right Pane (Desktop: rounded card; Mobile: full-screen) */}
+      <div
+        className="messages-main-container mobile-active"
+        style={{
+          flex: 1,
+          height: '100%',
+          padding: '16px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          backgroundColor: '#000000',
+          boxSizing: 'border-box'
+        }}
+      >
         <ChatClient
           initialMessages={initialMessages}
           conversationId={id}

@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   Send,
   Plus,
@@ -31,7 +30,6 @@ export default function ChatClient({
   conversationId,
   currentUserId,
   partner,
-  isMobileOnly = false,
 }: {
   initialMessages: MessageItem[];
   conversationId: string;
@@ -43,7 +41,6 @@ export default function ChatClient({
     avatarData: string | null;
     status?: string;
   };
-  isMobileOnly?: boolean;
 }) {
   const [messages, setMessages] = useState<MessageItem[]>(initialMessages);
   const [text, setText] = useState('');
@@ -51,9 +48,7 @@ export default function ChatClient({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const router = useRouter();
 
-  // Scroll to bottom
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
@@ -78,8 +73,10 @@ export default function ChatClient({
         const latest = await getLatestMessages(conversationId, 60);
         if (latest && latest.length > 0) {
           setMessages((prev) => {
-            // Check if there are any new messages or state changes
-            if (latest.length !== prev.length || latest[latest.length - 1].id !== prev[prev.length - 1]?.id) {
+            if (
+              latest.length !== prev.length ||
+              latest[latest.length - 1].id !== prev[prev.length - 1]?.id
+            ) {
               return latest as MessageItem[];
             }
             return prev;
@@ -115,7 +112,6 @@ export default function ChatClient({
       textareaRef.current.style.height = 'auto';
     }
 
-    // Optimistic message update
     const tempId = 'temp-' + Date.now();
     const optimisticMsg: MessageItem = {
       id: tempId,
@@ -134,7 +130,6 @@ export default function ChatClient({
           prev.map((m) => (m.id === tempId ? (res.message as MessageItem) : m))
         );
       } else {
-        // Rollback
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
       }
     } catch {
@@ -157,82 +152,159 @@ export default function ChatClient({
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-[#18191c] rounded-none md:rounded-[28px] overflow-hidden select-none border border-white/5">
+    <div
+      className="messages-card-shell"
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#16171B',
+        overflow: 'hidden',
+        position: 'relative',
+        boxSizing: 'border-box'
+      }}
+    >
       {/* Header matching Figma 16.png */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-white/[0.08] bg-[#18191c]/90 backdrop-blur-md shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
-          {/* Back button (Mobile only or when requested) */}
+      <div
+        className="messages-chat-header"
+        style={{
+          padding: '14px 22px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          backgroundColor: 'rgba(22, 23, 27, 0.95)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          flexShrink: 0,
+          boxSizing: 'border-box'
+        }}
+      >
+        <div
+          className="messages-header-user-group"
+          style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}
+        >
+          {/* Mobile Back Button */}
           <Link
             href="/messages"
-            className="md:hidden w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white mr-1 transition-colors"
+            style={{
+              width: '34px',
+              height: '34px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255, 255, 255, 0.06)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#FFFFFF',
+              textDecoration: 'none',
+              marginRight: '2px',
+              flexShrink: 0
+            }}
           >
             <ChevronLeft size={20} />
           </Link>
 
           {/* Red Status Dot matching Figma 16.png */}
-          <div className="relative flex items-center justify-center shrink-0">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-          </div>
+          <div
+            className="messages-red-status-dot"
+            style={{
+              width: '9px',
+              height: '9px',
+              borderRadius: '50%',
+              backgroundColor: '#EF4444',
+              boxShadow: '0 0 10px rgba(239, 68, 68, 0.6)',
+              flexShrink: 0
+            }}
+          />
 
           {/* Partner Avatar */}
-          <Link href={`/user/${partner.id}`} className="shrink-0">
+          <Link href={`/user/${partner.id}`} style={{ flexShrink: 0 }}>
             <ProfilePicture user={partner} size={40} showStatus={false} />
           </Link>
 
-          {/* Partner Name & Tag */}
-          <div className="flex flex-col min-w-0">
+          {/* Partner Name & Handle */}
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <Link
               href={`/user/${partner.id}`}
-              className="text-base sm:text-lg font-bold text-white hover:text-sky-400 transition-colors truncate font-sans"
+              className="messages-chat-title"
+              style={{
+                fontSize: '17px',
+                fontWeight: 700,
+                color: '#FFFFFF',
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                fontFamily: 'inherit'
+              }}
             >
               {partner.name || partner.username}
             </Link>
-            <span className="text-[11px] text-zinc-400 truncate">
+            <span
+              className="messages-chat-handle"
+              style={{ fontSize: '12px', color: '#8E8E93', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+            >
               @{partner.username}
             </span>
           </div>
         </div>
 
-        {/* Right action indicator */}
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/user/${partner.id}`}
-            className="text-xs text-sky-400 hover:text-sky-300 font-semibold px-3 py-1.5 rounded-full bg-sky-500/10 hover:bg-sky-500/20 transition-all hidden sm:inline-block"
-          >
-            View Profile
-          </Link>
-        </div>
+        {/* View Profile Action */}
+        <Link
+          href={`/user/${partner.id}`}
+          style={{
+            fontSize: '12px',
+            color: '#1D9BF0',
+            fontWeight: 600,
+            padding: '6px 14px',
+            borderRadius: '999px',
+            backgroundColor: 'rgba(29, 155, 240, 0.1)',
+            textDecoration: 'none',
+            flexShrink: 0
+          }}
+        >
+          Profile
+        </Link>
       </div>
 
       {/* Messages Scroll Area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4"
-        style={{ scrollBehavior: 'smooth' }}
+        className="messages-chat-body"
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+          boxSizing: 'border-box'
+        }}
       >
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-3">
-              <ProfilePicture user={partner} size={54} showStatus={false} />
-            </div>
-            <h4 className="text-white font-bold text-base mb-1">
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              textAlign: 'center',
+              padding: '40px 16px'
+            }}
+          >
+            <ProfilePicture user={partner} size={56} showStatus={false} />
+            <h4 style={{ color: '#FFFFFF', fontWeight: 700, fontSize: '16px', margin: '14px 0 4px 0' }}>
               Say hello to {partner.name || partner.username}!
             </h4>
-            <p className="text-zinc-500 text-xs max-w-xs">
-              This is the beginning of your direct conversation. Send a message to connect.
+            <p style={{ color: '#8E8E93', fontSize: '13px', maxWidth: '300px', margin: 0 }}>
+              This is the beginning of your direct conversation.
             </p>
           </div>
         ) : (
-          messages.map((msg, index) => {
+          messages.map((msg) => {
             const isMe = msg.senderId === currentUserId;
-            const prevMsg = messages[index - 1];
-            const isFirstInGroup =
-              !prevMsg ||
-              prevMsg.senderId !== msg.senderId ||
-              new Date(msg.createdAt).getTime() -
-                new Date(prevMsg.createdAt).getTime() >
-                5 * 60000;
-
             const timeStr = new Date(msg.createdAt).toLocaleTimeString([], {
               hour: '2-digit',
               minute: '2-digit',
@@ -241,46 +313,120 @@ export default function ChatClient({
             return (
               <div
                 key={msg.id}
-                className={`flex flex-col ${
-                  isMe ? 'items-end' : 'items-start'
-                }`}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: isMe ? 'flex-end' : 'flex-start',
+                  width: '100%'
+                }}
               >
-                {/* Incoming Message (Left) matching Figma 16.png */}
                 {!isMe ? (
-                  <div className="flex items-start gap-2.5 max-w-[85%] sm:max-w-[70%]">
-                    {/* Partner Avatar on left */}
-                    <div className="shrink-0 mt-1">
-                      <ProfilePicture
-                        user={partner}
-                        size={32}
-                        showStatus={false}
-                      />
+                  /* Incoming Message (Partner) matching Figma 16.png */
+                  <div
+                    className="messages-bubble-incoming-row"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '10px',
+                      maxWidth: '75%'
+                    }}
+                  >
+                    <div style={{ flexShrink: 0, marginTop: '2px' }}>
+                      <ProfilePicture user={partner} size={32} showStatus={false} />
                     </div>
 
-                    <div className="flex flex-col">
-                      {/* Dark bubble with cyan handle tag matching Figma 16 */}
-                      <div className="bg-[#26282c] border border-white/[0.04] text-white rounded-[22px] px-4 py-2.5 shadow-sm">
-                        <div className="text-[11px] font-semibold text-[#38bdf8] mb-0.5">
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <div
+                        className="messages-bubble-incoming-content"
+                        style={{
+                          backgroundColor: '#24262B',
+                          border: '1px solid rgba(255, 255, 255, 0.06)',
+                          borderRadius: '20px',
+                          padding: '10px 16px',
+                          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.3)'
+                        }}
+                      >
+                        <div
+                          className="messages-bubble-handle-tag"
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            color: '#38BDF8',
+                            marginBottom: '2px'
+                          }}
+                        >
                           @{partner.username}
                         </div>
-                        <div className="text-[14px] text-zinc-100 leading-relaxed whitespace-pre-wrap break-words">
+                        <div
+                          className="messages-bubble-text"
+                          style={{
+                            fontSize: '14px',
+                            lineHeight: 1.5,
+                            color: '#F4F4F5',
+                            wordBreak: 'break-word',
+                            whiteSpace: 'pre-wrap'
+                          }}
+                        >
                           {msg.content}
                         </div>
                       </div>
-                      <span className="text-[10px] text-zinc-500 ml-2 mt-1">
+                      <span
+                        className="messages-bubble-timestamp"
+                        style={{
+                          fontSize: '10px',
+                          color: '#71717A',
+                          marginTop: '4px',
+                          marginLeft: '8px'
+                        }}
+                      >
                         {timeStr}
                       </span>
                     </div>
                   </div>
                 ) : (
-                  /* Outgoing Message (Right) matching Figma 16.png vibrant blue bubble */
-                  <div className="flex flex-col items-end max-w-[85%] sm:max-w-[70%]">
-                    <div className="bg-[#0284c7] text-white rounded-[22px] px-4 py-2.5 shadow-md">
-                      <div className="text-[14px] text-white leading-relaxed whitespace-pre-wrap break-words">
+                  /* Outgoing Message (Current User) matching Figma 16.png */
+                  <div
+                    className="messages-bubble-outgoing-row"
+                    style={{
+                      alignSelf: 'flex-end',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-end',
+                      maxWidth: '75%'
+                    }}
+                  >
+                    <div
+                      className="messages-bubble-outgoing-content"
+                      style={{
+                        backgroundColor: '#0284C7',
+                        borderRadius: '20px',
+                        padding: '10px 16px',
+                        color: '#FFFFFF',
+                        boxShadow: '0 4px 16px rgba(2, 132, 199, 0.4)'
+                      }}
+                    >
+                      <div
+                        className="messages-bubble-text"
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: 1.5,
+                          color: '#FFFFFF',
+                          wordBreak: 'break-word',
+                          whiteSpace: 'pre-wrap'
+                        }}
+                      >
                         {msg.content}
                       </div>
                     </div>
-                    <span className="text-[10px] text-zinc-500 mr-2 mt-1">
+                    <span
+                      className="messages-bubble-timestamp"
+                      style={{
+                        fontSize: '10px',
+                        color: '#71717A',
+                        marginTop: '4px',
+                        marginRight: '8px'
+                      }}
+                    >
                       {timeStr}
                     </span>
                   </div>
@@ -293,33 +439,78 @@ export default function ChatClient({
 
       {/* Emoji Picker Popup */}
       {showEmojiPicker && (
-        <div className="px-4 py-2 bg-[#202227] border-t border-white/10 flex items-center gap-2 overflow-x-auto">
-          {['👋', '🔥', '👏', '🚀', '❤️', '😂', '👍', '✨', '🎯', '💯', '🙌'].map(
-            (emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                onClick={() => addEmoji(emoji)}
-                className="text-xl hover:scale-125 transition-transform p-1"
-              >
-                {emoji}
-              </button>
-            )
-          )}
+        <div
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#202227',
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            overflowX: 'auto'
+          }}
+        >
+          {['👋', '🔥', '👏', '🚀', '❤️', '😂', '👍', '✨', '🎯', '💯', '🙌'].map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => addEmoji(emoji)}
+              style={{
+                fontSize: '20px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px'
+              }}
+            >
+              {emoji}
+            </button>
+          ))}
         </div>
       )}
 
       {/* Chat Footer / Input Bar matching Figma 16.png */}
-      <div className="p-3 sm:p-4 border-t border-white/[0.08] bg-[#18191c]/95 backdrop-blur-md shrink-0">
+      <div
+        className="messages-chat-input-bar"
+        style={{
+          padding: '14px 20px',
+          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          backgroundColor: '#16171B',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          flexShrink: 0,
+          boxSizing: 'border-box'
+        }}
+      >
         <form
           onSubmit={handleSend}
-          className="flex items-center gap-2 sm:gap-3 w-full"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            width: '100%'
+          }}
         >
-          {/* Green circular button matching Figma 16 */}
+          {/* Green circular apps button matching Figma 16 */}
           <button
             type="button"
             title="Apps & Tools"
-            className="w-9 h-9 rounded-full bg-[#22c55e] hover:bg-[#16a34a] text-black flex items-center justify-center shrink-0 shadow transition-transform active:scale-95"
+            className="messages-action-green-btn"
+            style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '50%',
+              backgroundColor: '#22C55E',
+              color: '#000000',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              flexShrink: 0,
+              boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+            }}
           >
             <LayoutGrid size={17} strokeWidth={2.4} />
           </button>
@@ -329,29 +520,77 @@ export default function ChatClient({
             type="button"
             title="Attach Media"
             onClick={() => setShowEmojiPicker((prev) => !prev)}
-            className="w-9 h-9 rounded-full border border-white/20 hover:border-white/40 text-white/70 hover:text-white flex items-center justify-center shrink-0 transition-colors"
+            className="messages-plus-circle-btn"
+            style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '50%',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              backgroundColor: 'transparent',
+              color: 'rgba(255, 255, 255, 0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              flexShrink: 0
+            }}
           >
             <Plus size={18} strokeWidth={2.2} />
           </button>
 
           {/* Pill Input Container matching Figma 16 */}
-          <div className="flex-1 flex items-center bg-[#202227] border border-white/10 rounded-full px-3.5 sm:px-4 py-1.5 focus-within:border-sky-500/50 transition-all gap-2">
+          <div
+            className="messages-input-pill"
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              backgroundColor: '#202227',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '999px',
+              padding: '4px 14px 4px 18px',
+              gap: '10px',
+              boxSizing: 'border-box'
+            }}
+          >
             <textarea
               ref={textareaRef}
               value={text}
               onChange={handleInput}
               onKeyDown={handleKeyDown}
-              placeholder="History is on"
+              placeholder="Type a message..."
               rows={1}
-              className="flex-1 bg-transparent text-white placeholder-zinc-500 text-sm outline-none resize-none py-1 leading-normal max-h-24"
+              className="messages-input-field"
+              style={{
+                flex: 1,
+                backgroundColor: 'transparent',
+                border: 'none',
+                color: '#FFFFFF',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                outline: 'none',
+                resize: 'none',
+                padding: '7px 0',
+                lineHeight: 1.4,
+                maxHeight: '100px'
+              }}
             />
 
             {/* Utility action icons cluster matching Figma 16 */}
-            <div className="hidden sm:flex items-center gap-2 text-zinc-400">
+            <div
+              className="messages-input-icons-group"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                color: '#8E8E93'
+              }}
+            >
               <button
                 type="button"
                 title="Formatting"
-                className="hover:text-white transition-colors"
+                className="messages-input-icon-btn"
+                style={{ background: 'none', border: 'none', color: '#8E8E93', cursor: 'pointer', padding: '4px' }}
               >
                 <Type size={16} />
               </button>
@@ -359,28 +598,32 @@ export default function ChatClient({
                 type="button"
                 title="Emoji"
                 onClick={() => setShowEmojiPicker((prev) => !prev)}
-                className="hover:text-white transition-colors"
+                className="messages-input-icon-btn"
+                style={{ background: 'none', border: 'none', color: '#8E8E93', cursor: 'pointer', padding: '4px' }}
               >
                 <Smile size={16} />
               </button>
               <button
                 type="button"
                 title="Stickers"
-                className="hover:text-white transition-colors"
+                className="messages-input-icon-btn"
+                style={{ background: 'none', border: 'none', color: '#8E8E93', cursor: 'pointer', padding: '4px' }}
               >
                 <ImageIcon size={16} />
               </button>
               <button
                 type="button"
                 title="Attach file"
-                className="hover:text-white transition-colors"
+                className="messages-input-icon-btn"
+                style={{ background: 'none', border: 'none', color: '#8E8E93', cursor: 'pointer', padding: '4px' }}
               >
                 <Paperclip size={16} />
               </button>
               <button
                 type="button"
                 title="Voice note"
-                className="hover:text-white transition-colors"
+                className="messages-input-icon-btn"
+                style={{ background: 'none', border: 'none', color: '#8E8E93', cursor: 'pointer', padding: '4px' }}
               >
                 <Mic size={16} />
               </button>
@@ -392,13 +635,24 @@ export default function ChatClient({
             type="submit"
             disabled={!text.trim() || isSending}
             title="Send"
-            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all ${
-              text.trim()
-                ? 'bg-[#0284c7] hover:bg-[#0369a1] text-white shadow-lg shadow-sky-500/25 active:scale-95'
-                : 'bg-[#24262b] text-zinc-500 cursor-default'
-            }`}
+            className={`messages-send-circle-btn ${text.trim() ? 'active' : ''}`}
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: 'none',
+              cursor: text.trim() ? 'pointer' : 'default',
+              flexShrink: 0,
+              backgroundColor: text.trim() ? '#0284C7' : '#24262B',
+              color: text.trim() ? '#FFFFFF' : '#71717A',
+              boxShadow: text.trim() ? '0 4px 16px rgba(2, 132, 199, 0.4)' : 'none',
+              transition: 'all 0.2s ease'
+            }}
           >
-            <Send size={18} className="translate-x-0.5" />
+            <Send size={18} style={{ transform: 'translateX(1px)' }} />
           </button>
         </form>
       </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Search, User as UserIcon } from 'lucide-react';
+import { X, Search } from 'lucide-react';
 import ProfilePicture from '../components/ProfilePicture';
 
 interface ContactUser {
@@ -42,30 +42,74 @@ export default function NewConversationModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)'
+      }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-[#16171b] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh]"
+        style={{
+          width: '100%',
+          maxWidth: '440px',
+          backgroundColor: '#16171B',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '24px',
+          overflow: 'hidden',
+          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: '80vh',
+          boxSizing: 'border-box'
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-          <h2 className="text-lg font-bold text-white font-sans">New Message</h2>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '16px 20px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+          }}
+        >
+          <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#FFFFFF', margin: 0, fontFamily: 'inherit' }}>
+            New Message
+          </h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255, 255, 255, 0.06)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#A1A1AA',
+              border: 'none',
+              cursor: 'pointer'
+            }}
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b border-white/10">
-          <div className="relative">
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <div style={{ position: 'relative' }}>
             <Search
               size={16}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400"
+              style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#71717A' }}
             />
             <input
               type="text"
@@ -73,17 +117,28 @@ export default function NewConversationModal({
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search people to message..."
               autoFocus
-              className="w-full bg-[#202227] text-white text-sm pl-10 pr-4 py-2.5 rounded-full border border-white/10 focus:border-sky-500/50 outline-none transition-colors"
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                backgroundColor: '#1E2026',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: '999px',
+                padding: '9px 14px 9px 38px',
+                color: '#FFFFFF',
+                fontSize: '13px',
+                fontFamily: 'inherit',
+                outline: 'none'
+              }}
             />
           </div>
         </div>
 
-        {/* List of contacts */}
-        <div className="flex-1 overflow-y-auto p-2 divide-y divide-white/5">
+        {/* Contacts list */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {filtered.length === 0 ? (
-            <div className="text-center py-12 px-4 text-zinc-500 text-sm">
+            <div style={{ textAlign: 'center', padding: '40px 16px', color: '#71717A', fontSize: '13px' }}>
               {contacts.length === 0
-                ? "No connections found yet. Explore the network to find friends!"
+                ? "No connections found yet. Explore network to connect!"
                 : "No matching users found."}
             </div>
           ) : (
@@ -91,18 +146,41 @@ export default function NewConversationModal({
               <button
                 key={user.id}
                 onClick={() => handleSelect(user.id)}
-                className="w-full flex items-center gap-3.5 p-3 rounded-2xl hover:bg-white/5 transition-colors text-left group"
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '10px 12px',
+                  borderRadius: '16px',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'background 0.15s ease'
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
-                <ProfilePicture user={user} size={44} showStatus={false} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-white font-semibold text-sm group-hover:text-sky-400 transition-colors truncate">
+                <ProfilePicture user={user} size={42} showStatus={false} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: '#FFFFFF', fontWeight: 600, fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {user.name || user.username}
                   </div>
-                  <div className="text-zinc-400 text-xs truncate">
+                  <div style={{ color: '#71717A', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     @{user.username}
                   </div>
                 </div>
-                <div className="text-xs text-sky-400 font-medium px-3 py-1 rounded-full bg-sky-500/10 group-hover:bg-sky-500 group-hover:text-white transition-all">
+                <div
+                  style={{
+                    fontSize: '12px',
+                    color: '#1D9BF0',
+                    fontWeight: 600,
+                    padding: '4px 12px',
+                    borderRadius: '999px',
+                    backgroundColor: 'rgba(29, 155, 240, 0.1)'
+                  }}
+                >
                   Chat
                 </div>
               </button>

@@ -4,14 +4,42 @@ import React from 'react';
 
 export default function EmptyStateIllustration({ onNewChat }: { onNewChat?: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full p-8 text-center select-none">
+    <div
+      className="messages-empty-state-view"
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px 24px',
+        textAlign: 'center',
+        userSelect: 'none',
+        boxSizing: 'border-box'
+      }}
+    >
       {/* 3D Layered Speech Bubble matching Figma 17.png */}
-      <div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center mb-6">
+      <div
+        style={{
+          position: 'relative',
+          width: '240px',
+          height: '240px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '20px'
+        }}
+      >
         <svg
           viewBox="0 0 260 260"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full drop-shadow-[0_20px_40px_rgba(0,0,0,0.8)]"
+          style={{
+            width: '100%',
+            height: '100%',
+            filter: 'drop-shadow(0 24px 48px rgba(0, 0, 0, 0.9))'
+          }}
         >
           <defs>
             {/* Outer Olive/Gold Glow Gradient */}
@@ -30,7 +58,7 @@ export default function EmptyStateIllustration({ onNewChat }: { onNewChat?: () =
 
             {/* Bubble Shadows */}
             <filter id="shadowUnder" x="-10%" y="-10%" width="130%" height="130%">
-              <feDropShadow dx="-4" dy="12" stdDeviation="10" floodColor="#000000" floodOpacity="0.7" />
+              <feDropShadow dx="-4" dy="12" stdDeviation="10" floodColor="#000000" floodOpacity="0.8" />
             </filter>
 
             <filter id="frontShadow" x="-10%" y="-10%" width="130%" height="130%">
@@ -50,7 +78,7 @@ export default function EmptyStateIllustration({ onNewChat }: { onNewChat?: () =
                C 30 72, 72 35, 125 35 Z"
             fill="url(#goldBubble)"
             filter="url(#shadowUnder)"
-            transform="translate(-6, 8) scale(1.04) transform-origin-center"
+            transform="translate(-6, 8) scale(1.04)"
           />
 
           {/* Layer 2: Foreground Deep Royal Blue Bubble (Figma 17.png) */}
@@ -86,18 +114,54 @@ export default function EmptyStateIllustration({ onNewChat }: { onNewChat?: () =
         </svg>
       </div>
 
-      {/* Text matching Figma minimalist aesthetic */}
-      <h3 className="text-xl font-bold text-white mb-2 tracking-wide font-sans">
+      {/* Typography */}
+      <h3
+        className="messages-empty-state-title"
+        style={{
+          fontSize: '22px',
+          fontWeight: 700,
+          color: '#FFFFFF',
+          margin: '0 0 8px 0',
+          letterSpacing: '-0.3px',
+          fontFamily: 'inherit'
+        }}
+      >
         Amerigam Messages
       </h3>
-      <p className="text-zinc-400 text-sm max-w-sm mb-6 leading-relaxed">
-        Select a conversation from the left to start messaging, or create a new conversation with creators and connections.
+      <p
+        className="messages-empty-state-desc"
+        style={{
+          fontSize: '14px',
+          color: '#8E8E93',
+          maxWidth: '360px',
+          lineHeight: 1.5,
+          margin: '0 0 24px 0',
+          fontFamily: 'inherit'
+        }}
+      >
+        Select a conversation from the left to start messaging, or create a new conversation with your network.
       </p>
 
       {onNewChat && (
         <button
           onClick={onNewChat}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1D9BF0] hover:bg-[#1a8cd8] text-white text-sm font-semibold transition-all shadow-lg hover:shadow-sky-500/20 active:scale-95"
+          className="messages-empty-state-cta"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            backgroundColor: '#1D9BF0',
+            color: '#FFFFFF',
+            fontWeight: 600,
+            fontSize: '14px',
+            padding: '10px 24px',
+            borderRadius: '999px',
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 6px 20px rgba(29, 155, 240, 0.35)',
+            transition: 'all 0.2s ease',
+            fontFamily: 'inherit'
+          }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 5v14M5 12h14"/>
