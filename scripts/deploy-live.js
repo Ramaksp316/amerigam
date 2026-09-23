@@ -56,6 +56,25 @@ async function tryConnect(authConfig) {
 }
 
 async function runDeploy() {
+  const { execSync } = require('child_process');
+  console.log('====================================================');
+  console.log('📦 Step 0: Syncing local changes to GitHub...');
+  try {
+    const status = execSync('git status --porcelain', { encoding: 'utf8' }).trim();
+    if (status) {
+      console.log('Staging changes...');
+      execSync('git add -A', { stdio: 'inherit' });
+      const commitMsg = 'feat: redesign Messages page and direct chat matching Figma 16 & 17';
+      console.log(`Committing: ${commitMsg}`);
+      execSync(`git commit -m "${commitMsg}"`, { stdio: 'inherit' });
+    }
+    console.log('Pushing to GitHub origin main...');
+    execSync('git push origin main', { stdio: 'inherit' });
+    console.log('✅ Pushed to GitHub successfully!');
+  } catch (err) {
+    console.warn('⚠️ Git push note:', err.message);
+  }
+
   console.log('====================================================');
   console.log(`Connecting to live server: ${USERNAME}@${HOST}...`);
   console.log('====================================================');

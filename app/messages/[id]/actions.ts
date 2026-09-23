@@ -33,12 +33,9 @@ export async function sendMessage(conversationId: string, receiverId: string, co
         actorId: userId,
         type: 'message',
         content: 'sent you a message.',
-        link: `/messages/${receiverId}`
+        link: `/messages/${conversationId}`
       }
     });
-
-    // We skip the push import here to avoid path issues, or we can assume it's silent on push failure.
-    // Assuming standard web push logic if imported, but database notification is what matters for the UI.
 
     revalidatePath(`/messages/${receiverId}`);
     revalidatePath(`/messages/${conversationId}`);
@@ -48,5 +45,41 @@ export async function sendMessage(conversationId: string, receiverId: string, co
   } catch (error) {
     console.error('Error sending message:', error);
     return { success: false };
+  }
+}
+
+export async function getLatestMessages(conversationId: string, take = 50) {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) return [];
+
+  try {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId }
+    });
+    if (!conversation || (conversation.user1Id !== userId && conversation.user2Id !== userId)) {
+      return [];
+    }
+
+    // Mark as read
+    await prisma.message.updateMany({
+      where: {
+        conversationId,
+        receiverId: userId,
+        isRead: false
+      },
+      data: { isRead: true }
+    });
+
+    const messages = await prisma.message.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: 'asc' },
+      take
+    });
+
+    return messages;
+  } catch (err) {
+    console.error('Error fetching latest messages:', err);
+    return [];
   }
 }
