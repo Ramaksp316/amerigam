@@ -21,6 +21,9 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
     if (route === '/home') {
       return pathname === '/home' || pathname === '/';
     }
+    if (route === '/search' || route === '/competitions') {
+      return pathname?.startsWith('/search') || pathname?.startsWith('/explore') || pathname?.startsWith('/competitions');
+    }
     return pathname?.startsWith(route);
   };
 
@@ -118,10 +121,10 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
             </div>
           </Link>
 
-          {/* 3. 4-circles icon (Competitions/Explore matching media_1790141405614.png) */}
+          {/* 3. 4-circles icon (Explore matching Figma 18) */}
           <Link
-            href="/competitions"
-            title="Competitions"
+            href="/search"
+            title="Explore"
             style={{
               textDecoration: 'none',
               display: 'flex',

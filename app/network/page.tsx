@@ -143,7 +143,7 @@ export default async function NetworkPage({
               transition: 'color 0.15s'
             }}
           >
-            Expore
+            Explore
           </Link>
           <div style={{
             fontSize: '14px',

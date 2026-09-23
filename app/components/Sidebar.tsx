@@ -43,6 +43,7 @@ export default function Sidebar({
 
   const isActive = (path: string) => {
     if (path === '/home') return pathname === '/home' || pathname === '/';
+    if (path === '/search') return pathname?.startsWith('/search') || pathname?.startsWith('/explore');
     return pathname?.startsWith(path);
   };
 
