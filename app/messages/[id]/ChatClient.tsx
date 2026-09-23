@@ -538,18 +538,22 @@ export default function ChatClient({
             <Plus size={18} strokeWidth={2.2} />
           </button>
 
-          {/* Pill Input Container matching Figma 16 */}
+          {/* Pill Input Container matching Figma 16 & media_1790141403849.jpg */}
           <div
             className="messages-input-pill"
             style={{
               flex: 1,
               display: 'flex',
               alignItems: 'center',
-              backgroundColor: '#202227',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
+              backgroundColor: 'rgba(26, 27, 32, 0.85)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
               borderRadius: '999px',
               padding: '4px 14px 4px 18px',
               gap: '10px',
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.22)',
+              transition: 'all 0.2s ease',
               boxSizing: 'border-box'
             }}
           >

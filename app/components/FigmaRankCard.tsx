@@ -14,7 +14,7 @@ interface FigmaRankCardProps {
 export default function FigmaRankCard({
   rank = '#1',
   creatorTitle = 'Editing',
-  creatorDescription = 'This creator has mastery in his own field of Editing. Design is not just what it looks like and feels like. Design is how it works.',
+  creatorDescription = 'This creator has mastery at his own field of Editing.Design is not just what it looks like and feels like. Design is how it works.',
   badges = []
 }: FigmaRankCardProps) {
   const displayRank = typeof rank === 'number' ? `#${rank}` : (rank.startsWith('#') ? rank : `#${rank}`);
@@ -23,21 +23,24 @@ export default function FigmaRankCard({
     <div style={{
       width: '100%',
       maxWidth: '300px',
-      backgroundColor: '#18181B',
-      borderRadius: '24px',
-      border: '1px solid rgba(255, 255, 255, 0.08)',
-      overflow: 'hidden',
-      boxShadow: '0 12px 32px rgba(0, 0, 0, 0.5)',
       display: 'flex',
       flexDirection: 'column',
-      fontFamily: 'inherit'
+      fontFamily: 'inherit',
+      userSelect: 'none'
     }}>
-      {/* Top Body */}
+      {/* Top Body Card matching media_1790141404798.jpg */}
       <div style={{
+        width: '100%',
+        backgroundColor: '#18181B',
+        borderRadius: '24px',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        boxShadow: '0 16px 36px rgba(0, 0, 0, 0.6)',
         padding: '20px',
+        boxSizing: 'border-box',
         display: 'flex',
         gap: '16px',
-        alignItems: 'flex-start'
+        alignItems: 'flex-start',
+        position: 'relative'
       }}>
         {/* Left Green Emblem Badge */}
         <div style={{
@@ -47,14 +50,13 @@ export default function FigmaRankCard({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          filter: 'drop-shadow(0 4px 12px rgba(22, 163, 74, 0.25))'
+          filter: 'drop-shadow(0 6px 16px rgba(22, 163, 74, 0.3))'
         }}>
           <img
             src="/images/figma/badge_164_290.svg"
             alt="Emblem"
             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
             onError={(e) => {
-              // fallback to png if svg render fails
               (e.target as HTMLImageElement).src = '/images/figma/badge_164_290.png';
             }}
           />
@@ -64,7 +66,7 @@ export default function FigmaRankCard({
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <div style={{
             fontSize: '22px',
-            fontFamily: 'serif',
+            fontFamily: 'Georgia, serif',
             color: '#FFFFFF',
             lineHeight: '1.1',
             letterSpacing: '-0.2px'
@@ -93,21 +95,41 @@ export default function FigmaRankCard({
         </div>
       </div>
 
-      {/* Bottom Notch Container for Badges */}
+      {/* Connected Bridge Notch (media_1790141404798.jpg) */}
       <div style={{
-        backgroundColor: '#0F0F12',
-        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        paddingLeft: '32px',
+        marginTop: '-1px',
+        marginBottom: '-1px',
+        zIndex: 2
+      }}>
+        <div style={{
+          width: '28px',
+          height: '8px',
+          backgroundColor: '#18181B',
+          borderLeft: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)'
+        }} />
+      </div>
+
+      {/* Bottom Tray for Badges matching media_1790141404798.jpg */}
+      <div style={{
+        backgroundColor: '#141417',
+        borderRadius: '20px',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        padding: '10px 14px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: '10px'
+        gap: '10px',
+        boxShadow: '0 12px 28px rgba(0, 0, 0, 0.5)'
       }}>
         {/* Slot 1: Pink Shield Badge */}
         <div style={{
-          width: '44px',
-          height: '44px',
-          borderRadius: '12px',
+          width: '46px',
+          height: '46px',
+          borderRadius: '14px',
           backgroundColor: '#1C1C20',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
@@ -119,7 +141,7 @@ export default function FigmaRankCard({
           <img
             src="/images/figma/badge_164_309.svg"
             alt="Pink Badge"
-            style={{ width: '28px', height: '28px', objectFit: 'contain' }}
+            style={{ width: '30px', height: '30px', objectFit: 'contain' }}
             onError={(e) => {
               (e.target as HTMLImageElement).src = '/images/figma/badge_164_309.png';
             }}
@@ -128,9 +150,9 @@ export default function FigmaRankCard({
 
         {/* Slot 2: Blue Shield Badge */}
         <div style={{
-          width: '44px',
-          height: '44px',
-          borderRadius: '12px',
+          width: '46px',
+          height: '46px',
+          borderRadius: '14px',
           backgroundColor: '#1C1C20',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
@@ -142,7 +164,7 @@ export default function FigmaRankCard({
           <img
             src="/images/figma/badge_164_318.svg"
             alt="Blue Badge"
-            style={{ width: '28px', height: '28px', objectFit: 'contain' }}
+            style={{ width: '30px', height: '30px', objectFit: 'contain' }}
             onError={(e) => {
               (e.target as HTMLImageElement).src = '/images/figma/badge_164_318.png';
             }}
@@ -151,22 +173,22 @@ export default function FigmaRankCard({
 
         {/* Slot 3: Empty Slot */}
         <div style={{
-          width: '44px',
-          height: '44px',
-          borderRadius: '12px',
-          backgroundColor: '#141416',
-          border: '1px solid rgba(255, 255, 255, 0.04)',
-          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6)'
+          width: '46px',
+          height: '46px',
+          borderRadius: '14px',
+          backgroundColor: '#0F0F12',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.7)'
         }} />
 
         {/* Slot 4: Empty Slot */}
         <div style={{
-          width: '44px',
-          height: '44px',
-          borderRadius: '12px',
-          backgroundColor: '#141416',
-          border: '1px solid rgba(255, 255, 255, 0.04)',
-          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6)'
+          width: '46px',
+          height: '46px',
+          borderRadius: '14px',
+          backgroundColor: '#0F0F12',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.7)'
         }} />
       </div>
     </div>

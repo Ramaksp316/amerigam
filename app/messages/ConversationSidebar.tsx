@@ -193,15 +193,26 @@ export default function ConversationSidebar({
               style={{
                 width: '100%',
                 boxSizing: 'border-box',
-                backgroundColor: '#18191D',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
+                backgroundColor: 'rgba(26, 27, 32, 0.85)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: '1px solid rgba(255, 255, 255, 0.18)',
                 borderRadius: '999px',
                 padding: '9px 16px 9px 38px',
                 color: '#FFFFFF',
                 fontSize: '13px',
                 fontFamily: 'inherit',
                 outline: 'none',
-                boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.5)'
+                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.22)',
+                transition: 'all 0.2s ease'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.7)';
+                e.currentTarget.style.boxShadow = '0 0 16px rgba(59, 130, 246, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
+                e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.22)';
               }}
             />
           </div>

@@ -180,19 +180,23 @@ export default function CompetitionsClient({
             <div style={{
               width: '440px',
               maxWidth: '100%',
-              height: '38px',
+              height: '40px',
               borderRadius: '999px',
-              backgroundColor: '#18181B',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              backgroundColor: 'rgba(24, 25, 30, 0.85)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
               display: 'flex',
               alignItems: 'center',
               padding: '0 16px',
               gap: '10px',
-              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)'
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.25)',
+              transition: 'all 0.2s ease'
             }}>
+              <Search size={16} color="#8E8E93" style={{ flexShrink: 0 }} />
               <input
                 type="text"
-                placeholder=""
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 style={{
@@ -205,7 +209,6 @@ export default function CompetitionsClient({
                   fontFamily: 'inherit'
                 }}
               />
-              <Search size={16} color="#A1A1AA" style={{ flexShrink: 0 }} />
             </div>
           </div>
 
