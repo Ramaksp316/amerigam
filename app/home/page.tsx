@@ -53,7 +53,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
         }
       }
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { joinedAt: 'desc' }
   });
   const joinedCommunities = userCommunityMemberships.map(m => m.community);
 
