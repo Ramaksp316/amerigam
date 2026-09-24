@@ -55,6 +55,10 @@ export default async function InboxPage({
     }),
   ]);
 
+  if (!currentUser) {
+    redirect('/login');
+  }
+
   // Fetch all conversations for the user
   const rawConversations = await prisma.conversation.findMany({
     where: {
@@ -225,6 +229,7 @@ export default async function InboxPage({
             </span>
             <Link
               href="/communities"
+              className="messages-tab-community-link"
               style={{
                 fontSize: '16px',
                 fontWeight: 500,
@@ -232,8 +237,6 @@ export default async function InboxPage({
                 textDecoration: 'none',
                 transition: 'color 0.15s ease'
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#8E8E93')}
             >
               Community
             </Link>

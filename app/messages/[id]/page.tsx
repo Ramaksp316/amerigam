@@ -55,6 +55,10 @@ export default async function ConversationPage({
     }),
   ]);
 
+  if (!currentUser) {
+    redirect('/login');
+  }
+
   if (!conversation) {
     redirect('/messages');
   }
@@ -267,6 +271,7 @@ export default async function ConversationPage({
             </span>
             <Link
               href="/communities"
+              className="messages-tab-community-link"
               style={{
                 fontSize: '16px',
                 fontWeight: 500,
@@ -274,8 +279,6 @@ export default async function ConversationPage({
                 textDecoration: 'none',
                 transition: 'color 0.15s ease'
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#8E8E93')}
             >
               Community
             </Link>

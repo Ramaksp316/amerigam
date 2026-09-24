@@ -2763,3 +2763,7 @@ body:has(.dev-board-root) .floating-dock-nav,
 .floating-dock-nav:has(.dev-board-root) {
   display: none !important;
 }
+
+.messages-tab-community-link:hover {
+  color: #FFFFFF !important;
+}
