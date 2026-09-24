@@ -13,13 +13,11 @@ import { prisma } from '@/lib/prisma';
 
 const inter = Inter({ 
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800', '900'],
   display: 'swap',
 });
 
 const caveat = Caveat({
   subsets: ['latin'],
-  weight: ['500', '700'],
   variable: '--font-caveat',
   display: 'swap',
 });
