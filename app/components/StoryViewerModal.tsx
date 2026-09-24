@@ -19,24 +19,42 @@ export interface StoryItem {
   };
 }
 
-interface StoryViewerModalProps {
+export interface UserStoriesGroup {
+  author: {
+    id: string;
+    name?: string | null;
+    username?: string | null;
+    avatarData?: string | null;
+  };
   stories: StoryItem[];
-  initialIndex?: number;
+}
+
+interface StoryViewerModalProps {
+  groups: UserStoriesGroup[];
+  initialGroupIndex?: number;
+  initialSlideIndex?: number;
   onClose: () => void;
 }
 
 export default function StoryViewerModal({
-  stories,
-  initialIndex = 0,
+  groups = [],
+  initialGroupIndex = 0,
+  initialSlideIndex = 0,
   onClose
 }: StoryViewerModalProps) {
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [currentGroupIndex, setCurrentGroupIndex] = useState(
+    Math.min(initialGroupIndex, Math.max(0, groups.length - 1))
+  );
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(initialSlideIndex);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const currentStory = stories[currentIndex];
+  const currentGroup = groups[currentGroupIndex];
+  const currentStories = currentGroup?.stories || [];
+  const currentStory = currentStories[currentSlideIndex];
 
+  // Auto-advance progress timer
   useEffect(() => {
     if (!currentStory) return;
     setProgress(0);
@@ -51,7 +69,7 @@ export default function StoryViewerModal({
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(timer);
-          handleNext();
+          handleNextSlide();
           return 0;
         }
         return prev + step;
@@ -59,23 +77,62 @@ export default function StoryViewerModal({
     }, intervalMs);
 
     return () => clearInterval(timer);
-  }, [currentIndex, isPaused]);
+  }, [currentGroupIndex, currentSlideIndex, isPaused, currentStory]);
 
-  const handleNext = () => {
-    if (currentIndex < stories.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+  const handleNextSlide = () => {
+    if (!currentGroup) return;
+
+    if (currentSlideIndex < currentStories.length - 1) {
+      // Advance to next slide of current creator
+      setCurrentSlideIndex((prev) => prev + 1);
+      setProgress(0);
+    } else if (currentGroupIndex < groups.length - 1) {
+      // Advance to next creator's first slide
+      setCurrentGroupIndex((prev) => prev + 1);
+      setCurrentSlideIndex(0);
+      setProgress(0);
+    } else {
+      // Finished all creators
+      onClose();
+    }
+  };
+
+  const handlePrevSlide = () => {
+    if (currentSlideIndex > 0) {
+      // Go to previous slide of current creator
+      setCurrentSlideIndex((prev) => prev - 1);
+      setProgress(0);
+    } else if (currentGroupIndex > 0) {
+      // Go to previous creator's last slide
+      const prevGroup = groups[currentGroupIndex - 1];
+      setCurrentGroupIndex((prev) => prev - 1);
+      setCurrentSlideIndex(Math.max(0, prevGroup.stories.length - 1));
+      setProgress(0);
+    } else {
+      // Restart current slide from beginning
+      setProgress(0);
+    }
+  };
+
+  const handlePrevGroup = () => {
+    if (currentGroupIndex > 0) {
+      setCurrentGroupIndex((prev) => prev - 1);
+      setCurrentSlideIndex(0);
+      setProgress(0);
+    }
+  };
+
+  const handleNextGroup = () => {
+    if (currentGroupIndex < groups.length - 1) {
+      setCurrentGroupIndex((prev) => prev + 1);
+      setCurrentSlideIndex(0);
+      setProgress(0);
     } else {
       onClose();
     }
   };
 
-  const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
-
-  if (!currentStory) return null;
+  if (!currentGroup || !currentStory) return null;
 
   return (
     <div
@@ -98,7 +155,7 @@ export default function StoryViewerModal({
       onTouchStart={() => setIsPaused(true)}
       onTouchEnd={() => setIsPaused(false)}
     >
-      {/* Story Box Container (Mobile 9:16 frame) */}
+      {/* Story Card Box (Mobile 9:16 frame) */}
       <div
         style={{
           position: 'relative',
@@ -114,7 +171,7 @@ export default function StoryViewerModal({
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.9)'
         }}
       >
-        {/* Top Progress Bars */}
+        {/* Top Progress Bars (Multi-slide WhatsApp / Instagram segments for current creator) */}
         <div
           style={{
             position: 'absolute',
@@ -126,14 +183,14 @@ export default function StoryViewerModal({
             zIndex: 30
           }}
         >
-          {stories.map((s, idx) => {
+          {currentStories.map((s, idx) => {
             let fillWidth = '0%';
-            if (idx < currentIndex) fillWidth = '100%';
-            else if (idx === currentIndex) fillWidth = `${progress}%`;
+            if (idx < currentSlideIndex) fillWidth = '100%';
+            else if (idx === currentSlideIndex) fillWidth = `${progress}%`;
 
             return (
               <div
-                key={s.id}
+                key={s.id || idx}
                 style={{
                   flex: 1,
                   height: '3px',
@@ -147,7 +204,7 @@ export default function StoryViewerModal({
                     height: '100%',
                     width: fillWidth,
                     backgroundColor: '#FFFFFF',
-                    transition: idx === currentIndex ? 'width 0.05s linear' : 'none'
+                    transition: idx === currentSlideIndex ? 'width 0.05s linear' : 'none'
                   }}
                 />
               </div>
@@ -175,28 +232,31 @@ export default function StoryViewerModal({
                 height: '38px',
                 borderRadius: '50%',
                 overflow: 'hidden',
-                border: '2px solid #1D9BF0',
-                backgroundColor: '#1E1E22'
+                border: '2px solid #0284C7',
+                backgroundColor: '#1E1E22',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
-              {currentStory.author.avatarData ? (
+              {currentGroup.author.avatarData ? (
                 <img
-                  src={currentStory.author.avatarData}
-                  alt={currentStory.author.username || 'Story author'}
+                  src={currentGroup.author.avatarData}
+                  alt={currentGroup.author.username || 'Story author'}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               ) : (
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontWeight: 700 }}>
-                  {(currentStory.author.username || 'U')[0].toUpperCase()}
-                </div>
+                <span style={{ color: '#FFF', fontWeight: 700, fontSize: '14px' }}>
+                  {(currentGroup.author.name || currentGroup.author.username || 'U')[0].toUpperCase()}
+                </span>
               )}
             </div>
             <div>
               <div style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 700 }}>
-                {currentStory.author.name || currentStory.author.username}
+                {currentGroup.author.name || currentGroup.author.username}
               </div>
               <div style={{ color: '#A1A1AA', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span>@{currentStory.author.username}</span>
+                <span>@{currentGroup.author.username}</span>
                 <span>•</span>
                 <LocalTime date={currentStory.createdAt} format="relative" />
               </div>
@@ -249,11 +309,11 @@ export default function StoryViewerModal({
 
           {/* Left / Right Tap zones */}
           <div
-            onClick={handlePrev}
+            onClick={handlePrevSlide}
             style={{ position: 'absolute', left: 0, top: 0, width: '35%', height: '100%', cursor: 'pointer', zIndex: 20 }}
           />
           <div
-            onClick={handleNext}
+            onClick={handleNextSlide}
             style={{ position: 'absolute', right: 0, top: 0, width: '65%', height: '100%', cursor: 'pointer', zIndex: 20 }}
           />
         </div>
@@ -281,15 +341,15 @@ export default function StoryViewerModal({
         )}
       </div>
 
-      {/* Outside Desktop Navigation Controls */}
-      {currentIndex > 0 && (
+      {/* Outside Desktop Navigation Controls (Switching between creators) */}
+      {currentGroupIndex > 0 && (
         <button
-          onClick={handlePrev}
+          onClick={handlePrevGroup}
           style={{
             position: 'absolute',
             left: '32px',
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            border: 'none',
+            backgroundColor: 'rgba(255, 255, 255, 0.12)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
             borderRadius: '50%',
             width: '48px',
             height: '48px',
@@ -297,21 +357,24 @@ export default function StoryViewerModal({
             alignItems: 'center',
             justifyContent: 'center',
             color: '#FFFFFF',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            backdropFilter: 'blur(8px)',
+            transition: 'background-color 0.15s ease'
           }}
+          title="Previous Creator"
         >
           <ChevronLeft size={28} />
         </button>
       )}
 
-      {currentIndex < stories.length - 1 && (
+      {currentGroupIndex < groups.length - 1 && (
         <button
-          onClick={handleNext}
+          onClick={handleNextGroup}
           style={{
             position: 'absolute',
             right: '32px',
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            border: 'none',
+            backgroundColor: 'rgba(255, 255, 255, 0.12)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
             borderRadius: '50%',
             width: '48px',
             height: '48px',
@@ -319,8 +382,11 @@ export default function StoryViewerModal({
             alignItems: 'center',
             justifyContent: 'center',
             color: '#FFFFFF',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            backdropFilter: 'blur(8px)',
+            transition: 'background-color 0.15s ease'
           }}
+          title="Next Creator"
         >
           <ChevronRight size={28} />
         </button>

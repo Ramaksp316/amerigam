@@ -480,28 +480,35 @@ function SingleReelCard({
   const handleShare = async () => {
     setShareCount((prev) => prev + 1);
     const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/post/${reel.id}` : '';
-    if (navigator.share) {
+    let shared = false;
+    if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
           title: `Reel by @${reel.author?.username || 'creator'} on Amerigam`,
           url: shareUrl
         });
-      } catch (e) {}
-    }
-    try {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(shareUrl);
-      } else {
-        const textarea = document.createElement('textarea');
-        textarea.value = shareUrl;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
+        shared = true;
+        onShowToast('Shared successfully! 🚀');
+      } catch (e) {
+        // Fallback to clipboard
       }
-      onShowToast('Link copied to clipboard! 📋');
-    } catch (e) {
-      onShowToast('Link copied! 📋');
+    }
+    if (!shared) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(shareUrl);
+        } else {
+          const textarea = document.createElement('textarea');
+          textarea.value = shareUrl;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+        }
+        onShowToast('Link copied to clipboard! 📋');
+      } catch (e) {
+        onShowToast('Link copied! 📋');
+      }
     }
   };
 
@@ -532,8 +539,127 @@ function SingleReelCard({
       position: 'relative'
     }}>
 
-      {/* Symmetrical Left Spacer to ensure 9:16 video is 100% mathematically centered on desktop */}
-      <div style={{ width: '56px', flexShrink: 0 }} className="desktop-only" />
+      {/* ========================================================
+          LEFT COLUMN: CREATOR INFO & CAPTION (Desktop, matching Reels.png)
+         ======================================================== */}
+      <div
+        className="desktop-only"
+        style={{
+          width: '280px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-end',
+          alignItems: 'flex-start',
+          paddingBottom: '20px',
+          boxSizing: 'border-box',
+          flexShrink: 0
+        }}
+      >
+        {/* Creator Avatar + Name + Follow Button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+          <Link href={`/user/${reel.author?.id}`} style={{ textDecoration: 'none', display: 'flex', flexShrink: 0 }}>
+            <div style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '50%',
+              overflow: 'hidden',
+              backgroundColor: '#27272A',
+              border: '1.5px solid rgba(255, 255, 255, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              {reel.author?.avatarData ? (
+                <img
+                  src={reel.author.avatarData}
+                  alt={reel.author?.name || 'Creator'}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 700 }}>
+                  {(reel.author?.name || reel.author?.username || 'C')[0].toUpperCase()}
+                </span>
+              )}
+            </div>
+          </Link>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Link
+              href={`/user/${reel.author?.id}`}
+              style={{
+                textDecoration: 'none',
+                color: '#FFFFFF',
+                fontSize: '16px',
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '120px'
+              }}
+            >
+              {reel.author?.name || reel.author?.username || 'Creator'}
+            </Link>
+
+            {currentUserId !== reel.author?.id && (
+              <button
+                onClick={handleFollow}
+                style={{
+                  backgroundColor: isFollowing ? 'rgba(255,255,255,0.15)' : '#0284C7',
+                  color: '#FFFFFF',
+                  border: isFollowing ? '1px solid rgba(255,255,255,0.2)' : 'none',
+                  borderRadius: '999px',
+                  padding: '5px 16px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  flexShrink: 0
+                }}
+              >
+                {isFollowing ? 'Following' : 'Follow'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Multiline caption */}
+        {reel.content && (
+          <div style={{ maxWidth: '280px' }}>
+            <p style={{
+              fontSize: '13px',
+              color: '#F4F4F5',
+              lineHeight: '1.5',
+              margin: 0,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              display: isCaptionExpanded ? 'block' : '-webkit-box',
+              WebkitLineClamp: isCaptionExpanded ? 'unset' : 4,
+              WebkitBoxOrient: 'vertical',
+              overflow: isCaptionExpanded ? 'visible' : 'hidden'
+            }}>
+              {reel.content}
+            </p>
+            {reel.content.length > 120 && (
+              <button
+                onClick={() => setIsCaptionExpanded(!isCaptionExpanded)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#A1A1AA',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  padding: 0,
+                  marginTop: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                {isCaptionExpanded ? 'less' : 'more'}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* ========================================================
           CENTER: 9:16 VERTICAL VIDEO CARD (Instagram style)
@@ -621,20 +747,23 @@ function SingleReelCard({
           {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
         </button>
 
-        {/* Instagram Style Creator Overlay at bottom of video card */}
-        <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: '28px 16px 18px',
-          background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.45) 60%, transparent 100%)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px',
-          zIndex: 15,
-          pointerEvents: 'none'
-        }}>
+        {/* Mobile-Only Creator Overlay (Shown inside video card on phones) */}
+        <div
+          className="mobile-only"
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: '28px 16px 18px',
+            background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.45) 60%, transparent 100%)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+            zIndex: 15,
+            pointerEvents: 'none'
+          }}
+        >
           {/* Creator Avatar (Clean, NO yellow ring) + Username + Follow */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', pointerEvents: 'auto' }}>
             <Link href={`/user/${reel.author?.id}`} style={{ textDecoration: 'none', display: 'flex', flexShrink: 0 }}>
@@ -743,122 +872,108 @@ function SingleReelCard({
       </div>
 
       {/* ========================================================
-          RIGHT: ACTION BUTTONS (Width 56px, Vertically Stacked)
+          RIGHT COLUMN: ACTION BUTTONS (Symmetrically 280px, matching Reels.png)
          ======================================================== */}
-      <div style={{
-        width: '56px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '20px',
-        paddingBottom: '16px',
-        flexShrink: 0,
-        position: 'relative'
-      }}>
+      <div
+        className="reel-side-rail-right"
+        style={{
+          width: '280px',
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'flex-start',
+          paddingBottom: '20px',
+          boxSizing: 'border-box',
+          flexShrink: 0
+        }}
+      >
+        <div style={{
+          width: '56px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '20px',
+          position: 'relative'
+        }}>
 
-        {/* Like */}
-        <button
-          onClick={handleLike}
-          style={{
-            background: 'none',
-            border: 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '4px',
-            cursor: 'pointer',
-            color: '#FFFFFF',
-            padding: 0
-          }}
-          title={isLiked ? 'Unlike' : 'Like'}
-        >
-          <div style={{
-            transform: isLiked ? 'scale(1.15)' : 'scale(1)',
-            transition: 'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)'
-          }}>
-            <Heart
-              size={26}
-              color={isLiked ? '#EF4444' : '#FFFFFF'}
-              fill={isLiked ? '#EF4444' : 'transparent'}
-              strokeWidth={1.8}
-            />
-          </div>
-          <span style={{ fontSize: '11px', color: '#D4D4D8', fontWeight: 600 }}>
-            {formatCount(likeCount)}
-          </span>
-        </button>
-
-        {/* Comment */}
-        <button
-          onClick={() => onOpenComments(reel)}
-          style={{
-            background: 'none',
-            border: 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '4px',
-            cursor: 'pointer',
-            color: '#FFFFFF',
-            padding: 0
-          }}
-          title="Comments"
-        >
-          <MessageCircle size={26} color="#FFFFFF" strokeWidth={1.8} />
-          <span style={{ fontSize: '11px', color: '#D4D4D8', fontWeight: 600 }}>
-            {formatCount(commentCount)}
-          </span>
-        </button>
-
-        {/* Share */}
-        <button
-          onClick={handleShare}
-          style={{
-            background: 'none',
-            border: 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '4px',
-            cursor: 'pointer',
-            color: '#FFFFFF',
-            padding: 0
-          }}
-          title="Share"
-        >
-          <Share2 size={26} color="#FFFFFF" strokeWidth={1.8} />
-          <span style={{ fontSize: '11px', color: '#D4D4D8', fontWeight: 600 }}>
-            {formatCount(shareCount)}
-          </span>
-        </button>
-
-        {/* Bookmark / Save */}
-        <button
-          onClick={handleBookmark}
-          style={{
-            background: 'none',
-            border: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            color: '#FFFFFF',
-            padding: '4px'
-          }}
-          title={isSaved ? 'Remove from saved' : 'Save'}
-        >
-          <Bookmark
-            size={26}
-            color="#FFFFFF"
-            fill={isSaved ? '#FFFFFF' : 'transparent'}
-            strokeWidth={1.8}
-          />
-        </button>
-
-        {/* More Options (···) */}
-        <div style={{ position: 'relative' }}>
+          {/* Like */}
           <button
-            onClick={() => setShowMoreMenu(!showMoreMenu)}
+            onClick={handleLike}
+            style={{
+              background: 'none',
+              border: 'none',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+              color: '#FFFFFF',
+              padding: 0
+            }}
+            title={isLiked ? 'Unlike' : 'Like'}
+          >
+            <div style={{
+              transform: isLiked ? 'scale(1.15)' : 'scale(1)',
+              transition: 'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            }}>
+              <Heart
+                size={26}
+                color={isLiked ? '#EF4444' : '#FFFFFF'}
+                fill={isLiked ? '#EF4444' : 'transparent'}
+                strokeWidth={1.8}
+              />
+            </div>
+            <span style={{ fontSize: '11px', color: '#D4D4D8', fontWeight: 600 }}>
+              {formatCount(likeCount)}
+            </span>
+          </button>
+
+          {/* Comment */}
+          <button
+            onClick={() => onOpenComments(reel)}
+            style={{
+              background: 'none',
+              border: 'none',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+              color: '#FFFFFF',
+              padding: 0
+            }}
+            title="Comments"
+          >
+            <MessageCircle size={26} color="#FFFFFF" strokeWidth={1.8} />
+            <span style={{ fontSize: '11px', color: '#D4D4D8', fontWeight: 600 }}>
+              {formatCount(commentCount)}
+            </span>
+          </button>
+
+          {/* Share */}
+          <button
+            onClick={handleShare}
+            style={{
+              background: 'none',
+              border: 'none',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+              color: '#FFFFFF',
+              padding: 0
+            }}
+            title="Share"
+          >
+            <Share2 size={26} color="#FFFFFF" strokeWidth={1.8} />
+            <span style={{ fontSize: '11px', color: '#D4D4D8', fontWeight: 600 }}>
+              {formatCount(shareCount)}
+            </span>
+          </button>
+
+          {/* Bookmark / Save */}
+          <button
+            onClick={handleBookmark}
             style={{
               background: 'none',
               border: 'none',
@@ -869,78 +984,103 @@ function SingleReelCard({
               color: '#FFFFFF',
               padding: '4px'
             }}
-            title="More"
+            title={isSaved ? 'Remove from saved' : 'Save'}
           >
-            <MoreHorizontal size={26} color="#FFFFFF" strokeWidth={1.8} />
+            <Bookmark
+              size={26}
+              color="#FFFFFF"
+              fill={isSaved ? '#FFFFFF' : 'transparent'}
+              strokeWidth={1.8}
+            />
           </button>
 
-          {/* More popover menu */}
-          {showMoreMenu && (
-            <div
+          {/* More Options (···) */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowMoreMenu(!showMoreMenu)}
               style={{
-                position: 'absolute',
-                bottom: '100%',
-                right: 0,
-                marginBottom: '8px',
-                backgroundColor: '#1E1E22',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '12px',
-                padding: '6px',
-                minWidth: '150px',
-                boxShadow: '0 12px 32px rgba(0,0,0,0.85)',
-                zIndex: 60,
+                background: 'none',
+                border: 'none',
                 display: 'flex',
-                flexDirection: 'column',
-                gap: '2px'
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#FFFFFF',
+                padding: '4px'
               }}
+              title="More"
             >
-              <button
-                onClick={() => {
-                  handleShare();
-                  setShowMoreMenu(false);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#FFFFFF',
-                  padding: '8px 12px',
-                  textAlign: 'left',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  borderRadius: '6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-              >
-                Copy link
-              </button>
-              <Link
-                href={`/user/${reel.author?.id}`}
-                onClick={() => setShowMoreMenu(false)}
-                style={{
-                  color: '#FFFFFF',
-                  textDecoration: 'none',
-                  padding: '8px 12px',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  borderRadius: '6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-              >
-                View profile
-              </Link>
-            </div>
-          )}
-        </div>
+              <MoreHorizontal size={26} color="#FFFFFF" strokeWidth={1.8} />
+            </button>
 
+            {/* More popover menu */}
+            {showMoreMenu && (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '100%',
+                  right: 0,
+                  marginBottom: '8px',
+                  backgroundColor: '#1E1E22',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '12px',
+                  padding: '6px',
+                  minWidth: '150px',
+                  boxShadow: '0 12px 32px rgba(0,0,0,0.85)',
+                  zIndex: 60,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '2px'
+                }}
+              >
+                <button
+                  onClick={() => {
+                    handleShare();
+                    setShowMoreMenu(false);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#FFFFFF',
+                    padding: '8px 12px',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    borderRadius: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  Copy link
+                </button>
+                <Link
+                  href={`/user/${reel.author?.id}`}
+                  onClick={() => setShowMoreMenu(false)}
+                  style={{
+                    color: '#FFFFFF',
+                    textDecoration: 'none',
+                    padding: '8px 12px',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    borderRadius: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  View profile
+                </Link>
+              </div>
+            )}
+          </div>
+
+        </div>
       </div>
 
     </div>
@@ -969,6 +1109,7 @@ function CommentsDrawer({
   const [commentInput, setCommentInput] = useState('');
   const [commentsList, setCommentsList] = useState<any[]>(reel.comments || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   // Sync if reel comments change
   useEffect(() => {
@@ -978,8 +1119,9 @@ function CommentsDrawer({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = commentInput.trim();
-    if (!text || isSubmitting) return;
+    if (!text || isSubmittingRef.current) return;
 
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     const tempId = `temp-${Date.now()}`;
     const newCommentObj = {
@@ -1001,14 +1143,18 @@ function CommentsDrawer({
       if (reel.id && !reel.id.startsWith('demo-')) {
         const res = await addComment(reel.id, text);
         if (res?.success && res.comment) {
-          // Replace temp placeholder with real comment
-          setCommentsList((prev) => prev.map(c => c.id === tempId ? res.comment : c));
+          // Replace temp placeholder with real comment and ensure no duplicate
+          setCommentsList((prev) => {
+            const filtered = prev.filter(c => c.id !== tempId && c.id !== res.comment.id);
+            return [res.comment, ...filtered];
+          });
           onCommentAdded(res.comment);
         }
       }
     } catch (err) {
       console.error('Comment error:', err);
     } finally {
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };

@@ -73,51 +73,75 @@ export async function DELETE(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
 
     await prisma.$transaction(async (tx) => {
-      // 1. Notifications
-      await tx.notification.deleteMany({ where: { OR: [{ userId }, { actorId: userId }] } }).catch(() => {});
-      // 2. Push subscriptions
-      await tx.pushSubscription.deleteMany({ where: { userId } }).catch(() => {});
-      // 3. Messages & Conversations
-      await tx.message.deleteMany({ where: { OR: [{ senderId: userId }, { receiverId: userId }] } }).catch(() => {});
-      await tx.conversation.deleteMany({ where: { OR: [{ user1Id: userId }, { user2Id: userId }] } }).catch(() => {});
-      // 4. Follows
-      await tx.follow.deleteMany({ where: { OR: [{ followerId: userId }, { followingId: userId }] } }).catch(() => {});
-      // 5. Likes & Comments
-      await tx.like.deleteMany({ where: { userId } }).catch(() => {});
-      await tx.comment.deleteMany({ where: { authorId: userId } }).catch(() => {});
-      // 6. Posts & Stories
-      await tx.post.deleteMany({ where: { authorId: userId } }).catch(() => {});
-      await tx.story.deleteMany({ where: { authorId: userId } }).catch(() => {});
-      // 7. Community interactions
-      await tx.communityMessage.deleteMany({ where: { senderId: userId } }).catch(() => {});
-      await tx.communityPost.deleteMany({ where: { authorId: userId } }).catch(() => {});
-      await tx.communityTask.deleteMany({ where: { OR: [{ creatorId: userId }, { assignedToId: userId }] } }).catch(() => {});
-      await tx.communityMember.deleteMany({ where: { userId } }).catch(() => {});
-      await tx.community.deleteMany({ where: { creatorId: userId } }).catch(() => {});
-      // 8. Event relations
-      await tx.eventRegistration.deleteMany({ where: { userId } }).catch(() => {});
-      await tx.eventCheckIn.deleteMany({ where: { scannedById: userId } }).catch(() => {});
-      await tx.eventEvaluation.deleteMany({ where: { judgeId: userId } }).catch(() => {});
-      await tx.eventTeam.deleteMany({ where: { captainId: userId } }).catch(() => {});
-      await tx.event.deleteMany({ where: { creatorId: userId } }).catch(() => {});
-      // 9. Challenges & Transactions
-      await tx.challenge.deleteMany({ where: { OR: [{ challengerId: userId }, { challengedId: userId }] } }).catch(() => {});
-      await tx.apTransaction.deleteMany({ where: { userId } }).catch(() => {});
-      await tx.achievement.deleteMany({ where: { userId } }).catch(() => {});
-      await tx.competitionEntity.deleteMany({ where: { userId } }).catch(() => {});
-      await tx.competition.deleteMany({ where: { creatorId: userId } }).catch(() => {});
-      await tx.competitionModel.deleteMany({ where: { creatorId: userId } }).catch(() => {});
-      // 10. Profiles & Connections
-      await tx.personalProfile.deleteMany({ where: { userId } }).catch(() => {});
-      await tx.businessProfile.deleteMany({ where: { userId } }).catch(() => {});
-      await tx.creatorProfile.deleteMany({ where: { userId } }).catch(() => {});
-      await tx.influencerProfile.deleteMany({ where: { userId } }).catch(() => {});
-      await tx.organizationProfile.deleteMany({ where: { userId } }).catch(() => {});
-      await tx.entityConnection.deleteMany({ where: { OR: [{ sourceId: userId }, { targetId: userId }] } }).catch(() => {});
-      // 11. Dev error logs
-      await tx.devErrorLog.deleteMany({ where: { userId } }).catch(() => {});
+      // 1. User's own bookmarks
+      await tx.bookmark.deleteMany({ where: { userId } });
 
-      // Finally delete the user
+      // 2. Cascade delete all posts authored by this user, including other users' comments/likes/bookmarks on them
+      const userPosts = await tx.post.findMany({ where: { authorId: userId }, select: { id: true } });
+      const postIds = userPosts.map((p) => p.id);
+      if (postIds.length > 0) {
+        await tx.comment.deleteMany({ where: { postId: { in: postIds } } });
+        await tx.like.deleteMany({ where: { postId: { in: postIds } } });
+        await tx.bookmark.deleteMany({ where: { postId: { in: postIds } } });
+        await tx.post.deleteMany({ where: { id: { in: postIds } } });
+      }
+
+      // 3. Likes and comments by this user on other posts
+      await tx.like.deleteMany({ where: { userId } });
+      await tx.comment.deleteMany({ where: { authorId: userId } });
+
+      // 4. Notifications
+      await tx.notification.deleteMany({ where: { OR: [{ userId }, { actorId: userId }] } });
+
+      // 5. Push subscriptions
+      await tx.pushSubscription.deleteMany({ where: { userId } });
+
+      // 6. Messages & Conversations
+      await tx.message.deleteMany({ where: { OR: [{ senderId: userId }, { receiverId: userId }] } });
+      await tx.conversation.deleteMany({ where: { OR: [{ user1Id: userId }, { user2Id: userId }] } });
+
+      // 7. Follows
+      await tx.follow.deleteMany({ where: { OR: [{ followerId: userId }, { followingId: userId }] } });
+
+      // 8. Stories
+      await tx.story.deleteMany({ where: { authorId: userId } });
+
+      // 9. Community interactions & notes
+      await tx.communityNote.deleteMany({ where: { updatedById: userId } });
+      await tx.communityMessage.deleteMany({ where: { senderId: userId } });
+      await tx.communityPost.deleteMany({ where: { authorId: userId } });
+      await tx.communityTask.deleteMany({ where: { OR: [{ creatorId: userId }, { assignedToId: userId }] } });
+      await tx.communityMember.deleteMany({ where: { userId } });
+      await tx.community.deleteMany({ where: { creatorId: userId } });
+
+      // 10. Event relations
+      await tx.eventResult.deleteMany({ where: { userId } });
+      await tx.eventRegistration.deleteMany({ where: { userId } });
+      await tx.eventCheckIn.deleteMany({ where: { scannedById: userId } });
+      await tx.eventEvaluation.deleteMany({ where: { judgeId: userId } });
+      await tx.eventTeam.deleteMany({ where: { captainId: userId } });
+      await tx.event.deleteMany({ where: { creatorId: userId } });
+
+      // 11. Challenges & Transactions
+      await tx.challenge.deleteMany({ where: { OR: [{ challengerId: userId }, { challengedId: userId }] } });
+      await tx.apTransaction.deleteMany({ where: { userId } });
+      await tx.achievement.deleteMany({ where: { userId } });
+      await tx.competitionEntity.deleteMany({ where: { userId } });
+      await tx.competition.deleteMany({ where: { creatorId: userId } });
+      await tx.competitionModel.deleteMany({ where: { creatorId: userId } });
+
+      // 12. Profiles & Connections
+      await tx.personalProfile.deleteMany({ where: { userId } });
+      await tx.businessProfile.deleteMany({ where: { userId } });
+      await tx.creatorProfile.deleteMany({ where: { userId } });
+      await tx.influencerProfile.deleteMany({ where: { userId } });
+      await tx.organizationProfile.deleteMany({ where: { userId } });
+      await tx.entityConnection.deleteMany({ where: { OR: [{ sourceId: userId }, { targetId: userId }] } });
+
+      // 13. Dev error logs
+      await tx.devErrorLog.deleteMany({ where: { userId } });
+
+      // 14. Finally delete the user
       await tx.user.delete({ where: { id: userId } });
     });
 

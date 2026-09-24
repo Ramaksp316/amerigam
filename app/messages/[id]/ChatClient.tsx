@@ -545,14 +545,15 @@ export default function ChatClient({
                   <div
                     style={{
                       maxWidth: '70%',
-                      backgroundColor: isMe ? '#0284C7' : '#24262B',
+                      backgroundColor: isMe ? '#0284C7' : 'rgba(255, 255, 255, 0.08)',
                       color: '#FFFFFF',
-                      borderRadius: isMe ? '22px 22px 4px 22px' : '22px 22px 22px 4px',
-                      padding: msg.mediaUrl && !msg.voiceDuration ? '8px' : '10px 18px',
-                      boxShadow: isMe ? '0 4px 16px rgba(2, 132, 199, 0.35)' : '0 4px 12px rgba(0, 0, 0, 0.25)',
+                      borderRadius: '999px',
+                      padding: msg.mediaUrl && !msg.voiceDuration ? '8px' : '10px 22px',
+                      border: 'none',
+                      boxShadow: 'none',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '6px'
+                      gap: '4px'
                     }}
                   >
                     {/* Image Attachment */}

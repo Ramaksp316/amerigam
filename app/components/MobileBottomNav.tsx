@@ -61,12 +61,7 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
     return pathname?.startsWith(route);
   };
 
-  const isIndividualChat = pathname?.startsWith('/messages/') && pathname !== '/messages';
-  if (isIndividualChat || isCommunityPage || pathname?.includes('/apply') || pathname?.startsWith('/dev-board')) return null;
-
-  if (pathname?.startsWith('/messages/') && pathname !== '/messages/') {
-    return null;
-  }
+  if (isCommunityPage || pathname?.includes('/apply') || pathname?.startsWith('/dev-board')) return null;
 
   return (
     <>
@@ -314,6 +309,28 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
             </div>
           </div>
         </Link>
+
+        {/* Minimize / Hide Button */}
+        <button
+          type="button"
+          onClick={() => setIsVisible(false)}
+          title="Hide Navigation"
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'rgba(255, 255, 255, 0.4)',
+            cursor: 'pointer',
+            padding: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginLeft: '-8px'
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
       </nav>
 
       {/* Floating Reveal Trigger Button (Visible only when nav dock is hidden) */}

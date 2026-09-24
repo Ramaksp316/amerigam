@@ -65,17 +65,14 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   const followingUserIds = followingList.map(f => f.followingId);
   const followingSet = new Set(followingUserIds);
 
-  // 4. Query Real Active Friends (followed users active in last 10 min or ONLINE)
-  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+  // 4. Query Real Active Friends (followed users active in last 3 min, matching dev board)
+  const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000);
   let activeFriends: any[] = [];
   if (followingUserIds.length > 0) {
     activeFriends = await prisma.user.findMany({
       where: {
         id: { in: followingUserIds },
-        OR: [
-          { status: 'ONLINE' },
-          { lastSeen: { gte: tenMinutesAgo } }
-        ]
+        lastSeen: { gte: threeMinutesAgo }
       },
       include: { personalProfile: true },
       take: 10
