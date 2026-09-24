@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MessageCircle, Bookmark, Repeat2, Send } from 'lucide-react';
+import { MessageCircle, Bookmark, Repeat2, Send, CornerDownLeft, ExternalLink } from 'lucide-react';
 import LikeButton from './LikeButton';
 import Link from 'next/link';
 import { toggleBookmark } from '../actions/postActions';
@@ -23,6 +23,11 @@ export default function PostActionButtons({
   const [isShared, setIsShared] = useState(false);
   const [isReposted, setIsReposted] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const [commentsNum, setCommentsNum] = useState(commentsCount);
+  const [showCommentBox, setShowCommentBox] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -71,7 +76,7 @@ export default function PostActionButtons({
     try {
       await toggleBookmark(postId);
     } catch (err) {
-      setIsBookmarked(!nextState); // Rollback on failure
+      setIsBookmarked(!nextState);
     }
   };
 
@@ -82,8 +87,33 @@ export default function PostActionButtons({
     showToast(!isReposted ? 'Post reposted! 🔁' : 'Repost removed');
   };
 
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim() || isSubmittingComment) return;
+
+    const text = commentText.trim();
+    setIsSubmittingComment(true);
+    try {
+      const { addComment } = await import('../actions/postActions');
+      const res = await addComment(postId, text);
+      if (res?.success) {
+        setCommentsNum((prev) => prev + 1);
+        setCommentText('');
+        showToast('Comment posted! 💬');
+        setShowCommentBox(false);
+      } else {
+        showToast(res?.error || 'Failed to post comment');
+      }
+    } catch (err) {
+      showToast('Error posting comment');
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
   return (
     <div style={{ position: 'relative' }}>
+      {/* Action Buttons Row */}
       <div style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
@@ -91,35 +121,50 @@ export default function PostActionButtons({
         color: '#71717A',
         paddingRight: '8px'
       }}>
+        {/* Like */}
         <LikeButton postId={postId} initialHasLiked={hasLiked} initialLikesCount={likesCount} />
 
-        <Link href={`/post/${postId}`} style={{ textDecoration: 'none', color: 'inherit', WebkitTapHighlightColor: 'transparent' }}>
-          <button style={{ 
-            background: 'transparent', border: 'none', color: 'inherit', 
-            display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', 
-            fontSize: '13px', outline: 'none', padding: '4px',
-            transition: 'transform 0.1s ease',
+        {/* Comment */}
+        <button 
+          onClick={() => setShowCommentBox(!showCommentBox)}
+          title="Comment"
+          style={{ 
+            background: 'transparent', 
+            border: 'none', 
+            color: showCommentBox ? '#1D9BF0' : 'inherit', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '6px', 
+            cursor: 'pointer', 
+            fontSize: '13px', 
+            outline: 'none', 
+            padding: '4px',
+            transition: 'transform 0.1s ease, color 0.15s ease',
             WebkitTapHighlightColor: 'transparent'
           }}
-          onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
-          onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          onTouchStart={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
-          onTouchEnd={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          >
-            <MessageCircle size={18} strokeWidth={2} /> 
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{commentsCount > 0 ? commentsCount : ''}</span>
-          </button>
-        </Link>
+          onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.9)')}
+          onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+        >
+          <MessageCircle size={18} strokeWidth={2} /> 
+          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{commentsNum > 0 ? commentsNum : ''}</span>
+        </button>
         
+        {/* Repost */}
         <button 
           onClick={handleRepost}
           title="Repost"
           style={{ 
-            background: 'transparent', border: 'none', 
+            background: 'transparent', 
+            border: 'none', 
             color: isReposted ? '#10B981' : 'inherit', 
-            display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', 
-            fontSize: '13px', outline: 'none', padding: '4px',
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '6px', 
+            cursor: 'pointer', 
+            fontSize: '13px', 
+            outline: 'none', 
+            padding: '4px',
             transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease',
             WebkitTapHighlightColor: 'transparent'
           }}
@@ -127,14 +172,21 @@ export default function PostActionButtons({
           <Repeat2 size={18} strokeWidth={2} />
         </button>
 
+        {/* Share */}
         <button 
           onClick={handleShare}
           title="Share Post"
           style={{ 
-            background: 'transparent', border: 'none', 
+            background: 'transparent', 
+            border: 'none', 
             color: isShared ? '#1D9BF0' : 'inherit', 
-            display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', 
-            fontSize: '13px', outline: 'none', padding: '4px',
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '6px', 
+            cursor: 'pointer', 
+            fontSize: '13px', 
+            outline: 'none', 
+            padding: '4px',
             transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease',
             WebkitTapHighlightColor: 'transparent'
           }}
@@ -142,14 +194,21 @@ export default function PostActionButtons({
           <Send size={18} strokeWidth={2} />
         </button>
 
+        {/* Bookmark */}
         <button 
           onClick={handleBookmark}
           title={isBookmarked ? 'Remove bookmark' : 'Bookmark post'}
           style={{ 
-            background: 'transparent', border: 'none', 
+            background: 'transparent', 
+            border: 'none', 
             color: isBookmarked ? '#1D9BF0' : 'inherit', 
-            display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', 
-            fontSize: '13px', outline: 'none', padding: '4px',
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '6px', 
+            cursor: 'pointer', 
+            fontSize: '13px', 
+            outline: 'none', 
+            padding: '4px',
             transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease',
             WebkitTapHighlightColor: 'transparent'
           }}
@@ -157,6 +216,98 @@ export default function PostActionButtons({
           <Bookmark size={18} strokeWidth={2} fill={isBookmarked ? '#1D9BF0' : 'none'} />
         </button>
       </div>
+
+      {/* Inline Quick-Comment Tray */}
+      {showCommentBox && (
+        <div
+          style={{
+            marginTop: '12px',
+            paddingTop: '12px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}
+        >
+          <form
+            onSubmit={handleCommentSubmit}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              backgroundColor: '#1E1E22',
+              borderRadius: '999px',
+              padding: '4px 6px 4px 14px',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+          >
+            <input
+              type="text"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Write a comment..."
+              autoFocus
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                color: '#FFFFFF',
+                fontSize: '13px',
+                outline: 'none'
+              }}
+            />
+            <button
+              type="submit"
+              disabled={!commentText.trim() || isSubmittingComment}
+              style={{
+                backgroundColor: commentText.trim() ? '#1D9BF0' : 'transparent',
+                color: commentText.trim() ? '#FFFFFF' : '#71717A',
+                border: 'none',
+                borderRadius: '50%',
+                width: '30px',
+                height: '30px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: commentText.trim() ? 'pointer' : 'default',
+                transition: 'all 0.15s ease'
+              }}
+              title="Post comment"
+            >
+              <CornerDownLeft size={14} strokeWidth={2.2} />
+            </button>
+          </form>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px' }}>
+            <Link
+              href={`/post/${postId}`}
+              style={{
+                fontSize: '12px',
+                color: '#1D9BF0',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <span>View all comments & thread</span>
+              <ExternalLink size={11} />
+            </Link>
+            <button
+              onClick={() => setShowCommentBox(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#71717A',
+                fontSize: '12px',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Floating Action Toast Notification */}
       {toastMessage && (

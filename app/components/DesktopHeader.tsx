@@ -1,14 +1,18 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Activity, Globe, Bell, Settings } from 'lucide-react';
+import { Search, Globe, Bell, Settings, Share2 } from 'lucide-react';
 
-export default function DesktopHeader({ unreadCount = 0 }: { unreadCount?: number }) {
-  const [searchQuery, setSearchQuery] = useState('');
+export default function DesktopHeader({
+  unreadCount = 0
+}: {
+  unreadCount?: number;
+}) {
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,54 +25,56 @@ export default function DesktopHeader({ unreadCount = 0 }: { unreadCount?: numbe
     <header
       className="desktop-only"
       style={{
-        height: '60px',
-        padding: '0 28px',
+        height: '58px',
+        backgroundColor: '#000000',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        width: '100%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#000000',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-        flexShrink: 0,
-        width: '100%',
+        padding: '0 32px',
         boxSizing: 'border-box'
       }}
     >
-      {/* Left: Amerigam Logo */}
-      <Link href="/home" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-        <Image
-          src="/amerigam-logo-transparent.png"
-          alt="Amerigam"
-          width={116}
-          height={28}
-          style={{ objectFit: 'contain' }}
-          priority
-        />
-      </Link>
+      {/* LEFT: Amerigam Logo + Text */}
+      <div style={{ display: 'flex', alignItems: 'center', width: '240px' }}>
+        <Link href="/home" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <Image
+            src="/amerigam-logo-transparent.png"
+            alt="Amerigam"
+            width={124}
+            height={28}
+            style={{ objectFit: 'contain' }}
+            priority
+          />
+        </Link>
+      </div>
 
-      {/* Center: Search pill bar */}
+      {/* CENTER: Search Bar */}
       <form
         onSubmit={handleSearchSubmit}
         style={{
           width: '420px',
-          maxWidth: '38vw',
+          maxWidth: '35vw',
           height: '38px',
           borderRadius: '999px',
-          backgroundColor: '#18181B',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          backgroundColor: '#16181C',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
           alignItems: 'center',
           padding: '0 16px',
-          gap: '10px'
+          gap: '10px',
+          transition: 'border-color 0.15s ease'
         }}
       >
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search creators, posts, communities..."
+          placeholder="Search"
           style={{
             background: 'transparent',
             border: 'none',
@@ -83,32 +89,46 @@ export default function DesktopHeader({ unreadCount = 0 }: { unreadCount?: numbe
           style={{
             background: 'none',
             border: 'none',
-            padding: 0,
+            color: '#71717A',
             cursor: 'pointer',
+            padding: 0,
             display: 'flex',
-            alignItems: 'center',
-            color: '#71717A'
+            alignItems: 'center'
           }}
         >
           <Search size={16} />
         </button>
       </form>
 
-      {/* Right: 4 Global Icons matching reference */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '22px' }}>
+      {/* RIGHT: 4 Global Icons (Network, Global/Explore, Notification, Settings) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '22px', justifyContent: 'flex-end', width: '240px' }}>
+        {/* 1. Network */}
         <Link
-          href="/ranking"
-          style={{ color: '#D4D4D8', display: 'flex', alignItems: 'center', transition: 'color 0.15s' }}
-          title="Activity / Rankings"
+          href="/network"
+          style={{
+            color: '#D4D4D8',
+            display: 'flex',
+            alignItems: 'center',
+            transition: 'color 0.15s ease',
+            textDecoration: 'none'
+          }}
+          title="Network"
           onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
           onMouseLeave={(e) => (e.currentTarget.style.color = '#D4D4D8')}
         >
-          <Activity size={20} strokeWidth={1.8} />
+          <Share2 size={20} strokeWidth={1.8} />
         </Link>
 
+        {/* 2. Global / Explore */}
         <Link
           href="/search"
-          style={{ color: '#D4D4D8', display: 'flex', alignItems: 'center', transition: 'color 0.15s' }}
+          style={{
+            color: '#D4D4D8',
+            display: 'flex',
+            alignItems: 'center',
+            transition: 'color 0.15s ease',
+            textDecoration: 'none'
+          }}
           title="Explore"
           onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
           onMouseLeave={(e) => (e.currentTarget.style.color = '#D4D4D8')}
@@ -116,9 +136,17 @@ export default function DesktopHeader({ unreadCount = 0 }: { unreadCount?: numbe
           <Globe size={20} strokeWidth={1.8} />
         </Link>
 
+        {/* 3. Notification with unread badge */}
         <Link
           href="/notifications"
-          style={{ color: '#D4D4D8', display: 'flex', alignItems: 'center', position: 'relative', transition: 'color 0.15s' }}
+          style={{
+            color: '#D4D4D8',
+            display: 'flex',
+            alignItems: 'center',
+            position: 'relative',
+            transition: 'color 0.15s ease',
+            textDecoration: 'none'
+          }}
           title="Notifications"
           onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
           onMouseLeave={(e) => (e.currentTarget.style.color = '#D4D4D8')}
@@ -128,21 +156,33 @@ export default function DesktopHeader({ unreadCount = 0 }: { unreadCount?: numbe
             <span
               style={{
                 position: 'absolute',
-                top: '-3px',
-                right: '-3px',
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
+                top: '-4px',
+                right: '-6px',
                 backgroundColor: '#EF4444',
-                border: '1.5px solid #000000'
+                color: '#FFFFFF',
+                fontSize: '10px',
+                fontWeight: 700,
+                padding: '1px 5px',
+                borderRadius: '999px',
+                border: '1.5px solid #000000',
+                lineHeight: 1
               }}
-            />
+            >
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
           )}
         </Link>
 
+        {/* 4. Settings */}
         <Link
           href="/settings"
-          style={{ color: '#D4D4D8', display: 'flex', alignItems: 'center', transition: 'color 0.15s' }}
+          style={{
+            color: '#D4D4D8',
+            display: 'flex',
+            alignItems: 'center',
+            transition: 'color 0.15s ease',
+            textDecoration: 'none'
+          }}
           title="Settings"
           onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
           onMouseLeave={(e) => (e.currentTarget.style.color = '#D4D4D8')}
