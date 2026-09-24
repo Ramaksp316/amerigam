@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, Plus, LayoutGrid } from 'lucide-react';
+import { UserPlus, Plus } from 'lucide-react';
 import ProfilePicture from '../components/ProfilePicture';
 import NewConversationModal from './NewConversationModal';
 
@@ -24,7 +24,7 @@ export interface SerializedConversation {
   unreadCount: number;
 }
 
-function formatFigmaTime(dateString?: string) {
+function formatBlueprintTime(dateString?: string) {
   if (!dateString) return '';
   const date = new Date(dateString);
   const now = new Date();
@@ -52,20 +52,7 @@ export default function ConversationSidebar({
   currentUserId: string;
   availableContacts?: any[];
 }) {
-  const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const filtered = conversations.filter((c) => {
-    const term = search.toLowerCase();
-    const partnerName = (c.partner.name || '').toLowerCase();
-    const partnerUsername = (c.partner.username || '').toLowerCase();
-    const lastMsg = (c.lastMessage?.content || '').toLowerCase();
-    return (
-      partnerName.includes(term) ||
-      partnerUsername.includes(term) ||
-      lastMsg.includes(term)
-    );
-  });
 
   return (
     <>
@@ -78,144 +65,27 @@ export default function ConversationSidebar({
           flexDirection: 'column',
           backgroundColor: '#000000',
           boxSizing: 'border-box',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          padding: '16px 12px 16px 16px'
         }}
       >
-        {/* Top Header & Tabs matching Figma 17.png */}
-        <div style={{ flexShrink: 0 }}>
-          {/* Top Tabs: Message | Community */}
-          <div
-            className="messages-tabs-header"
+        {/* Title matching Blueprint: "Recent messages for you" */}
+        <div
+          style={{
+            padding: '4px 8px 14px 8px',
+            flexShrink: 0
+          }}
+        >
+          <span
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '24px',
-              padding: '20px 20px 14px 20px'
+              fontSize: '13px',
+              fontWeight: 500,
+              color: '#8E8E93',
+              letterSpacing: '-0.1px'
             }}
           >
-            <span
-              className="messages-tab-btn active"
-              style={{
-                fontSize: '16px',
-                fontWeight: 700,
-                color: '#FFFFFF',
-                borderBottom: '2px solid #FFFFFF',
-                paddingBottom: '4px',
-                cursor: 'default',
-                letterSpacing: '-0.2px'
-              }}
-            >
-              Message
-            </span>
-            <Link
-              href="/communities"
-              className="messages-tab-btn"
-              style={{
-                fontSize: '16px',
-                fontWeight: 500,
-                color: '#8E8E93',
-                paddingBottom: '4px',
-                textDecoration: 'none',
-                letterSpacing: '-0.2px',
-                transition: 'color 0.2s ease'
-              }}
-            >
-              Community
-            </Link>
-          </div>
-
-          {/* Subtitle matching Figma 17.png: "Recent messages for you" */}
-          <div
-            className="messages-section-title-row"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '4px 20px 10px 20px'
-            }}
-          >
-            <h2
-              className="messages-section-title"
-              style={{
-                fontSize: '13px',
-                fontWeight: 600,
-                color: '#8E8E93',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                margin: 0
-              }}
-            >
-              Recent messages for you
-            </h2>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="messages-new-chat-link"
-              style={{
-                fontSize: '12px',
-                fontWeight: 600,
-                color: '#1D9BF0',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '2px 6px'
-              }}
-            >
-              + New
-            </button>
-          </div>
-
-          {/* Search bar matching Windows / Figma border-glow pill */}
-          <div
-            className="messages-search-container"
-            style={{
-              margin: '0 16px 14px 16px',
-              position: 'relative'
-            }}
-          >
-            <Search
-              size={15}
-              className="messages-search-icon"
-              style={{
-                position: 'absolute',
-                left: '14px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#71717A',
-                pointerEvents: 'none'
-              }}
-            />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search messages..."
-              className="messages-search-input"
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                backgroundColor: 'rgba(26, 27, 32, 0.85)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                border: '1px solid rgba(255, 255, 255, 0.18)',
-                borderRadius: '999px',
-                padding: '9px 16px 9px 38px',
-                color: '#FFFFFF',
-                fontSize: '13px',
-                fontFamily: 'inherit',
-                outline: 'none',
-                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.22)',
-                transition: 'all 0.2s ease'
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.7)';
-                e.currentTarget.style.boxShadow = '0 0 16px rgba(59, 130, 246, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
-                e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.22)';
-              }}
-            />
-          </div>
+            Recent messages for you
+          </span>
         </div>
 
         {/* Conversation List */}
@@ -224,19 +94,17 @@ export default function ConversationSidebar({
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '4px 12px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '4px',
-            boxSizing: 'border-box'
+            gap: '6px',
+            boxSizing: 'border-box',
+            paddingRight: '4px'
           }}
         >
-          {filtered.length === 0 ? (
+          {conversations.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 16px' }}>
               <p style={{ color: '#71717A', fontSize: '13px', margin: '0 0 12px 0' }}>
-                {conversations.length === 0
-                  ? 'No conversations yet'
-                  : 'No matching messages'}
+                No conversations yet
               </p>
               <button
                 onClick={() => setIsModalOpen(true)}
@@ -258,10 +126,10 @@ export default function ConversationSidebar({
               </button>
             </div>
           ) : (
-            filtered.map((conv) => {
+            conversations.map((conv) => {
               const isActive = conv.id === activeConversationId;
               const hasUnread = conv.unreadCount > 0;
-              const timeString = formatFigmaTime(conv.lastMessage?.createdAt);
+              const timeString = formatBlueprintTime(conv.lastMessage?.createdAt);
 
               let snippet = 'No messages yet';
               if (conv.lastMessage) {
@@ -275,7 +143,6 @@ export default function ConversationSidebar({
                 <Link
                   key={conv.id}
                   href={`/messages/${conv.id}`}
-                  className={`messages-thread-item ${isActive ? 'active' : ''}`}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -283,16 +150,17 @@ export default function ConversationSidebar({
                     padding: '10px 14px',
                     borderRadius: '16px',
                     textDecoration: 'none',
-                    backgroundColor: isActive ? '#22242B' : 'transparent',
+                    backgroundColor: isActive ? '#1E2026' : 'transparent',
                     border: isActive
                       ? '1px solid rgba(255, 255, 255, 0.08)'
                       : '1px solid transparent',
-                    boxShadow: isActive ? '0 4px 12px rgba(0, 0, 0, 0.3)' : 'none',
+                    boxShadow: isActive ? '0 4px 16px rgba(0, 0, 0, 0.4)' : 'none',
                     transition: 'all 0.15s ease',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    position: 'relative'
                   }}
                   onMouseEnter={(e) => {
-                    if (!isActive) e.currentTarget.style.backgroundColor = '#16171B';
+                    if (!isActive) e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.04)';
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
@@ -300,28 +168,27 @@ export default function ConversationSidebar({
                 >
                   {/* Partner Avatar */}
                   <div
-                    className="messages-thread-avatar"
                     style={{
-                      width: '44px',
-                      height: '44px',
+                      width: '42px',
+                      height: '42px',
                       borderRadius: '50%',
                       overflow: 'hidden',
                       flexShrink: 0,
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      backgroundColor: '#27272A'
                     }}
                   >
                     <ProfilePicture
                       user={conv.partner}
-                      size={44}
+                      size={42}
                       showStatus={false}
                     />
                   </div>
 
                   {/* Info */}
                   <div
-                    className="messages-thread-info"
                     style={{
                       flex: 1,
                       minWidth: 0,
@@ -330,126 +197,105 @@ export default function ConversationSidebar({
                       gap: '2px'
                     }}
                   >
-                    <div
-                      className="messages-thread-top"
+                    <span
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '8px'
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: '#FFFFFF',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
                       }}
                     >
-                      <span
-                        className="messages-thread-name"
-                        style={{
-                          fontSize: '14px',
-                          fontWeight: 600,
-                          color: '#FFFFFF',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}
-                      >
-                        {conv.partner.name || conv.partner.username}
+                      {conv.partner.name || conv.partner.username}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        color: hasUnread ? '#FFFFFF' : '#8E8E93',
+                        fontWeight: hasUnread ? 600 : 400,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {snippet}
                       </span>
                       {timeString && (
-                        <span
-                          className="messages-thread-time"
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: 500,
-                            color: '#71717A',
-                            flexShrink: 0
-                          }}
-                        >
+                        <span style={{ color: '#71717A', fontSize: '11px', flexShrink: 0 }}>
                           {timeString}
                         </span>
                       )}
-                    </div>
-                    <div
-                      className="messages-thread-bottom"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '8px'
-                      }}
-                    >
-                      <p
-                        className={`messages-thread-snippet ${hasUnread ? 'unread' : ''}`}
-                        style={{
-                          fontSize: '13px',
-                          color: hasUnread ? '#E4E4E7' : '#8E8E93',
-                          fontWeight: hasUnread ? 600 : 400,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          margin: 0,
-                          lineHeight: 1.4
-                        }}
-                      >
-                        {snippet}
-                      </p>
-                      {/* Unread Blue Dot matching Figma 17.png */}
-                      {hasUnread && (
-                        <div
-                          className="messages-thread-unread-dot"
-                          style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            backgroundColor: '#1D9BF0',
-                            boxShadow: '0 0 8px #1D9BF0',
-                            flexShrink: 0
-                          }}
-                        />
-                      )}
-                    </div>
+                    </span>
                   </div>
+
+                  {/* Unread Blue Dot matching Blueprint */}
+                  {hasUnread && (
+                    <div
+                      style={{
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        backgroundColor: '#0284C7',
+                        boxShadow: '0 0 8px #0284C7',
+                        flexShrink: 0
+                      }}
+                    />
+                  )}
                 </Link>
               );
             })
           )}
         </div>
 
-        {/* Bottom Bar with Green Action Button matching Figma 17.png */}
+        {/* Bottom Left: Blueprint Action Button (Dark circular icon with user/grid plus) */}
         <div
-          className="messages-sidebar-footer"
           style={{
-            padding: '14px 18px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            paddingTop: '12px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            backgroundColor: '#000000',
             flexShrink: 0
           }}
         >
           <button
             onClick={() => setIsModalOpen(true)}
-            title="New Conversation"
-            className="messages-action-green-btn"
+            title="Start New Conversation"
             style={{
               width: '42px',
               height: '42px',
               borderRadius: '50%',
-              backgroundColor: '#22C55E',
-              color: '#000000',
-              border: 'none',
+              backgroundColor: '#1E2026',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: '#FFFFFF',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              boxShadow: '0 6px 20px rgba(34, 197, 94, 0.4)',
-              transition: 'transform 0.2s ease, background-color 0.2s ease',
-              flexShrink: 0
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.5)',
+              transition: 'transform 0.15s ease, background-color 0.15s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.backgroundColor = '#272932';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.backgroundColor = '#1E2026';
             }}
           >
-            <LayoutGrid size={18} strokeWidth={2.4} />
+            {/* Custom 4-dot + icon matching blueprint */}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="2" />
+              <rect x="3" y="14" width="7" height="7" rx="2" />
+              <rect x="14" y="14" width="7" height="7" rx="2" />
+              <line x1="17.5" y1="4" x2="17.5" y2="10" />
+              <line x1="14.5" y1="7" x2="20.5" y2="7" />
+            </svg>
           </button>
-          <span style={{ fontSize: '11px', color: '#71717A', fontWeight: 500 }}>
-            {conversations.length} conversation{conversations.length === 1 ? '' : 's'}
-          </span>
         </div>
       </div>
 

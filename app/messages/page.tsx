@@ -1,8 +1,10 @@
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import ConversationSidebar, { SerializedConversation } from './ConversationSidebar';
 import EmptyStateIllustration from './EmptyStateIllustration';
+import MessagesHeader from './MessagesHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +43,17 @@ export default async function InboxPage({
     }
     redirect(`/messages/${conversation.id}`);
   }
+
+  // Fetch current user and unread notification count
+  const [currentUser, unreadNotifications] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, username: true, avatarData: true },
+    }),
+    prisma.notification.count({
+      where: { userId, isRead: false },
+    }),
+  ]);
 
   // Fetch all conversations for the user
   const rawConversations = await prisma.conversation.findMany({
@@ -129,9 +142,9 @@ export default async function InboxPage({
 
   return (
     <div
-      className="messages-root-layout"
       style={{
         display: 'flex',
+        flexDirection: 'column',
         width: '100%',
         height: '100vh',
         maxHeight: '100vh',
@@ -140,59 +153,109 @@ export default async function InboxPage({
         color: '#FFFFFF'
       }}
     >
-      {/* Left Pane: Conversation Sidebar */}
-      <div
-        className="messages-sidebar-panel"
-        style={{
-          width: '340px',
-          minWidth: '300px',
-          maxWidth: '380px',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: '#000000',
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-          flexShrink: 0,
-          boxSizing: 'border-box'
-        }}
-      >
-        <ConversationSidebar
-          conversations={conversations}
-          currentUserId={userId}
-          availableContacts={availableContacts}
-        />
-      </div>
+      {/* Top Header matching Normal messagar.png */}
+      <MessagesHeader
+        currentUser={currentUser}
+        unreadNotifications={unreadNotifications}
+      />
 
-      {/* Right Pane (Desktop): Figma 17.png Empty State Illustration inside dark rounded card */}
+      {/* Main Container below header */}
       <div
-        className="messages-main-container"
         style={{
-          flex: 1,
-          height: '100%',
-          padding: '16px 20px',
           display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          backgroundColor: '#000000',
-          boxSizing: 'border-box'
+          flex: 1,
+          minHeight: 0,
+          overflow: 'hidden'
         }}
       >
+        {/* Left Pane: Recent messages for you */}
         <div
-          className="messages-card-shell"
           style={{
-            width: '100%',
+            width: '320px',
+            minWidth: '280px',
+            maxWidth: '360px',
             height: '100%',
-            backgroundColor: '#16171B',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: '28px',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.7)',
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden',
+            backgroundColor: '#000000',
+            borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+            flexShrink: 0,
             boxSizing: 'border-box'
           }}
         >
-          <EmptyStateIllustration />
+          <ConversationSidebar
+            conversations={conversations}
+            currentUserId={userId}
+            availableContacts={availableContacts}
+          />
+        </div>
+
+        {/* Right Pane: Message | Community Tabs + 3D Speech Bubble Card */}
+        <div
+          style={{
+            flex: 1,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '12px 24px 20px 24px',
+            boxSizing: 'border-box',
+            overflow: 'hidden',
+            backgroundColor: '#000000'
+          }}
+        >
+          {/* Tabs directly above the card matching Normal messagar.png */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '28px',
+              padding: '4px 8px 12px 8px',
+              flexShrink: 0
+            }}
+          >
+            <span
+              style={{
+                fontSize: '16px',
+                fontWeight: 700,
+                color: '#FFFFFF',
+                cursor: 'default'
+              }}
+            >
+              Message
+            </span>
+            <Link
+              href="/communities"
+              style={{
+                fontSize: '16px',
+                fontWeight: 500,
+                color: '#8E8E93',
+                textDecoration: 'none',
+                transition: 'color 0.15s ease'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#8E8E93')}
+            >
+              Community
+            </Link>
+          </div>
+
+          {/* Large Dark Rounded Card containing 3D Speech Bubble Illustration */}
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              backgroundColor: '#16171B',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '24px',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.7)',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              boxSizing: 'border-box'
+            }}
+          >
+            <EmptyStateIllustration />
+          </div>
         </div>
       </div>
     </div>

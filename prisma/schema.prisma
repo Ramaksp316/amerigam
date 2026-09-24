@@ -262,6 +262,9 @@ model Follow {
 model Message {
   id             String       @id @default(uuid())
   content        String
+  mediaUrl       String?
+  mediaType      String?      // 'image' | 'video' | 'voice' | 'sticker'
+  voiceDuration  Int?         // in seconds
   senderId       String
   receiverId     String
   sender         User         @relation("sentMessages", fields: [senderId], references: [id])

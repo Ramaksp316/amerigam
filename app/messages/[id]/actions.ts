@@ -3,15 +3,32 @@ import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 
-export async function sendMessage(conversationId: string, receiverId: string, content: string) {
+export async function sendMessage(
+  conversationId: string,
+  receiverId: string,
+  content: string,
+  mediaUrl?: string | null,
+  mediaType?: string | null,
+  voiceDuration?: number | null
+) {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
   if (!userId) return { success: false };
 
   try {
+    const finalContent = content.trim() || (
+      mediaType === 'image' ? '📷 Photo' :
+      mediaType === 'video' ? '📹 Video' :
+      mediaType === 'voice' ? '🎙️ Voice message' :
+      mediaType === 'sticker' ? '🎴 Sticker' : 'Media'
+    );
+
     const message = await prisma.message.create({
       data: {
-        content,
+        content: finalContent,
+        mediaUrl: mediaUrl || null,
+        mediaType: mediaType || null,
+        voiceDuration: voiceDuration || null,
         senderId: userId,
         receiverId,
         conversationId
@@ -32,14 +49,10 @@ export async function sendMessage(conversationId: string, receiverId: string, co
         userId: receiverId,
         actorId: userId,
         type: 'message',
-        content: 'sent you a message.',
+        content: mediaType === 'voice' ? 'sent you a voice message.' : mediaType === 'image' ? 'sent you a photo.' : mediaType === 'video' ? 'sent you a video.' : 'sent you a message.',
         link: `/messages/${conversationId}`
       }
     });
-
-    revalidatePath(`/messages/${receiverId}`);
-    revalidatePath(`/messages/${conversationId}`);
-    revalidatePath('/messages');
 
     return { success: true, message };
   } catch (error) {

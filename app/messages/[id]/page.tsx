@@ -1,8 +1,10 @@
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import ChatClient from './ChatClient';
 import ConversationSidebar, { SerializedConversation } from '../ConversationSidebar';
+import MessagesHeader from '../MessagesHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,29 +22,38 @@ export default async function ConversationPage({
 
   const { id } = await params;
 
-  const conversation = await prisma.conversation.findUnique({
-    where: { id },
-    include: {
-      user1: {
-        select: {
-          id: true,
-          name: true,
-          username: true,
-          avatarData: true,
-          status: true,
+  const [currentUser, unreadNotifications, conversation] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, username: true, avatarData: true },
+    }),
+    prisma.notification.count({
+      where: { userId, isRead: false },
+    }),
+    prisma.conversation.findUnique({
+      where: { id },
+      include: {
+        user1: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatarData: true,
+            status: true,
+          },
+        },
+        user2: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatarData: true,
+            status: true,
+          },
         },
       },
-      user2: {
-        select: {
-          id: true,
-          name: true,
-          username: true,
-          avatarData: true,
-          status: true,
-        },
-      },
-    },
-  });
+    }),
+  ]);
 
   if (!conversation) {
     redirect('/messages');
@@ -75,6 +86,9 @@ export default async function ConversationPage({
   const initialMessages = rawMessages.map((m) => ({
     id: m.id,
     content: m.content,
+    mediaUrl: m.mediaUrl,
+    mediaType: m.mediaType,
+    voiceDuration: m.voiceDuration,
     senderId: m.senderId,
     receiverId: m.receiverId,
     createdAt: m.createdAt.toISOString(),
@@ -168,9 +182,9 @@ export default async function ConversationPage({
 
   return (
     <div
-      className="messages-root-layout"
       style={{
         display: 'flex',
+        flexDirection: 'column',
         width: '100%',
         height: '100vh',
         maxHeight: '100vh',
@@ -179,50 +193,112 @@ export default async function ConversationPage({
         color: '#FFFFFF'
       }}
     >
-      {/* Left Pane (Desktop): Conversation Sidebar */}
-      <div
-        className="messages-sidebar-panel"
-        style={{
-          width: '340px',
-          minWidth: '300px',
-          maxWidth: '380px',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: '#000000',
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-          flexShrink: 0,
-          boxSizing: 'border-box'
-        }}
-      >
-        <ConversationSidebar
-          conversations={conversations}
-          activeConversationId={id}
-          currentUserId={userId}
-          availableContacts={availableContacts}
-        />
-      </div>
+      {/* Top Header matching Normal message 2.png */}
+      <MessagesHeader
+        currentUser={currentUser}
+        unreadNotifications={unreadNotifications}
+      />
 
-      {/* Right Pane (Desktop: rounded card; Mobile: full-screen) */}
+      {/* Main Container below header */}
       <div
-        className="messages-main-container mobile-active"
         style={{
-          flex: 1,
-          height: '100%',
-          padding: '16px 20px',
           display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          backgroundColor: '#000000',
-          boxSizing: 'border-box'
+          flex: 1,
+          minHeight: 0,
+          overflow: 'hidden'
         }}
       >
-        <ChatClient
-          initialMessages={initialMessages}
-          conversationId={id}
-          currentUserId={userId}
-          partner={partner}
-        />
+        {/* Left Pane (Desktop): Recent messages for you */}
+        <div
+          className="desktop-only"
+          style={{
+            width: '320px',
+            minWidth: '280px',
+            maxWidth: '360px',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: '#000000',
+            borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+            flexShrink: 0,
+            boxSizing: 'border-box'
+          }}
+        >
+          <ConversationSidebar
+            conversations={conversations}
+            activeConversationId={id}
+            currentUserId={userId}
+            availableContacts={availableContacts}
+          />
+        </div>
+
+        {/* Right Pane: Message | Community Tabs + ChatClient Card */}
+        <div
+          style={{
+            flex: 1,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '12px 24px 20px 24px',
+            boxSizing: 'border-box',
+            overflow: 'hidden',
+            backgroundColor: '#000000'
+          }}
+        >
+          {/* Tabs directly above the card matching Normal message 2.png */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '28px',
+              padding: '4px 8px 12px 8px',
+              flexShrink: 0
+            }}
+          >
+            <span
+              style={{
+                fontSize: '16px',
+                fontWeight: 700,
+                color: '#FFFFFF',
+                cursor: 'default'
+              }}
+            >
+              Message
+            </span>
+            <Link
+              href="/communities"
+              style={{
+                fontSize: '16px',
+                fontWeight: 500,
+                color: '#8E8E93',
+                textDecoration: 'none',
+                transition: 'color 0.15s ease'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#8E8E93')}
+            >
+              Community
+            </Link>
+          </div>
+
+          {/* Active Chat Card */}
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}
+          >
+            <ChatClient
+              initialMessages={initialMessages}
+              conversationId={id}
+              currentUserId={userId}
+              partner={partner}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

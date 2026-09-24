@@ -59,8 +59,8 @@ export default function Sidebar({
     };
   }, [showMoreMenu]);
 
-  // Hide sidebar on full-screen /feed, /notifications, /ranking, /dev-board or auth pages
-  if (pathname?.startsWith('/login') || pathname?.startsWith('/create') || pathname?.startsWith('/feed') || pathname?.startsWith('/notifications') || pathname?.startsWith('/ranking') || pathname?.startsWith('/dev-board')) {
+  // Hide sidebar on full-screen /feed, /notifications, /ranking, /dev-board, auth pages, or /messages
+  if (pathname?.startsWith('/login') || pathname?.startsWith('/create') || pathname?.startsWith('/feed') || pathname?.startsWith('/notifications') || pathname?.startsWith('/ranking') || pathname?.startsWith('/dev-board') || pathname?.startsWith('/messages')) {
     return null;
   }
 

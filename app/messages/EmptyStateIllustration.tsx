@@ -19,156 +19,87 @@ export default function EmptyStateIllustration({ onNewChat }: { onNewChat?: () =
         boxSizing: 'border-box'
       }}
     >
-      {/* 3D Layered Speech Bubble matching Figma 17.png */}
+      {/* 3D Layered Double Speech Bubble matching Normal messagar.png EXACTLY */}
       <div
         style={{
           position: 'relative',
-          width: '240px',
-          height: '240px',
+          width: '320px',
+          height: '300px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: '20px'
+          filter: 'drop-shadow(0 32px 64px rgba(0, 0, 0, 0.9)) drop-shadow(0 16px 32px rgba(0, 0, 0, 0.8))'
         }}
       >
         <svg
-          viewBox="0 0 260 260"
+          viewBox="0 0 340 320"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           style={{
             width: '100%',
             height: '100%',
-            filter: 'drop-shadow(0 24px 48px rgba(0, 0, 0, 0.9))'
+            overflow: 'visible'
           }}
         >
           <defs>
-            {/* Outer Olive/Gold Glow Gradient */}
-            <linearGradient id="goldBubble" x1="40" y1="20" x2="220" y2="240" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#D4C22B" />
-              <stop offset="0.6" stopColor="#B39E18" />
-              <stop offset="1" stopColor="#7E6C0C" />
+            {/* Deep Royal Blue Back Bubble Gradient */}
+            <linearGradient id="blueBubbleGrad" x1="60" y1="30" x2="260" y2="250" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#3B82F6" />
+              <stop offset="35%" stopColor="#2563EB" />
+              <stop offset="80%" stopColor="#1D4ED8" />
+              <stop offset="100%" stopColor="#173EAB" />
             </linearGradient>
 
-            {/* Deep Blue Front Bubble Gradient */}
-            <linearGradient id="blueBubble" x1="60" y1="40" x2="210" y2="210" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#3263E6" />
-              <stop offset="0.4" stopColor="#224EC4" />
-              <stop offset="1" stopColor="#153696" />
+            {/* Front Olive/Golden Yellow Bubble Gradient */}
+            <linearGradient id="goldBubbleGrad" x1="90" y1="50" x2="270" y2="260" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#D8C328" />
+              <stop offset="30%" stopColor="#C4AF1F" />
+              <stop offset="70%" stopColor="#A89415" />
+              <stop offset="100%" stopColor="#81710C" />
             </linearGradient>
 
-            {/* Bubble Shadows */}
-            <filter id="shadowUnder" x="-10%" y="-10%" width="130%" height="130%">
-              <feDropShadow dx="-4" dy="12" stdDeviation="10" floodColor="#000000" floodOpacity="0.8" />
+            {/* Ambient Deep Shadow under the Back Bubble */}
+            <filter id="bubbleFloorShadow" x="-20%" y="-20%" width="140%" height="150%">
+              <feDropShadow dx="-8" dy="24" stdDeviation="16" floodColor="#000000" floodOpacity="0.85" />
             </filter>
 
-            <filter id="frontShadow" x="-10%" y="-10%" width="130%" height="130%">
-              <feDropShadow dx="2" dy="8" stdDeviation="8" floodColor="#0a1a4a" floodOpacity="0.6" />
+            {/* Inter-bubble Inner Depth Shadow */}
+            <filter id="goldOverBlueShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="-4" dy="8" stdDeviation="8" floodColor="#071233" floodOpacity="0.75" />
             </filter>
           </defs>
 
-          {/* Layer 1: Background Gold/Yellow Bubble (Figma 17.png) */}
-          <path
-            d="M 125 35 
-               C 178 35, 220 72, 220 118 
-               C 220 164, 178 201, 125 201 
-               C 107 201, 90 196, 75 187 
-               C 52 201, 38 214, 38 214 
-               C 42 195, 46 177, 42 165 
-               C 34 151, 30 135, 30 118 
-               C 30 72, 72 35, 125 35 Z"
-            fill="url(#goldBubble)"
-            filter="url(#shadowUnder)"
-            transform="translate(-6, 8) scale(1.04)"
-          />
+          {/* LAYER 1: Deep Royal Blue Speech Bubble (BACK LAYER) */}
+          <g filter="url(#bubbleFloorShadow)">
+            <path
+              d="M 165 42
+                 C 232 42, 286 86, 286 140
+                 C 286 194, 232 238, 165 238
+                 C 142 238, 120 232, 102 221
+                 C 72 238, 54 254, 54 254
+                 C 59 232, 64 210, 60 196
+                 C 49 180, 44 161, 44 140
+                 C 44 86, 98 42, 165 42 Z"
+              fill="url(#blueBubbleGrad)"
+            />
+          </g>
 
-          {/* Layer 2: Foreground Deep Royal Blue Bubble (Figma 17.png) */}
-          <path
-            d="M 132 44 
-               C 183 44, 222 79, 222 122 
-               C 222 165, 183 200, 132 200 
-               C 115 200, 99 195, 85 187 
-               C 63 200, 48 212, 48 212 
-               C 52 194, 56 177, 52 166 
-               C 44 153, 42 138, 42 122 
-               C 42 79, 81 44, 132 44 Z"
-            fill="url(#blueBubble)"
-            filter="url(#frontShadow)"
-          />
-
-          {/* Layer 3: Crisp White Globe Icon inside Blue Bubble */}
-          <g transform="translate(132, 122)">
-            {/* Outer Globe Circle */}
-            <circle cx="0" cy="0" r="30" stroke="#FFFFFF" strokeWidth="3" fill="none" opacity="0.95" />
-            
-            {/* Equator & Latitude Lines */}
-            <line x1="-30" y1="0" x2="30" y2="0" stroke="#FFFFFF" strokeWidth="2.5" opacity="0.95" />
-            <line x1="-25" y1="-14" x2="25" y2="-14" stroke="#FFFFFF" strokeWidth="2" opacity="0.75" />
-            <line x1="-25" y1="14" x2="25" y2="14" stroke="#FFFFFF" strokeWidth="2" opacity="0.75" />
-            
-            {/* Central Prime Meridian */}
-            <line x1="0" y1="-30" x2="0" y2="30" stroke="#FFFFFF" strokeWidth="2.5" opacity="0.95" />
-            
-            {/* Curved Longitude Ellipses */}
-            <ellipse cx="0" cy="0" rx="16" ry="30" stroke="#FFFFFF" strokeWidth="2" fill="none" opacity="0.85" />
+          {/* LAYER 2: Rich Olive / Gold-Yellow Speech Bubble (FRONT LAYER, offset down-right) */}
+          <g filter="url(#goldOverBlueShadow)">
+            <path
+              d="M 178 58
+                 C 238 58, 286 98, 286 146
+                 C 286 194, 238 234, 178 234
+                 C 158 234, 138 228, 122 218
+                 C 96 234, 80 248, 80 248
+                 C 84 228, 89 208, 85 196
+                 C 76 182, 70 165, 70 146
+                 C 70 98, 118 58, 178 58 Z"
+              fill="url(#goldBubbleGrad)"
+            />
           </g>
         </svg>
       </div>
-
-      {/* Typography */}
-      <h3
-        className="messages-empty-state-title"
-        style={{
-          fontSize: '22px',
-          fontWeight: 700,
-          color: '#FFFFFF',
-          margin: '0 0 8px 0',
-          letterSpacing: '-0.3px',
-          fontFamily: 'inherit'
-        }}
-      >
-        Amerigam Messages
-      </h3>
-      <p
-        className="messages-empty-state-desc"
-        style={{
-          fontSize: '14px',
-          color: '#8E8E93',
-          maxWidth: '360px',
-          lineHeight: 1.5,
-          margin: '0 0 24px 0',
-          fontFamily: 'inherit'
-        }}
-      >
-        Select a conversation from the left to start messaging, or create a new conversation with your network.
-      </p>
-
-      {onNewChat && (
-        <button
-          onClick={onNewChat}
-          className="messages-empty-state-cta"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            backgroundColor: '#1D9BF0',
-            color: '#FFFFFF',
-            fontWeight: 600,
-            fontSize: '14px',
-            padding: '10px 24px',
-            borderRadius: '999px',
-            border: 'none',
-            cursor: 'pointer',
-            boxShadow: '0 6px 20px rgba(29, 155, 240, 0.35)',
-            transition: 'all 0.2s ease',
-            fontFamily: 'inherit'
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 5v14M5 12h14"/>
-          </svg>
-          New Message
-        </button>
-      )}
     </div>
   );
 }
