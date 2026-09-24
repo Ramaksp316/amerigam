@@ -66,6 +66,9 @@ export default async function FeedPage() {
       likes: {
         where: { userId } // Check if current logged-in user liked it
       },
+      bookmarks: {
+        where: { userId } // Check if current logged-in user bookmarked it
+      },
       comments: {
         include: {
           author: {

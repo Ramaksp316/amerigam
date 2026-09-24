@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -13,7 +13,13 @@ import {
   Bell,
   Globe,
   Share2,
-  Settings
+  Settings,
+  Menu,
+  Bookmark,
+  Activity,
+  Moon,
+  AlertCircle,
+  LogOut
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -27,6 +33,8 @@ export default function Sidebar({
 }) {
   const pathname = usePathname();
   const [displayUnread, setDisplayUnread] = useState(unreadCount);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (pathname === '/notifications') {
@@ -36,6 +44,21 @@ export default function Sidebar({
     }
   }, [pathname, unreadCount]);
 
+  // Close more menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setShowMoreMenu(false);
+      }
+    };
+    if (showMoreMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMoreMenu]);
+
   // Hide sidebar on full-screen /feed, /notifications, /ranking, /dev-board or auth pages
   if (pathname?.startsWith('/login') || pathname?.startsWith('/create') || pathname?.startsWith('/feed') || pathname?.startsWith('/notifications') || pathname?.startsWith('/ranking') || pathname?.startsWith('/dev-board')) {
     return null;
@@ -44,6 +67,7 @@ export default function Sidebar({
   const isActive = (path: string) => {
     if (path === '/home') return pathname === '/home' || pathname === '/';
     if (path === '/search') return pathname?.startsWith('/search') || pathname?.startsWith('/explore');
+    if (path === '/saved') return pathname?.startsWith('/saved');
     return pathname?.startsWith(path);
   };
 
@@ -149,7 +173,7 @@ export default function Sidebar({
           margin: '12px 4px'
         }} />
 
-        {/* Secondary Items: Communites & Network */}
+        {/* Secondary Items: Communities & Network */}
         {secondaryItems.map(({ href, label, icon: Icon }) => {
           const active = isActive(href);
           return (
@@ -182,32 +206,192 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* Bottom Settings Link */}
-      <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
-        <Link
-          href="/settings"
+      {/* Bottom Section: Settings & "More" Menu matching Instagram Web */}
+      <div ref={moreMenuRef} style={{ marginTop: 'auto', paddingTop: '16px', position: 'relative' }}>
+        {/* Instagram Style "More" Floating Popover Menu */}
+        {showMoreMenu && (
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '56px',
+              left: 0,
+              width: '240px',
+              backgroundColor: '#1E1E22',
+              borderRadius: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              boxShadow: '0 16px 48px rgba(0, 0, 0, 0.85)',
+              padding: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+              zIndex: 100,
+              animation: 'fadeInUp 0.18s cubic-bezier(0.16, 1, 0.3, 1)'
+            }}
+          >
+            <Link
+              href="/settings"
+              onClick={() => setShowMoreMenu(false)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                color: '#FFFFFF',
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: 500,
+                transition: 'background-color 0.12s ease'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              <Settings size={18} />
+              <span>Settings</span>
+            </Link>
+
+            <Link
+              href="/saved?tab=liked"
+              onClick={() => setShowMoreMenu(false)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                color: '#FFFFFF',
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: 500,
+                transition: 'background-color 0.12s ease'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              <Activity size={18} />
+              <span>Your activity</span>
+            </Link>
+
+            <Link
+              href="/saved?tab=saved"
+              onClick={() => setShowMoreMenu(false)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                color: '#FFFFFF',
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: 500,
+                transition: 'background-color 0.12s ease'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              <Bookmark size={18} />
+              <span>Saved</span>
+            </Link>
+
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                color: '#A1A1AA',
+                fontSize: '14px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'background-color 0.12s ease'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              <Moon size={18} />
+              <span>Dark appearance (Active)</span>
+            </div>
+
+            <Link
+              href="/settings"
+              onClick={() => setShowMoreMenu(false)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                color: '#FFFFFF',
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: 500,
+                transition: 'background-color 0.12s ease'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              <AlertCircle size={18} />
+              <span>Report a problem</span>
+            </Link>
+
+            {/* Divider */}
+            <div style={{ height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.08)', margin: '4px 0' }} />
+
+            <Link
+              href="/login"
+              onClick={() => setShowMoreMenu(false)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                color: '#EF4444',
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: 600,
+                transition: 'background-color 0.12s ease'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              <LogOut size={18} />
+              <span>Log out</span>
+            </Link>
+          </div>
+        )}
+
+        {/* More Trigger Button */}
+        <button
+          onClick={() => setShowMoreMenu(!showMoreMenu)}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '16px',
             padding: '10px 12px',
             borderRadius: '12px',
-            textDecoration: 'none',
-            color: isActive('/settings') ? '#FFFFFF' : '#A1A1AA',
-            fontWeight: isActive('/settings') ? 700 : 500,
+            border: 'none',
+            background: showMoreMenu ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+            color: showMoreMenu ? '#FFFFFF' : '#A1A1AA',
+            fontWeight: showMoreMenu ? 700 : 500,
             fontSize: '15px',
+            cursor: 'pointer',
+            width: '100%',
+            textAlign: 'left',
             transition: 'all 0.15s ease'
           }}
           onMouseEnter={(e) => {
-            if (!isActive('/settings')) e.currentTarget.style.color = '#FFFFFF';
+            if (!showMoreMenu) e.currentTarget.style.color = '#FFFFFF';
           }}
           onMouseLeave={(e) => {
-            if (!isActive('/settings')) e.currentTarget.style.color = '#A1A1AA';
+            if (!showMoreMenu) e.currentTarget.style.color = '#A1A1AA';
           }}
         >
-          <Settings size={20} strokeWidth={isActive('/settings') ? 2.3 : 1.8} />
-          <span>Setting</span>
-        </Link>
+          <Menu size={22} strokeWidth={showMoreMenu ? 2.4 : 1.8} />
+          <span>More</span>
+        </button>
       </div>
     </aside>
   );

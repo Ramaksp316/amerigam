@@ -25,7 +25,7 @@ import {
   UserCheck,
   UserPlus
 } from 'lucide-react';
-import { toggleLike, addComment } from '../actions/postActions';
+import { toggleLike, addComment, toggleBookmark } from '../actions/postActions';
 import { toggleFollow } from '../actions/userActions';
 
 // Helper to format counts cleanly (e.g. 0 -> '0', 134 -> '134', 1500 -> '1.5k', 55000 -> '55k')
@@ -339,7 +339,9 @@ export default function ReelFeedClient({
               comments: (activeCommentsReel._count?.comments || 0) + 1
             };
             if (!activeCommentsReel.comments) activeCommentsReel.comments = [];
-            activeCommentsReel.comments.unshift(newComment);
+            if (!activeCommentsReel.comments.some((c: any) => c.id === newComment.id)) {
+              activeCommentsReel.comments.unshift(newComment);
+            }
           }}
         />
       )}
@@ -407,7 +409,9 @@ function SingleReelCard({
   const [likeCount, setLikeCount] = useState<number>(reel._count?.likes ?? 0);
   const [commentCount, setCommentCount] = useState<number>(reel._count?.comments ?? 0);
   const [shareCount, setShareCount] = useState<number>(0);
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(
+    (reel.bookmarks && reel.bookmarks.length > 0) || false
+  );
   const [isFollowing, setIsFollowing] = useState(
     reel.author?.followers && reel.author.followers.length > 0 ? true : false
   );
@@ -468,7 +472,7 @@ function SingleReelCard({
     setIsFollowing(nextState);
     try {
       await toggleFollow(reel.author.id);
-      onShowToast(nextState ? `Following ${reel.author?.name || 'Creator'}` : `Unfollowed ${reel.author?.name || 'Creator'}`);
+      onShowToast(nextState ? `Following @${reel.author?.username || 'creator'}` : `Unfollowed @${reel.author?.username || 'creator'}`);
     } catch (e) {}
   };
 
@@ -476,23 +480,43 @@ function SingleReelCard({
   const handleShare = async () => {
     setShareCount((prev) => prev + 1);
     const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/post/${reel.id}` : '';
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Reel by @${reel.author?.username || 'creator'} on Amerigam`,
+          url: shareUrl
+        });
+      } catch (e) {}
+    }
     try {
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(shareUrl);
-        onShowToast('Link copied to clipboard! 📋');
       } else {
-        onShowToast('Link copied!');
+        const textarea = document.createElement('textarea');
+        textarea.value = shareUrl;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
       }
+      onShowToast('Link copied to clipboard! 📋');
     } catch (e) {
-      onShowToast('Link copied!');
+      onShowToast('Link copied! 📋');
     }
   };
 
-  // Handle Save
-  const handleBookmark = () => {
+  // Handle Save / Bookmark
+  const handleBookmark = async () => {
     const nextState = !isSaved;
     setIsSaved(nextState);
     onShowToast(nextState ? 'Reel saved! 🔖' : 'Removed from saved');
+    try {
+      if (reel.id && !reel.id.startsWith('demo-')) {
+        await toggleBookmark(reel.id);
+      }
+    } catch (e) {
+      setIsSaved(!nextState);
+    }
   };
 
   return (
@@ -500,141 +524,30 @@ function SingleReelCard({
       display: 'flex',
       alignItems: 'flex-end',
       justifyContent: 'center',
-      gap: '32px',
+      gap: '18px',
       width: '100%',
-      maxWidth: '960px',
       margin: '0 auto',
-      padding: '12px 20px',
+      padding: '8px 16px',
       boxSizing: 'border-box',
       position: 'relative'
     }}>
 
-      {/* ========================================================
-          LEFT: CREATOR PROFILE & CAPTION (Matching mockup)
-         ======================================================== */}
-      <div style={{
-        width: '270px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-        paddingBottom: '16px',
-        flexShrink: 0
-      }} className="desktop-only">
-        {/* Creator Avatar + Name + Follow button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Link href={`/user/${reel.author?.id}`} style={{ textDecoration: 'none', display: 'flex', flexShrink: 0 }}>
-            <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '50%',
-              overflow: 'hidden',
-              backgroundColor: '#EAB308',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
-              border: '2px solid rgba(255, 255, 255, 0.15)',
-              cursor: 'pointer'
-            }}>
-              {reel.author?.avatarData ? (
-                <img
-                  src={reel.author.avatarData}
-                  alt={reel.author?.name || 'Creator'}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                <span style={{ color: '#000', fontSize: '18px', fontWeight: 800 }}>
-                  {reel.author?.name?.[0] || 'C'}
-                </span>
-              )}
-            </div>
-          </Link>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-            <Link
-              href={`/user/${reel.author?.id}`}
-              style={{
-                textDecoration: 'none',
-                color: '#FFFFFF',
-                fontSize: '16px',
-                fontWeight: 700,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                maxWidth: '125px'
-              }}
-            >
-              {reel.author?.name || reel.author?.username || 'Creator'}
-            </Link>
-
-            {/* Follow Button */}
-            {currentUserId !== reel.author?.id && (
-              <button
-                onClick={handleFollow}
-                style={{
-                  backgroundColor: isFollowing ? '#27272A' : '#0284C7',
-                  color: '#FFFFFF',
-                  border: isFollowing ? '1px solid rgba(255,255,255,0.15)' : 'none',
-                  borderRadius: '999px',
-                  padding: '5px 16px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  flexShrink: 0
-                }}
-              >
-                {isFollowing ? 'Following' : 'Follow'}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Multi-line Caption Text */}
-        <div style={{
-          fontSize: '13px',
-          color: '#D4D4D8',
-          lineHeight: '1.5',
-          whiteSpace: 'pre-line',
-          wordBreak: 'break-word',
-          maxHeight: isCaptionExpanded ? 'none' : '80px',
-          overflow: 'hidden',
-          paddingLeft: '6px'
-        }}>
-          {reel.content || "Watch this awesome reel on Amerigam! ✨"}
-        </div>
-        {reel.content && reel.content.length > 90 && (
-          <button
-            onClick={() => setIsCaptionExpanded(!isCaptionExpanded)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#A1A1AA',
-              fontSize: '12px',
-              paddingLeft: '6px',
-              textAlign: 'left',
-              cursor: 'pointer',
-              fontWeight: 500
-            }}
-          >
-            {isCaptionExpanded ? 'less' : 'more'}
-          </button>
-        )}
-      </div>
+      {/* Symmetrical Left Spacer to ensure 9:16 video is 100% mathematically centered on desktop */}
+      <div style={{ width: '56px', flexShrink: 0 }} className="desktop-only" />
 
       {/* ========================================================
-          CENTER: 9:16 VERTICAL VIDEO CARD (Strictly screen-fitted!)
+          CENTER: 9:16 VERTICAL VIDEO CARD (Instagram style)
          ======================================================== */}
       <div style={{
-        height: 'min(calc(100vh - 110px), 630px)',
-        maxHeight: '630px',
+        height: 'min(calc(100vh - 100px), 640px)',
+        maxHeight: '640px',
         aspectRatio: '9 / 16',
-        borderRadius: '24px',
-        backgroundColor: '#16161A',
+        borderRadius: '20px',
+        backgroundColor: '#121215',
         position: 'relative',
         overflow: 'hidden',
         boxShadow: '0 24px 60px rgba(0, 0, 0, 0.95)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -665,20 +578,20 @@ function SingleReelCard({
             onClick={handleTogglePlay}
             style={{
               position: 'absolute',
-              backgroundColor: 'rgba(0, 0, 0, 0.45)',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
               borderRadius: '50%',
-              width: '60px',
-              height: '60px',
+              width: '64px',
+              height: '64px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              backdropFilter: 'blur(4px)',
+              backdropFilter: 'blur(6px)',
               pointerEvents: 'auto',
               zIndex: 10
             }}
           >
-            <Play size={28} color="#FFFFFF" fill="#FFFFFF" style={{ marginLeft: '4px' }} />
+            <Play size={30} color="#FFFFFF" fill="#FFFFFF" style={{ marginLeft: '4px' }} />
           </div>
         )}
 
@@ -708,56 +621,132 @@ function SingleReelCard({
           {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
         </button>
 
-        {/* Mobile-only overlay for Creator info & Actions */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '24px 16px 16px',
-            background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)',
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'space-between',
-            pointerEvents: 'none',
-            zIndex: 15
-          }}
-          className="mobile-only"
-        >
-          <div style={{ maxWidth: '75%', pointerEvents: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span style={{ fontWeight: 700, fontSize: '15px', color: '#FFFFFF' }}>
-                @{reel.author?.username || reel.author?.name || 'creator'}
-              </span>
-              {currentUserId !== reel.author?.id && (
+        {/* Instagram Style Creator Overlay at bottom of video card */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '28px 16px 18px',
+          background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.45) 60%, transparent 100%)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          zIndex: 15,
+          pointerEvents: 'none'
+        }}>
+          {/* Creator Avatar (Clean, NO yellow ring) + Username + Follow */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', pointerEvents: 'auto' }}>
+            <Link href={`/user/${reel.author?.id}`} style={{ textDecoration: 'none', display: 'flex', flexShrink: 0 }}>
+              <div style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                backgroundColor: '#27272A',
+                border: '1.5px solid rgba(255, 255, 255, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                {reel.author?.avatarData ? (
+                  <img
+                    src={reel.author.avatarData}
+                    alt={reel.author?.name || 'Creator'}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 700 }}>
+                    {(reel.author?.name || reel.author?.username || 'C')[0].toUpperCase()}
+                  </span>
+                )}
+              </div>
+            </Link>
+
+            <Link
+              href={`/user/${reel.author?.id}`}
+              style={{
+                textDecoration: 'none',
+                color: '#FFFFFF',
+                fontSize: '14px',
+                fontWeight: 700,
+                textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '140px'
+              }}
+            >
+              @{reel.author?.username || reel.author?.name || 'creator'}
+            </Link>
+
+            {currentUserId !== reel.author?.id && (
+              <button
+                onClick={handleFollow}
+                style={{
+                  backgroundColor: isFollowing ? 'rgba(255,255,255,0.15)' : '#0284C7',
+                  color: '#FFFFFF',
+                  border: isFollowing ? '1px solid rgba(255,255,255,0.2)' : 'none',
+                  borderRadius: '999px',
+                  padding: '4px 14px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(4px)',
+                  transition: 'all 0.15s ease',
+                  flexShrink: 0
+                }}
+              >
+                {isFollowing ? 'Following' : 'Follow'}
+              </button>
+            )}
+          </div>
+
+          {/* Caption */}
+          {reel.content && (
+            <div style={{ pointerEvents: 'auto' }}>
+              <p style={{
+                fontSize: '13px',
+                color: '#F4F4F5',
+                lineHeight: '1.45',
+                margin: 0,
+                wordBreak: 'break-word',
+                textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+                display: isCaptionExpanded ? 'block' : '-webkit-box',
+                WebkitLineClamp: isCaptionExpanded ? 'unset' : 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: isCaptionExpanded ? 'visible' : 'hidden'
+              }}>
+                {reel.content}
+              </p>
+              {reel.content.length > 80 && (
                 <button
-                  onClick={handleFollow}
+                  onClick={() => setIsCaptionExpanded(!isCaptionExpanded)}
                   style={{
-                    backgroundColor: isFollowing ? '#27272A' : '#0284C7',
-                    color: '#FFFFFF',
+                    background: 'none',
                     border: 'none',
-                    borderRadius: '999px',
-                    padding: '3px 12px',
-                    fontSize: '11px',
-                    fontWeight: 600
+                    color: '#A1A1AA',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    padding: 0,
+                    marginTop: '2px',
+                    cursor: 'pointer'
                   }}
                 >
-                  {isFollowing ? 'Following' : 'Follow'}
+                  {isCaptionExpanded ? 'less' : 'more'}
                 </button>
               )}
             </div>
-            <p style={{ fontSize: '12px', color: '#E4E4E7', lineHeight: '1.4', margin: 0 }}>
-              {reel.content}
-            </p>
-          </div>
+          )}
         </div>
       </div>
 
       {/* ========================================================
-          RIGHT: ACTION BUTTONS (Real numbers, no hardcoded values!)
+          RIGHT: ACTION BUTTONS (Width 56px, Vertically Stacked)
          ======================================================== */}
       <div style={{
+        width: '56px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -981,15 +970,20 @@ function CommentsDrawer({
   const [commentsList, setCommentsList] = useState<any[]>(reel.comments || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Sync if reel comments change
+  useEffect(() => {
+    setCommentsList(reel.comments || []);
+  }, [reel.id]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = commentInput.trim();
     if (!text || isSubmitting) return;
 
     setIsSubmitting(true);
-
+    const tempId = `temp-${Date.now()}`;
     const newCommentObj = {
-      id: `temp-${Date.now()}`,
+      id: tempId,
       content: text,
       createdAt: new Date(),
       author: {
@@ -1000,18 +994,27 @@ function CommentsDrawer({
       }
     };
 
-    setCommentsList((prev) => [newCommentObj, ...prev]);
+    setCommentsList((prev) => [newCommentObj, ...prev.filter(c => c.id !== tempId)]);
     setCommentInput('');
-    onCommentAdded(newCommentObj);
 
     try {
       if (reel.id && !reel.id.startsWith('demo-')) {
-        await addComment(reel.id, text);
+        const res = await addComment(reel.id, text);
+        if (res?.success && res.comment) {
+          // Replace temp placeholder with real comment
+          setCommentsList((prev) => prev.map(c => c.id === tempId ? res.comment : c));
+          onCommentAdded(res.comment);
+        }
       }
-    } catch (err) {}
-
-    setIsSubmitting(false);
+    } catch (err) {
+      console.error('Comment error:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  // Deduplicate comments list by ID
+  const uniqueComments = Array.from(new Map(commentsList.map(c => [c.id, c])).values());
 
   return (
     <div style={{
@@ -1039,7 +1042,7 @@ function CommentsDrawer({
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '16px', fontWeight: 700, color: '#FFFFFF' }}>Comments</span>
-          <span style={{ fontSize: '13px', color: '#71717A' }}>({commentsList.length})</span>
+          <span style={{ fontSize: '13px', color: '#71717A' }}>({uniqueComments.length})</span>
         </div>
         <button
           onClick={onClose}
@@ -1066,7 +1069,7 @@ function CommentsDrawer({
         flexDirection: 'column',
         gap: '16px'
       }}>
-        {commentsList.length === 0 ? (
+        {uniqueComments.length === 0 ? (
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -1081,7 +1084,7 @@ function CommentsDrawer({
             <span style={{ fontSize: '12px' }}>Be the first to comment!</span>
           </div>
         ) : (
-          commentsList.map((c, i) => (
+          uniqueComments.map((c, i) => (
             <div key={c.id || i} style={{ display: 'flex', gap: '12px' }}>
               <div style={{
                 width: '34px',

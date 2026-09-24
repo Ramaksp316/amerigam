@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  Grid, Play, AlignJustify, CheckCircle2, MoreHorizontal,
+  Grid, Play, AlignJustify, Bookmark, CheckCircle2, MoreHorizontal,
   X, Calendar, MapPin, ShieldCheck, Share2, AlertCircle, Ban, Lock
 } from 'lucide-react';
 import ProfilePicture from '../../components/ProfilePicture';
@@ -133,7 +133,7 @@ export default function UserProfileClient({
   const tabs = [
     { id: 'posts', icon: <Grid size={20} />, label: 'Posts' },
     { id: 'reels', icon: <Play size={20} />, label: 'Reels' },
-    { id: 'saved', icon: <AlignJustify size={20} />, label: 'Saved' }
+    { id: 'saved', icon: <Bookmark size={20} />, label: 'Saved' }
   ];
 
   return (
@@ -774,8 +774,51 @@ export default function UserProfileClient({
           )}
 
           {activeTab === 'saved' && (
-            <div style={{ textAlign: 'center', padding: '40px 16px', color: '#71717A' }}>
-              <p style={{ margin: 0, fontSize: '14px' }}>Only you can see what you've saved</p>
+            <div style={{
+              textAlign: 'center',
+              padding: '60px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                border: '2px solid rgba(255, 255, 255, 0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(255, 255, 255, 0.03)'
+              }}>
+                <Bookmark size={28} color="#A1A1AA" />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#FFFFFF' }}>Saved Posts</h3>
+              <p style={{ margin: 0, fontSize: '13px', color: '#71717A', maxWidth: '360px', lineHeight: 1.5 }}>
+                {isOwner ? 'Save photos and reels that you want to see again. Only you can see what you’ve saved.' : 'Only you can see what you’ve saved.'}
+              </p>
+              {isOwner && (
+                <Link
+                  href="/saved"
+                  style={{
+                    marginTop: '10px',
+                    padding: '9px 24px',
+                    borderRadius: '999px',
+                    backgroundColor: '#0284C7',
+                    color: '#FFFFFF',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'background-color 0.15s ease'
+                  }}>
+                  <Bookmark size={15} />
+                  Open Saved & Liked
+                </Link>
+              )}
             </div>
           )}
         </div>

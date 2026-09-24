@@ -25,6 +25,7 @@ export async function deletePost(postId: string) {
   });
 
   revalidatePath('/feed');
+  revalidatePath('/home');
   revalidatePath(`/user/${userId}`);
   return { success: true };
 }
@@ -32,7 +33,7 @@ export async function deletePost(postId: string) {
 export async function toggleLike(postId: string) {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
-  if (!userId) return;
+  if (!userId) return { success: false, error: 'Unauthorized' };
 
   const existingLike = await prisma.like.findFirst({
     where: { userId, postId },
@@ -43,10 +44,14 @@ export async function toggleLike(postId: string) {
     select: { authorId: true },
   });
 
+  let hasLiked = false;
+
   if (existingLike) {
     await prisma.like.delete({ where: { id: existingLike.id } });
+    hasLiked = false;
   } else {
     await prisma.like.create({ data: { userId, postId } });
+    hasLiked = true;
     
     // Create Notification if liker is not the author
     if (post && post.authorId !== userId) {
@@ -58,28 +63,63 @@ export async function toggleLike(postId: string) {
           content: 'liked your post.',
           link: `/post/${postId}`,
         }
-      });
+      }).catch(() => {});
       
       const actorUser = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, username: true } });
       const actorName = actorUser ? (actorUser.username || actorUser.name || 'Someone') : 'Someone';
-      await sendWebPushNotification(post.authorId, 'New Like', `${actorName} liked your post.`, `/post/${postId}`);
+      await sendWebPushNotification(post.authorId, 'New Like', `${actorName} liked your post.`, `/post/${postId}`).catch(() => {});
     }
   }
-  revalidatePath('/feed');
-  revalidatePath(`/post/${postId}`);
+
+  return { success: true, hasLiked };
+}
+
+export async function toggleBookmark(postId: string) {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) return { success: false, error: 'Unauthorized' };
+
+  const existing = await prisma.bookmark.findUnique({
+    where: {
+      userId_postId: { userId, postId }
+    }
+  });
+
+  let isBookmarked = false;
+  if (existing) {
+    await prisma.bookmark.delete({
+      where: { id: existing.id }
+    });
+    isBookmarked = false;
+  } else {
+    await prisma.bookmark.create({
+      data: { userId, postId }
+    });
+    isBookmarked = true;
+  }
+
+  revalidatePath('/saved');
+  return { success: true, isBookmarked };
 }
 
 export async function addComment(postId: string, content: string) {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
-  if (!userId || !content || content.trim().length === 0) return;
+  if (!userId || !content || content.trim().length === 0) {
+    return { success: false, error: 'Unauthorized or empty comment' };
+  }
 
-  await prisma.comment.create({
+  const comment = await prisma.comment.create({
     data: {
-      content,
+      content: content.trim(),
       postId,
       authorId: userId,
     },
+    include: {
+      author: {
+        select: { id: true, name: true, username: true, avatarData: true }
+      }
+    }
   });
 
   const post = await prisma.post.findUnique({
@@ -97,13 +137,12 @@ export async function addComment(postId: string, content: string) {
         content: 'commented on your post.',
         link: `/post/${postId}`,
       }
-    });
+    }).catch(() => {});
 
     const actorUser = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, username: true } });
     const actorName = actorUser ? (actorUser.username || actorUser.name || 'Someone') : 'Someone';
-    await sendWebPushNotification(post.authorId, 'New Comment', `${actorName} commented on your post.`, `/post/${postId}`);
+    await sendWebPushNotification(post.authorId, 'New Comment', `${actorName} commented on your post.`, `/post/${postId}`).catch(() => {});
   }
 
-  revalidatePath('/feed');
-  revalidatePath(`/post/${postId}`);
+  return { success: true, comment };
 }

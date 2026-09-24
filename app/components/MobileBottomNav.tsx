@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import ProfilePicture from './ProfilePicture';
@@ -8,6 +8,8 @@ import ProfilePicture from './ProfilePicture';
 export default function MobileBottomNav({ currentUser }: { currentUser?: any }) {
   const pathname = usePathname();
   const [isCommunityPage, setIsCommunityPage] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
     if (pathname?.startsWith('/communities/')) {
@@ -15,7 +17,39 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
     } else {
       setIsCommunityPage(false);
     }
+    // Always show nav when route changes
+    setIsVisible(true);
   }, [pathname]);
+
+  // Smooth Auto-hide on scroll down, Auto-reveal on scroll up
+  useEffect(() => {
+    let ticking = false;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          // If scrolled near top (< 35px), always keep visible
+          if (currentScrollY < 35) {
+            setIsVisible(true);
+          } else if (currentScrollY > lastScrollY.current + 10) {
+            // Scrolling down by more than 10px -> smoothly slide down
+            setIsVisible(false);
+          } else if (currentScrollY < lastScrollY.current - 8) {
+            // Scrolling up by more than 8px -> smoothly slide up
+            setIsVisible(true);
+          }
+          lastScrollY.current = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const isActive = (route: string) => {
     if (route === '/home') {
@@ -37,12 +71,21 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
   return (
     <>
       {/* Floating Bottom Navigation Dock matching Figma dock (media_1790141405614.png) */}
-      <nav className="floating-dock-nav" aria-label="Bottom Navigation">
+      <nav
+        className="floating-dock-nav"
+        aria-label="Bottom Navigation"
+        style={{
+          transform: isVisible ? 'translateX(-50%)' : 'translate(-50%, calc(100% + 40px))',
+          opacity: isVisible ? 1 : 0,
+          pointerEvents: isVisible ? 'auto' : 'none',
+          transition: 'transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease'
+        }}
+      >
         {/* Dark Frosted Pill Dock with Top Specular Reflection */}
         <div
           className="floating-dock-pill"
           style={{
-            backgroundColor: 'rgba(18, 19, 24, 0.82)',
+            backgroundColor: 'rgba(18, 19, 24, 0.88)',
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
             borderTop: '1px solid rgba(255, 255, 255, 0.35)',
@@ -115,13 +158,13 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
               }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="16" rx="4.5" />
-                <polygon points="10 8.5 16 12 10 15.5" fill="currentColor" />
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                <polygon points="10 8 16 12 10 16 10 8" fill={isActive('/feed') ? '#FFFFFF' : 'currentColor'} />
               </svg>
             </div>
           </Link>
 
-          {/* 3. 4-circles icon (Explore matching Figma) */}
+          {/* 3. Search / Explore icon */}
           <Link
             href="/search"
             title="Explore"
@@ -134,31 +177,29 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
           >
             <div
               style={{
-                width: isActive('/search') || isActive('/competitions') ? '38px' : '36px',
-                height: isActive('/search') || isActive('/competitions') ? '34px' : '36px',
-                borderRadius: isActive('/search') || isActive('/competitions') ? '11px' : '50%',
+                width: isActive('/search') ? '38px' : '36px',
+                height: isActive('/search') ? '34px' : '36px',
+                borderRadius: isActive('/search') ? '11px' : '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: isActive('/search') || isActive('/competitions') ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
-                border: isActive('/search') || isActive('/competitions') ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid transparent',
-                color: isActive('/search') || isActive('/competitions') ? '#FFFFFF' : '#8E8E93',
+                backgroundColor: isActive('/search') ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
+                border: isActive('/search') ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid transparent',
+                color: isActive('/search') ? '#FFFFFF' : '#8E8E93',
                 transition: 'all 0.18s ease'
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                <circle cx="7" cy="7" r="2.8" fill={isActive('/search') || isActive('/competitions') ? '#FFFFFF' : 'none'} />
-                <circle cx="17" cy="7" r="2.8" fill={isActive('/search') || isActive('/competitions') ? '#FFFFFF' : 'none'} />
-                <circle cx="7" cy="17" r="2.8" fill={isActive('/search') || isActive('/competitions') ? '#FFFFFF' : 'none'} />
-                <circle cx="17" cy="17" r="2.8" fill={isActive('/search') || isActive('/competitions') ? '#FFFFFF' : 'none'} />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
             </div>
           </Link>
 
-          {/* 4. Create Plus Button */}
+          {/* 4. Normal Plus icon */}
           <Link
             href="/create"
-            title="Create"
+            title="Create Post"
             style={{
               textDecoration: 'none',
               display: 'flex',
@@ -171,23 +212,23 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
                 width: isActive('/create') ? '38px' : '36px',
                 height: isActive('/create') ? '34px' : '36px',
                 borderRadius: isActive('/create') ? '11px' : '50%',
-                backgroundColor: isActive('/create') ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
-                border: isActive('/create') ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid transparent',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                backgroundColor: isActive('/create') ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
+                border: isActive('/create') ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid transparent',
                 color: isActive('/create') ? '#FFFFFF' : '#8E8E93',
                 transition: 'all 0.18s ease'
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </div>
           </Link>
 
-          {/* 5. Messages speech bubble */}
+          {/* 5. Messages icon */}
           <Link
             href="/messages"
             title="Messages"
@@ -274,6 +315,43 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
           </div>
         </Link>
       </nav>
+
+      {/* Floating Reveal Trigger Button (Visible only when nav dock is hidden) */}
+      {!isVisible && (
+        <button
+          onClick={() => setIsVisible(true)}
+          title="Show Navigation"
+          style={{
+            position: 'fixed',
+            bottom: '12px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9998,
+            backgroundColor: 'rgba(20, 21, 28, 0.85)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '999px',
+            padding: '6px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            color: '#FFFFFF',
+            fontSize: '11px',
+            fontWeight: 600,
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.8)',
+            cursor: 'pointer',
+            transition: 'transform 0.15s ease',
+            animation: 'fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="18 15 12 9 6 15" />
+          </svg>
+          <span>Nav</span>
+        </button>
+      )}
     </>
   );
 }

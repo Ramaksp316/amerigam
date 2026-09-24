@@ -134,6 +134,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
         include: { 
           author: { include: { outgoingConnections: { include: { target: true } } } },
           likes: true,
+          bookmarks: true,
           comments: { include: { author: true }, orderBy: { createdAt: 'asc' }, take: 3 }
         },
         orderBy: { createdAt: 'desc' },
@@ -192,6 +193,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
           } 
         },
         likes: true,
+        bookmarks: true,
         comments: { include: { author: true }, orderBy: { createdAt: 'asc' }, take: 3 }
       },
       orderBy: { createdAt: 'desc' },
@@ -530,6 +532,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
                       hasLiked={hasLiked} 
                       likesCount={post.likes?.length || 0} 
                       commentsCount={post.comments?.length || 0} 
+                      initialIsBookmarked={post.bookmarks?.some((b: any) => b.userId === userId) || false}
                     />
 
                   </div>
