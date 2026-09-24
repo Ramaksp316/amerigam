@@ -15,6 +15,19 @@ export async function createPost(formData: FormData) {
   const content = formData.get('content') as string;
   const mediaUrl = formData.get('mediaUrl') as string | null;
   const mediaType = formData.get('mediaType') as string | null;
+  const mediaUrlsString = formData.get('mediaUrls') as string | null;
+  let mediaUrls: string[] = [];
+  if (mediaUrlsString) {
+    try {
+      mediaUrls = JSON.parse(mediaUrlsString);
+    } catch (e) {
+      mediaUrls = [];
+    }
+  }
+  if (mediaUrl && !mediaUrls.includes(mediaUrl)) {
+    mediaUrls.unshift(mediaUrl);
+  }
+
   const aspectRatio = formData.get('aspectRatio') as string || 'original';
   const type = formData.get('type') as string || 'post';
   const category = formData.get('category') as string | null;
@@ -32,7 +45,7 @@ export async function createPost(formData: FormData) {
     }
   }
 
-  if (content || mediaUrl) {
+  if (content || mediaUrl || mediaUrls.length > 0) {
     let finalContent = content;
     // Prefix the content based on the type if it's a project or status
     if (type === 'project') {
@@ -45,7 +58,7 @@ export async function createPost(formData: FormData) {
       await prisma.communityPost.create({
         data: {
           content: finalContent || '',
-          mediaUrl,
+          mediaUrl: mediaUrls[0] || mediaUrl,
           mediaType,
           authorId: userId,
           communityId: communityId
@@ -58,19 +71,21 @@ export async function createPost(formData: FormData) {
       await prisma.story.create({
         data: {
           content: finalContent || null,
-          mediaUrl,
+          mediaUrl: mediaUrls[0] || mediaUrl,
           mediaType,
           authorId: userId,
           expiresAt
         }
       });
-      redirect(`/user/${userId}`);
+      revalidatePath('/home');
+      redirect('/home');
     } else {
       const post = await prisma.post.create({
         data: {
           content: finalContent || '',
-          mediaUrl,
+          mediaUrl: mediaUrls[0] || mediaUrl,
           mediaType,
+          mediaUrls,
           aspectRatio,
           category: category || null,
           tags,

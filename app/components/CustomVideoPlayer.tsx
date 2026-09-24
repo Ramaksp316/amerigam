@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
 export default function CustomVideoPlayer({ 
   src, 
@@ -12,16 +12,49 @@ export default function CustomVideoPlayer({
   audioSrc?: string;
   style?: React.CSSProperties;
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Default muted like X/Twitter
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [showControls, setShowControls] = useState(true);
+  const [showControls, setShowControls] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-play / pause on scroll via IntersectionObserver (X/Twitter style)
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+            // Auto play muted when scrolled into viewport
+            if (videoRef.current && videoRef.current.paused) {
+              videoRef.current.muted = isMuted;
+              videoRef.current
+                .play()
+                .then(() => setIsPlaying(true))
+                .catch(() => {});
+            }
+          } else {
+            // Auto pause when scrolled away
+            if (videoRef.current && !videoRef.current.paused) {
+              videoRef.current.pause();
+              setIsPlaying(false);
+            }
+          }
+        });
+      },
+      { threshold: [0.1, 0.5, 0.8] }
+    );
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [isMuted]);
 
   const togglePlay = (e?: React.MouseEvent) => {
     if (e) {
@@ -103,30 +136,8 @@ export default function CustomVideoPlayer({
       if (isPlaying) {
         setShowControls(false);
       }
-    }, 2500);
+    }, 2800);
   };
-
-  const handleMouseMove = () => {
-    resetControlsTimeout();
-  };
-
-  useEffect(() => {
-    resetControlsTimeout();
-    // Explicitly set initial audio state
-    if (videoRef.current) {
-      videoRef.current.muted = isMuted;
-      videoRef.current.volume = isMuted ? 0 : 1.0;
-    }
-    if (audioRef.current) {
-      audioRef.current.muted = isMuted;
-      audioRef.current.volume = isMuted ? 0 : 1.0;
-    }
-    return () => {
-      if (controlsTimeoutRef.current) {
-        clearTimeout(controlsTimeoutRef.current);
-      }
-    };
-  }, [isPlaying, isMuted]);
 
   const formatTime = (time: number) => {
     if (isNaN(time)) return '0:00';
@@ -137,20 +148,21 @@ export default function CustomVideoPlayer({
 
   return (
     <div 
-      onMouseMove={handleMouseMove}
+      ref={containerRef}
+      onMouseMove={() => resetControlsTimeout()}
       onMouseLeave={() => isPlaying && setShowControls(false)}
       style={{
         position: 'relative',
         width: '100%',
-        backgroundColor: '#000',
-        borderRadius: '12px',
+        backgroundColor: '#000000',
+        borderRadius: '16px',
         overflow: 'hidden',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         aspectRatio: '16/9',
-        boxShadow: 'var(--shadow-lg)',
         userSelect: 'none',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
         ...style
       }}
     >
@@ -163,10 +175,12 @@ export default function CustomVideoPlayer({
         onWaiting={() => setIsLoading(true)}
         onPlaying={() => setIsLoading(false)}
         playsInline
+        muted={isMuted}
+        loop
         style={{
           width: '100%',
           height: '100%',
-          objectFit: 'contain',
+          objectFit: 'cover',
           cursor: 'pointer'
         }}
       />
@@ -185,135 +199,151 @@ export default function CustomVideoPlayer({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          pointerEvents: 'none'
+          pointerEvents: 'none',
+          zIndex: 5
         }}>
           <div style={{
-            width: '40px',
-            height: '40px',
+            width: '36px',
+            height: '36px',
             border: '3px solid rgba(255, 255, 255, 0.2)',
-            borderTop: '3px solid var(--accent-cyan)',
+            borderTop: '3px solid #1D9BF0',
             borderRadius: '50%',
             animation: 'spin 0.8s linear infinite'
           }} />
         </div>
       )}
 
-      {/* Play/Pause Large Center Overlay (Shows on Hover/Pause) */}
-      {(!isPlaying || showControls) && !isLoading && (
+      {/* Twitter/X Style Center Play Button when paused */}
+      {!isPlaying && !isLoading && (
         <div 
           onClick={() => togglePlay()}
           style={{
             position: 'absolute',
-            width: '100%',
-            height: '100%',
+            zIndex: 4,
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            backgroundColor: 'rgba(29, 155, 240, 0.9)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: isPlaying ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.45)',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.7)',
             cursor: 'pointer',
-            transition: 'background 0.3s ease',
-            zIndex: 2
+            transition: 'transform 0.15s ease'
           }}
+          className="play-btn-hover"
         >
-          {!isPlaying && (
-            <div style={{
-              background: 'var(--gradient-primary)',
-              borderRadius: '50%',
-              padding: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 25px rgba(139, 92, 246, 0.5)',
-              transform: 'scale(1)',
-              transition: 'transform 0.2s ease',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            >
-              <Play size={28} color="white" fill="white" style={{ marginLeft: '4px' }} />
-            </div>
-          )}
+          <Play size={26} color="#FFFFFF" fill="#FFFFFF" style={{ marginLeft: '3px' }} />
         </div>
       )}
 
-      {/* Bottom Controls Overlay */}
+      {/* Twitter/X Style Persistent Bottom-Right Mute/Unmute Pill */}
+      <button
+        onClick={toggleMute}
+        style={{
+          position: 'absolute',
+          bottom: '12px',
+          right: '12px',
+          zIndex: 6,
+          backgroundColor: 'rgba(0, 0, 0, 0.72)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '999px',
+          padding: '6px 12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          color: '#FFFFFF',
+          fontSize: '12px',
+          fontWeight: 600,
+          cursor: 'pointer',
+          transition: 'all 0.15s ease'
+        }}
+      >
+        {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+        <span>{isMuted ? 'Muted' : 'Unmuted'}</span>
+      </button>
+
+      {/* Twitter/X Style Persistent Bottom-Left Time Pill */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '12px',
+          left: '12px',
+          zIndex: 6,
+          backgroundColor: 'rgba(0, 0, 0, 0.72)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          borderRadius: '999px',
+          padding: '4px 10px',
+          color: 'rgba(255, 255, 255, 0.9)',
+          fontSize: '11px',
+          fontWeight: 600,
+          fontFamily: 'monospace',
+          letterSpacing: '0.3px',
+          pointerEvents: 'none'
+        }}
+      >
+        {formatTime(currentTime)} / {formatTime(duration)}
+      </div>
+
+      {/* Top-Right Fullscreen Button */}
       {showControls && (
-        <div style={{
+        <button
+          onClick={handleFullscreen}
+          style={{
+            position: 'absolute',
+            top: '12px',
+            right: '12px',
+            zIndex: 6,
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: '50%',
+            width: '32px',
+            height: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#FFFFFF',
+            cursor: 'pointer'
+          }}
+          aria-label="Fullscreen"
+        >
+          <Maximize size={15} />
+        </button>
+      )}
+
+      {/* Bottom Slim Progress Bar */}
+      <div
+        style={{
           position: 'absolute',
           bottom: 0,
           left: 0,
           right: 0,
-          background: 'linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.3), transparent)',
-          padding: '12px 16px 8px 16px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-          zIndex: 3,
-          transition: 'opacity 0.3s ease'
-        }}>
-          {/* Progress Seekbar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
-            <input 
-              type="range"
-              min="0"
-              max="100"
-              value={progress}
-              onChange={handleSeek}
-              style={{
-                flexGrow: 1,
-                height: '4px',
-                accentColor: 'var(--accent-cyan)',
-                cursor: 'pointer',
-                background: `linear-gradient(to right, var(--accent-cyan) ${progress}%, rgba(255, 255, 255, 0.25) ${progress}%)`,
-                borderRadius: '2px',
-                outline: 'none'
-              }}
-            />
-          </div>
+          height: '3px',
+          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+          zIndex: 5
+        }}
+      >
+        <div
+          style={{
+            height: '100%',
+            width: `${progress}%`,
+            backgroundColor: '#1D9BF0',
+            transition: 'width 0.1s linear'
+          }}
+        />
+      </div>
 
-          {/* Buttons Row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              {/* Play/Pause Button */}
-              <button 
-                onClick={togglePlay}
-                style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-              >
-                {isPlaying ? <Pause size={18} fill="white" /> : <Play size={18} fill="white" />}
-              </button>
-
-              {/* Mute Button */}
-              <button 
-                onClick={toggleMute}
-                style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-              >
-                {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-              </button>
-
-              {/* Time Display */}
-              <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.95)', fontFamily: 'monospace', letterSpacing: '0.5px' }}>
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </span>
-            </div>
-
-            <div>
-              {/* Fullscreen Button */}
-              <button 
-                onClick={handleFullscreen}
-                style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-              >
-                <Maximize size={18} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Inline Spinner Spin Style */}
+      {/* Spinner Animation */}
       <style jsx global>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        .play-btn-hover:hover {
+          transform: scale(1.1);
         }
       `}</style>
     </div>

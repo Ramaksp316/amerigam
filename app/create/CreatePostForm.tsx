@@ -26,7 +26,8 @@ import {
   Globe,
   Bell,
   Settings,
-  Check
+  Check,
+  Sparkles
 } from 'lucide-react';
 
 export default function CreatePostForm({
@@ -42,9 +43,9 @@ export default function CreatePostForm({
 }) {
   const router = useRouter();
 
-  // Mode: 'post' | 'reel' | 'blog'
-  const [postMode, setPostMode] = useState<'post' | 'reel' | 'blog'>(
-    initialIsReel ? 'reel' : 'post'
+  // Mode: 'post' | 'reel' | 'blog' | 'story'
+  const [postMode, setPostMode] = useState<'post' | 'reel' | 'blog' | 'story'>(
+    initialIsStory ? 'story' : (initialIsReel ? 'reel' : 'post')
   );
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -65,7 +66,9 @@ export default function CreatePostForm({
 
   // Media States
   const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [mediaPreviews, setMediaPreviews] = useState<{ url: string; type: 'image' | 'video' }[]>([]);
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,28 +80,39 @@ export default function CreatePostForm({
   const supabase = createClient();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 50 * 1024 * 1024) {
-        setErrorMsg('File size must be under 50MB.');
-        return;
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (files.length > 0) {
+      const validFiles = files.filter(f => f.size <= 50 * 1024 * 1024);
+      if (validFiles.length < files.length) {
+        setErrorMsg('Some files exceeded the 50MB limit and were skipped.');
       }
-      setMediaFile(file);
-      if (file.type.startsWith('image/')) {
-        setMediaType('image');
-        const reader = new FileReader();
-        reader.onload = () => setMediaPreview(reader.result as string);
-        reader.readAsDataURL(file);
-      } else if (file.type.startsWith('video/')) {
-        setMediaType('video');
-        setMediaPreview(URL.createObjectURL(file));
-      }
+      const updatedFiles = [...mediaFiles, ...validFiles].slice(0, 5);
+      setMediaFiles(updatedFiles);
+      setMediaFile(updatedFiles[0]);
+      setMediaType(updatedFiles[0].type.startsWith('video/') ? 'video' : 'image');
+
+      validFiles.forEach(file => {
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            setMediaPreviews(prev => [...prev, { url: reader.result as string, type: 'image' }].slice(0, 5));
+            if (!mediaPreview) setMediaPreview(reader.result as string);
+          };
+          reader.readAsDataURL(file);
+        } else if (file.type.startsWith('video/')) {
+          const vUrl = URL.createObjectURL(file);
+          setMediaPreviews(prev => [...prev, { url: vUrl, type: 'video' }].slice(0, 5));
+          if (!mediaPreview) setMediaPreview(vUrl);
+        }
+      });
     }
   };
 
   const handleClearMedia = () => {
     setMediaFile(null);
+    setMediaFiles([]);
     setMediaPreview(null);
+    setMediaPreviews([]);
     setMediaType(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -119,7 +133,7 @@ export default function CreatePostForm({
     e.preventDefault();
     setErrorMsg('');
 
-    if (!title.trim() && !description.trim() && !mediaFile && postMode !== 'blog') {
+    if (!title.trim() && !description.trim() && !mediaFile && mediaFiles.length === 0 && postMode !== 'blog') {
       setErrorMsg('Please add a title, description, or media.');
       return;
     }
@@ -127,14 +141,18 @@ export default function CreatePostForm({
     setIsUploading(true);
     setUploadProgress(15);
 
-    let uploadedUrl = '';
-    let uploadedType = mediaType || '';
+    let uploadedUrls: string[] = [];
+    const filesToUpload = mediaFiles.length > 0 ? mediaFiles : (mediaFile ? [mediaFile] : []);
 
-    // Upload media to DigitalOcean VPS storage if file is present
-    if (mediaFile) {
+    if (filesToUpload.length > 0) {
       try {
-        setUploadProgress(40);
-        uploadedUrl = await uploadMedia(mediaFile, mediaType === 'video' ? 'videos' : 'posts');
+        setUploadProgress(30);
+        for (let i = 0; i < filesToUpload.length; i++) {
+          const f = filesToUpload[i];
+          const url = await uploadMedia(f, f.type.startsWith('video/') ? 'videos' : 'posts');
+          uploadedUrls.push(url);
+          setUploadProgress(30 + Math.round(((i + 1) / filesToUpload.length) * 45));
+        }
       } catch (err: any) {
         setErrorMsg('Media upload failed: ' + (err.message || 'Unknown error'));
         setIsUploading(false);
@@ -142,7 +160,7 @@ export default function CreatePostForm({
       }
     }
 
-    setUploadProgress(75);
+    setUploadProgress(80);
 
     // Build the combined content
     let finalContent = '';
@@ -162,13 +180,14 @@ export default function CreatePostForm({
     const actionData = new FormData();
     actionData.append('type', postMode);
     actionData.append('content', finalContent.trim());
-    actionData.append('aspectRatio', postMode === 'reel' ? '9:16' : 'original');
-    actionData.append('category', postMode === 'reel' ? 'Reel' : (postMode === 'blog' ? 'Blog' : 'Post'));
+    actionData.append('aspectRatio', postMode === 'reel' || postMode === 'story' ? '9:16' : 'original');
+    actionData.append('category', postMode === 'reel' ? 'Reel' : (postMode === 'blog' ? 'Blog' : (postMode === 'story' ? 'Story' : 'Post')));
     actionData.append('tags', JSON.stringify(tags));
 
-    if (uploadedUrl) {
-      actionData.append('mediaUrl', uploadedUrl);
-      actionData.append('mediaType', uploadedType);
+    if (uploadedUrls.length > 0) {
+      actionData.append('mediaUrl', uploadedUrls[0]);
+      actionData.append('mediaType', mediaType || 'image');
+      actionData.append('mediaUrls', JSON.stringify(uploadedUrls));
     }
 
     if (communityId) {
@@ -376,6 +395,12 @@ export default function CreatePostForm({
                         <span>Reel</span>
                       </>
                     )}
+                    {postMode === 'story' && (
+                      <>
+                        <Sparkles size={16} color="#EAB308" />
+                        <span>Story (24h)</span>
+                      </>
+                    )}
                     {postMode === 'blog' && (
                       <>
                         <FileText size={16} />
@@ -395,7 +420,7 @@ export default function CreatePostForm({
                       border: '1px solid rgba(255, 255, 255, 0.12)',
                       borderRadius: '14px',
                       padding: '6px',
-                      minWidth: '140px',
+                      minWidth: '150px',
                       zIndex: 100,
                       boxShadow: '0 12px 32px rgba(0,0,0,0.6)'
                     }}>
@@ -441,6 +466,28 @@ export default function CreatePostForm({
                       >
                         <PlaySquare size={16} color={postMode === 'reel' ? '#3B82F6' : '#9CA3AF'} />
                         <span>Reel</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => { setPostMode('story'); setShowDropdown(false); }}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          background: postMode === 'story' ? 'rgba(234, 179, 8, 0.2)' : 'transparent',
+                          border: 'none',
+                          color: '#FFFFFF',
+                          fontSize: '13px',
+                          cursor: 'pointer',
+                          fontWeight: 500
+                        }}
+                      >
+                        <Sparkles size={16} color={postMode === 'story' ? '#EAB308' : '#9CA3AF'} />
+                        <span>Story (24h)</span>
                       </button>
 
                       <button
@@ -521,6 +568,7 @@ export default function CreatePostForm({
                 <input
                   ref={fileInputRef}
                   type="file"
+                  multiple
                   accept={postMode === 'reel' ? 'video/*' : 'image/*,video/*'}
                   onChange={handleFileChange}
                   style={{ display: 'none' }}
@@ -544,7 +592,7 @@ export default function CreatePostForm({
                     cursor: 'pointer',
                     zIndex: 10
                   }}
-                  title="Edit or Change media"
+                  title="Edit or Add media"
                 >
                   <Pencil size={15} color="#D4D4D8" />
                 </div>
@@ -573,6 +621,47 @@ export default function CreatePostForm({
                         alt="Preview"
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
+                    )}
+
+                    {/* Multi-Photo Thumbnail Bar */}
+                    {mediaPreviews.length > 1 && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '12px',
+                        left: '12px',
+                        right: '12px',
+                        display: 'flex',
+                        gap: '8px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                        backdropFilter: 'blur(8px)',
+                        padding: '6px 12px',
+                        borderRadius: '12px',
+                        zIndex: 10,
+                        alignItems: 'center'
+                      }}>
+                        <span style={{ fontSize: '11px', color: '#FFF', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                          {mediaPreviews.length} items:
+                        </span>
+                        <div style={{ display: 'flex', gap: '6px', overflowX: 'auto' }}>
+                          {mediaPreviews.map((p, pIdx) => (
+                            <div
+                              key={pIdx}
+                              onClick={() => setMediaPreview(p.url)}
+                              style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '6px',
+                                overflow: 'hidden',
+                                border: mediaPreview === p.url ? '2px solid #1D9BF0' : '1px solid rgba(255,255,255,0.2)',
+                                cursor: 'pointer',
+                                flexShrink: 0
+                              }}
+                            >
+                              <img src={p.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     )}
                     {/* Clear Button */}
                     <button

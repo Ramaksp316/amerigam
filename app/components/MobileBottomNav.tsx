@@ -71,19 +71,19 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
           >
             <div
               style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
+                width: isActive('/home') ? '38px' : '36px',
+                height: isActive('/home') ? '34px' : '36px',
+                borderRadius: isActive('/home') ? '11px' : '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: isActive('/home') ? 'rgba(255, 255, 255, 0.14)' : 'transparent',
-                boxShadow: isActive('/home') ? '0 0 16px rgba(255, 255, 255, 0.25)' : 'none',
+                backgroundColor: isActive('/home') ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
+                border: isActive('/home') ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid transparent',
                 color: isActive('/home') ? '#FFFFFF' : '#8E8E93',
                 transition: 'all 0.18s ease'
               }}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 10.5L12 3.5l9 7V20a2 2 0 0 1-2 2h-4a1 1 0 0 1-1-1v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2z" />
               </svg>
             </div>
@@ -102,26 +102,26 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
           >
             <div
               style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
+                width: isActive('/feed') ? '38px' : '36px',
+                height: isActive('/feed') ? '34px' : '36px',
+                borderRadius: isActive('/feed') ? '11px' : '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: isActive('/feed') ? 'rgba(255, 255, 255, 0.14)' : 'transparent',
-                boxShadow: isActive('/feed') ? '0 0 16px rgba(255, 255, 255, 0.25)' : 'none',
+                backgroundColor: isActive('/feed') ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
+                border: isActive('/feed') ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid transparent',
                 color: isActive('/feed') ? '#FFFFFF' : '#8E8E93',
                 transition: 'all 0.18s ease'
               }}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="16" rx="4.5" />
                 <polygon points="10 8.5 16 12 10 15.5" fill="currentColor" />
               </svg>
             </div>
           </Link>
 
-          {/* 3. 4-circles icon (Explore matching Figma 18) */}
+          {/* 3. 4-circles icon (Explore matching Figma) */}
           <Link
             href="/search"
             title="Explore"
@@ -134,28 +134,28 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
           >
             <div
               style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '50%',
+                width: isActive('/search') || isActive('/competitions') ? '38px' : '36px',
+                height: isActive('/search') || isActive('/competitions') ? '34px' : '36px',
+                borderRadius: isActive('/search') || isActive('/competitions') ? '11px' : '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: isActive('/competitions') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                boxShadow: isActive('/competitions') ? '0 0 18px rgba(255, 255, 255, 0.3)' : 'none',
-                color: isActive('/competitions') ? '#FFFFFF' : '#8E8E93',
+                backgroundColor: isActive('/search') || isActive('/competitions') ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
+                border: isActive('/search') || isActive('/competitions') ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid transparent',
+                color: isActive('/search') || isActive('/competitions') ? '#FFFFFF' : '#8E8E93',
                 transition: 'all 0.18s ease'
               }}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                <circle cx="7" cy="7" r="2.8" fill={isActive('/competitions') ? '#FFFFFF' : 'none'} />
-                <circle cx="17" cy="7" r="2.8" fill={isActive('/competitions') ? '#FFFFFF' : 'none'} />
-                <circle cx="7" cy="17" r="2.8" fill={isActive('/competitions') ? '#FFFFFF' : 'none'} />
-                <circle cx="17" cy="17" r="2.8" fill={isActive('/competitions') ? '#FFFFFF' : 'none'} />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <circle cx="7" cy="7" r="2.8" fill={isActive('/search') || isActive('/competitions') ? '#FFFFFF' : 'none'} />
+                <circle cx="17" cy="7" r="2.8" fill={isActive('/search') || isActive('/competitions') ? '#FFFFFF' : 'none'} />
+                <circle cx="7" cy="17" r="2.8" fill={isActive('/search') || isActive('/competitions') ? '#FFFFFF' : 'none'} />
+                <circle cx="17" cy="17" r="2.8" fill={isActive('/search') || isActive('/competitions') ? '#FFFFFF' : 'none'} />
               </svg>
             </div>
           </Link>
 
-          {/* 4. Create Plus Button (Figma squircle button) */}
+          {/* 4. Create Plus Button */}
           <Link
             href="/create"
             title="Create"
@@ -168,17 +168,16 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
           >
             <div
               style={{
-                width: '38px',
-                height: '34px',
-                borderRadius: '11px',
-                backgroundColor: isActive('/create') ? 'rgba(255, 255, 255, 0.28)' : 'rgba(255, 255, 255, 0.14)',
-                border: '1px solid rgba(255, 255, 255, 0.18)',
+                width: isActive('/create') ? '38px' : '36px',
+                height: isActive('/create') ? '34px' : '36px',
+                borderRadius: isActive('/create') ? '11px' : '50%',
+                backgroundColor: isActive('/create') ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
+                border: isActive('/create') ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid transparent',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#FFFFFF',
-                transition: 'all 0.18s ease',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)'
+                color: isActive('/create') ? '#FFFFFF' : '#8E8E93',
+                transition: 'all 0.18s ease'
               }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -201,26 +200,26 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
           >
             <div
               style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
+                width: isActive('/messages') ? '38px' : '36px',
+                height: isActive('/messages') ? '34px' : '36px',
+                borderRadius: isActive('/messages') ? '11px' : '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: isActive('/messages') ? 'rgba(255, 255, 255, 0.14)' : 'transparent',
-                boxShadow: isActive('/messages') ? '0 0 16px rgba(255, 255, 255, 0.25)' : 'none',
+                backgroundColor: isActive('/messages') ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
+                border: isActive('/messages') ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid transparent',
                 color: isActive('/messages') ? '#FFFFFF' : '#8E8E93',
                 transition: 'all 0.18s ease'
               }}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
               </svg>
             </div>
           </Link>
         </div>
 
-        {/* 6. User Circular Avatar with Gold Ring matching media_1790141405614.png */}
+        {/* 6. User Circular Avatar (Clean, no yellow ring, no glow) */}
         <Link
           href={currentUser ? `/user/${currentUser.id}` : '/login'}
           title="Profile"
@@ -239,8 +238,8 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
               borderRadius: '50%',
               backgroundColor: '#0F0F12',
               padding: '2px',
-              boxShadow: '0 10px 28px rgba(0, 0, 0, 0.8), 0 0 12px rgba(234, 179, 8, 0.35)',
-              border: '2px solid #EAB308',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.65)',
+              border: isActive(`/user/${currentUser?.id}`) ? '2px solid rgba(255, 255, 255, 0.6)' : '1.5px solid rgba(255, 255, 255, 0.16)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
