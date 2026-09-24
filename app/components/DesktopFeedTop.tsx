@@ -168,7 +168,7 @@ export default function DesktopFeedTop({
               scrollSnapAlign: 'start',
               flexShrink: 0
             }}
-            className="story-card-hover"
+            className="story-card-hover home-story-card"
           >
             {/* Background preview */}
             {(() => {
@@ -307,7 +307,7 @@ export default function DesktopFeedTop({
               flexShrink: 0,
               boxSizing: 'border-box'
             }}
-            className="story-card-hover"
+            className="story-card-hover home-story-card"
           >
             <div style={{ position: 'relative', marginBottom: '12px' }}>
               <div
@@ -382,7 +382,7 @@ export default function DesktopFeedTop({
                 scrollSnapAlign: 'start',
                 flexShrink: 0
               }}
-              className="story-card-hover"
+              className="story-card-hover home-story-card"
             >
               {/* Media Background Preview */}
               {latestStory.mediaUrl ? (
@@ -523,6 +523,7 @@ export default function DesktopFeedTop({
               flexShrink: 0,
               boxSizing: 'border-box'
             }}
+            className="home-story-card"
           >
             <div
               style={{

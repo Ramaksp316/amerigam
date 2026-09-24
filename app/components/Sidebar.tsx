@@ -59,8 +59,8 @@ export default function Sidebar({
     };
   }, [showMoreMenu]);
 
-  // Hide sidebar on full-screen /feed, /notifications, /ranking, /dev-board, auth pages, or /messages
-  if (pathname?.startsWith('/login') || pathname?.startsWith('/create') || pathname?.startsWith('/feed') || pathname?.startsWith('/notifications') || pathname?.startsWith('/ranking') || pathname?.startsWith('/dev-board') || pathname?.startsWith('/messages')) {
+  // Hide sidebar on full-screen /feed, /notifications, /ranking, /dev-board, auth pages, /messages, or /home
+  if (pathname === '/home' || pathname === '/' || pathname?.startsWith('/login') || pathname?.startsWith('/create') || pathname?.startsWith('/feed') || pathname?.startsWith('/notifications') || pathname?.startsWith('/ranking') || pathname?.startsWith('/dev-board') || pathname?.startsWith('/messages')) {
     return null;
   }
 
@@ -86,7 +86,7 @@ export default function Sidebar({
   ];
 
   return (
-    <aside style={{
+    <aside className="desktop-only" style={{
       width: '230px',
       height: '100vh',
       backgroundColor: '#000000',

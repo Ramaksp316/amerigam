@@ -34,12 +34,18 @@ export default function DesktopRightSidebar({
     <div
       className="layout-right desktop-only"
       style={{
-        width: '320px',
-        padding: '20px 16px',
+        width: '265px',
+        padding: '18px 14px',
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px'
+        gap: '16px',
+        position: 'sticky',
+        top: '60px',
+        height: 'calc(100vh - 60px)',
+        overflowY: 'auto',
+        scrollbarWidth: 'none',
+        boxSizing: 'border-box'
       }}
     >
       {/* ========================================================
@@ -48,37 +54,53 @@ export default function DesktopRightSidebar({
       <div
         style={{
           backgroundColor: '#16181C',
-          borderRadius: '24px',
-          padding: '22px 20px',
+          borderRadius: '20px',
+          padding: '18px 16px',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6)',
           position: 'relative'
         }}
       >
-        {/* Top: High-Clarity Profile Picture + Real Username + Stats */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          {/* HD Profile Picture (No glow, crisp clean border) */}
+        {/* Top: High-Clarity Profile Picture with Rainbow Border + Stats */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          {/* Avatar with Rainbow Border matching blueprint */}
           <Link href={`/user/${currentUser.id}`} style={{ textDecoration: 'none', flexShrink: 0 }}>
             <div
               style={{
-                width: '60px',
-                height: '60px',
+                width: '54px',
+                height: '54px',
                 borderRadius: '50%',
-                border: '1.5px solid rgba(255, 255, 255, 0.22)',
-                backgroundColor: '#1E1E22',
-                overflow: 'hidden',
-                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.5)'
+                background: 'linear-gradient(135deg, #EC4899, #F59E0B, #10B981, #3B82F6)',
+                padding: '2.5px',
+                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxSizing: 'border-box'
               }}
             >
-              {currentUser.avatarData ? (
-                <img
-                  src={currentUser.avatarData}
-                  alt={currentUser.name || currentUser.username || 'User'}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                <ProfilePicture user={currentUser} size={60} showStatus={false} />
-              )}
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  backgroundColor: '#1E1E22',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                {currentUser.avatarData ? (
+                  <img
+                    src={currentUser.avatarData}
+                    alt={currentUser.name || currentUser.username || 'User'}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <ProfilePicture user={currentUser} size={48} showStatus={false} />
+                )}
+              </div>
             </div>
           </Link>
 
@@ -87,7 +109,7 @@ export default function DesktopRightSidebar({
             <Link href={`/user/${currentUser.id}`} style={{ textDecoration: 'none' }}>
               <div
                 style={{
-                  fontSize: '18px',
+                  fontSize: '16px',
                   fontWeight: 800,
                   color: '#FFFFFF',
                   lineHeight: '1.2',
@@ -96,47 +118,45 @@ export default function DesktopRightSidebar({
                   textOverflow: 'ellipsis'
                 }}
               >
-                @{currentUser.username || 'user'}
+                {currentUser.name || currentUser.username || 'Creator'}
               </div>
             </Link>
-            {currentUser.name && (
-              <div
-                style={{
-                  fontSize: '12px',
-                  color: '#A1A1AA',
-                  marginTop: '1px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}
-              >
-                {currentUser.name}
-              </div>
-            )}
+            <div
+              style={{
+                fontSize: '11px',
+                color: '#71717A',
+                marginTop: '1px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              @{currentUser.username || 'user'}
+            </div>
 
             {/* 3 Real Stats: Rank, AP, Rating */}
-            <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
+            <div style={{ display: 'flex', gap: '14px', marginTop: '6px' }}>
               <div>
-                <div style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF', lineHeight: '1' }}>
-                  #{userRank}
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#FFFFFF', lineHeight: '1' }}>
+                  {userRank}
                 </div>
-                <div style={{ fontSize: '10px', color: '#71717A', marginTop: '2px', fontWeight: 500 }}>
+                <div style={{ fontSize: '9px', color: '#71717A', marginTop: '2px', fontWeight: 500 }}>
                   Rank
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF', lineHeight: '1' }}>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#FFFFFF', lineHeight: '1' }}>
                   {ap}
                 </div>
-                <div style={{ fontSize: '10px', color: '#71717A', marginTop: '2px', fontWeight: 500 }}>
+                <div style={{ fontSize: '9px', color: '#71717A', marginTop: '2px', fontWeight: 500 }}>
                   AP
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF', lineHeight: '1' }}>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#FFFFFF', lineHeight: '1' }}>
                   {rating}
                 </div>
-                <div style={{ fontSize: '10px', color: '#71717A', marginTop: '2px', fontWeight: 500 }}>
+                <div style={{ fontSize: '9px', color: '#71717A', marginTop: '2px', fontWeight: 500 }}>
                   Rating
                 </div>
               </div>
