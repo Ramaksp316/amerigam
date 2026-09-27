@@ -1,3 +1,5 @@
+'use client';
+
 interface ProfilePictureProps {
   user?: {
     name?: string | null;

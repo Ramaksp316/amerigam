@@ -295,17 +295,7 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
                 justifyContent: 'center'
               }}
             >
-              {currentUser?.avatarData ? (
-                <img
-                  src={currentUser.avatarData}
-                  alt={currentUser.name || 'User'}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : currentUser ? (
-                <ProfilePicture user={currentUser} size={42} showStatus={false} />
-              ) : (
-                <span style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 700 }}>U</span>
-              )}
+              <ProfilePicture user={currentUser} size={42} showStatus={false} />
             </div>
           </div>
         </Link>

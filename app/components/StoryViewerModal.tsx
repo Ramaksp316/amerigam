@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import LocalTime from './LocalTime';
+import ProfilePicture from './ProfilePicture';
 
 export interface StoryItem {
   id: string;
@@ -239,17 +240,7 @@ export default function StoryViewerModal({
                 justifyContent: 'center'
               }}
             >
-              {currentGroup.author.avatarData ? (
-                <img
-                  src={currentGroup.author.avatarData}
-                  alt={currentGroup.author.username || 'Story author'}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                <span style={{ color: '#FFF', fontWeight: 700, fontSize: '14px' }}>
-                  {(currentGroup.author.name || currentGroup.author.username || 'U')[0].toUpperCase()}
-                </span>
-              )}
+              <ProfilePicture user={currentGroup.author} size={38} showStatus={false} />
             </div>
             <div>
               <div style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 700 }}>

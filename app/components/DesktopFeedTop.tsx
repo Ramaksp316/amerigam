@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { Plus, ChevronLeft, ChevronRight, UserPlus, Sparkles } from 'lucide-react';
 import StoryViewerModal, { StoryItem, UserStoriesGroup } from './StoryViewerModal';
+import ProfilePicture from './ProfilePicture';
 
 interface DesktopFeedTopProps {
   currentUser?: any;
@@ -243,13 +244,7 @@ export default function DesktopFeedTop({
                   flexShrink: 0
                 }}
               >
-                {currentUser?.avatarData ? (
-                  <img src={currentUser.avatarData} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontSize: '11px', fontWeight: 700 }}>
-                    {(currentUser?.name || currentUser?.username || 'U')[0].toUpperCase()}
-                  </div>
-                )}
+                <ProfilePicture user={currentUser} size={30} showStatus={false} />
               </div>
               <span style={{ color: '#FFFFFF', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 Your Story
@@ -320,13 +315,7 @@ export default function DesktopFeedTop({
                   border: '2px solid rgba(255, 255, 255, 0.2)'
                 }}
               >
-                {currentUser?.avatarData ? (
-                  <img src={currentUser.avatarData} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontWeight: 700 }}>
-                    {(currentUser?.name || currentUser?.username || 'U')[0].toUpperCase()}
-                  </div>
-                )}
+                <ProfilePicture user={currentUser} size={46} showStatus={false} />
               </div>
               <div
                 style={{
@@ -454,13 +443,7 @@ export default function DesktopFeedTop({
                     flexShrink: 0
                   }}
                 >
-                  {group.author.avatarData ? (
-                    <img src={group.author.avatarData} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontSize: '11px', fontWeight: 700 }}>
-                      {(group.author.username || 'U')[0].toUpperCase()}
-                    </div>
-                  )}
+                  <ProfilePicture user={group.author} size={30} showStatus={false} />
                 </div>
                 <span
                   style={{

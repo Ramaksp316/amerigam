@@ -1,3 +1,5 @@
+'use client';
+
 interface CommunityAvatarProps {
   community?: {
     name?: string | null;
