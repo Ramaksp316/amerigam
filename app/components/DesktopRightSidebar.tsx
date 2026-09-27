@@ -71,15 +71,7 @@ export default function DesktopRightSidebar({
                 boxShadow: '0 4px 14px rgba(0, 0, 0, 0.5)'
               }}
             >
-              {currentUser.avatarData ? (
-                <img
-                  src={currentUser.avatarData}
-                  alt={currentUser.name || currentUser.username || 'User'}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                <ProfilePicture user={currentUser} size={52} showStatus={false} />
-              )}
+              <ProfilePicture user={currentUser} size={52} showStatus={false} />
             </div>
           </Link>
 
@@ -504,13 +496,7 @@ export default function DesktopRightSidebar({
                       border: '1px solid rgba(255, 255, 255, 0.12)'
                     }}
                   >
-                    {friend.avatarData ? (
-                      <img src={friend.avatarData} alt={friend.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontSize: '13px', fontWeight: 700 }}>
-                        {(friend.name || friend.username || 'U')[0].toUpperCase()}
-                      </div>
-                    )}
+                    <ProfilePicture user={friend} size={38} showStatus={false} />
                   </div>
                   <div
                     style={{

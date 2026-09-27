@@ -47,6 +47,10 @@ export default function TestAccountSelector({ accounts }: { accounts: TestAccoun
       setErrorMsg(null);
       await directTestLogin(id);
     } catch (error: any) {
+      if (error?.message === 'NEXT_REDIRECT' || error?.digest?.startsWith('NEXT_REDIRECT')) {
+        // Next.js redirection in progress, not an error
+        return;
+      }
       console.error('Login error:', error);
       setErrorMsg(error.message || 'Failed to login. Please try again.');
       setLoadingId(null);
@@ -112,7 +116,16 @@ export default function TestAccountSelector({ accounts }: { accounts: TestAccoun
             <div key={acc.id} className="test-account-card" onClick={() => handleLogin(acc.id)}>
               <div className="test-account-avatar">
                 {acc.avatarData ? (
-                  <img src={acc.avatarData} alt={acc.name || ''} />
+                  <img
+                    src={acc.avatarData.startsWith('http') || acc.avatarData.startsWith('data:') || acc.avatarData.startsWith('/') ? acc.avatarData : `data:image/jpeg;base64,${acc.avatarData}`}
+                    alt={acc.name || ''}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      if (e.currentTarget.parentElement) {
+                        e.currentTarget.parentElement.innerText = acc.name?.charAt(0).toUpperCase() || '?';
+                      }
+                    }}
+                  />
                 ) : (
                   <div className="test-avatar-placeholder">
                     {acc.name?.charAt(0).toUpperCase() || '?'}

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { MessageSquare, CheckCircle2 } from 'lucide-react';
 import FollowButton from './FollowButton';
+import ProfilePicture from './ProfilePicture';
 
 export default async function HomeNetwork({ userId, currentUser }: { userId: string, currentUser: any }) {
   const allUsers = await prisma.user.findMany({
@@ -75,12 +76,8 @@ export default async function HomeNetwork({ userId, currentUser }: { userId: str
 
           return (
             <div key={person.id} style={{ display: 'flex', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid #27272A', gap: '12px' }}>
-              <Link href={`/user/${person.id}`} style={{ flexShrink: 0, width: '50px', height: '50px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#27272A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {person.avatarData ? (
-                  <img src={person.avatarData.startsWith('http') || person.avatarData.startsWith('data:') ? person.avatarData : `data:image/jpeg;base64,${person.avatarData}`} style={{width:'100%', height:'100%', objectFit:'cover'}} />
-                ) : (
-                  <span style={{ color: '#fff', fontSize: '18px', fontWeight: 600 }}>{(person.name || person.username || 'U').charAt(0).toUpperCase()}</span>
-                )}
+              <Link href={`/user/${person.id}`} style={{ flexShrink: 0, textDecoration: 'none' }}>
+                <ProfilePicture user={person} size={50} showStatus={false} />
               </Link>
               
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>

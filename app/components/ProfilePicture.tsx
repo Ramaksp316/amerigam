@@ -27,24 +27,44 @@ export default function ProfilePicture({ user, size = 48, showStatus = true }: P
   const charCode = initials.charCodeAt(0) || 0;
   const bgColor = colors[charCode % colors.length];
 
+  const getAvatarUrl = (data?: string | null) => {
+    if (!data) return null;
+    const trimmed = data.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/') || trimmed.startsWith('data:')) {
+      return trimmed;
+    }
+    return `data:image/jpeg;base64,${trimmed}`;
+  };
+
+  const avatarUrl = getAvatarUrl(user?.avatarData);
+
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-      {user?.avatarData ? (
+      {avatarUrl ? (
         <img 
-          src={user.avatarData.startsWith('http') || user.avatarData.startsWith('data:') ? user.avatarData : `data:image/jpeg;base64,${user.avatarData}`} 
+          src={avatarUrl} 
           alt={displayName} 
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+            const fallback = e.currentTarget.parentElement?.querySelector('.avatar-initials-fallback') as HTMLElement | null;
+            if (fallback) {
+              fallback.style.display = 'flex';
+            }
+          }}
           style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} 
         />
-      ) : (
-        <div style={{ 
+      ) : null}
+      <div
+        className="avatar-initials-fallback"
+        style={{ 
           width: '100%', height: '100%', borderRadius: '50%', 
           background: bgColor, color: '#FFFFFF',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          display: avatarUrl ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: size * 0.45, fontWeight: '500', fontFamily: 'sans-serif'
-        }}>
-          {initials}
-        </div>
-      )}
+        }}
+      >
+        {initials}
+      </div>
     </div>
   );
 }

@@ -29,6 +29,6 @@ export async function directTestLogin(userId: string) {
     sameSite: 'lax',
   });
 
-  // 4. Redirect to feed
-  redirect('/feed');
+  // 4. Redirect to home
+  redirect('/home');
 }

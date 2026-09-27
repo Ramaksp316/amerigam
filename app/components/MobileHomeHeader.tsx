@@ -95,15 +95,7 @@ export default function MobileHomeHeader({
               textDecoration: 'none'
             }}
           >
-            {currentUser.avatarData ? (
-              <img
-                src={currentUser.avatarData}
-                alt={currentUser.name || currentUser.username || 'User'}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            ) : (
-              <ProfilePicture user={currentUser} size={34} showStatus={false} />
-            )}
+            <ProfilePicture user={currentUser} size={34} showStatus={false} />
           </Link>
         )}
       </div>
