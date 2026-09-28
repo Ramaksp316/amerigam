@@ -37,8 +37,28 @@ export default async function UserProfilePage({
   const user = await prisma.user.findUnique({
     where: { id: targetUserId },
     include: {
-      followers: true,
-      following: true,
+      followers: {
+        include: {
+          follower: {
+            include: {
+              personalProfile: true,
+              creatorProfile: true,
+              followers: true
+            }
+          }
+        }
+      },
+      following: {
+        include: {
+          following: {
+            include: {
+              personalProfile: true,
+              creatorProfile: true,
+              followers: true
+            }
+          }
+        }
+      },
       posts: {
         include: { likes: true, comments: { include: { author: true } } },
         orderBy: { createdAt: 'desc' }

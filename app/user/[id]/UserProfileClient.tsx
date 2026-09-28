@@ -19,14 +19,22 @@ import { toggleFollow } from '../../actions/userActions';
 function FigmaStatItem({
   value,
   label,
-  href
+  onClick
 }: {
   value: string | number;
   label: string;
-  href?: string;
+  onClick?: () => void;
 }) {
-  const content = (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', cursor: href ? 'pointer' : 'default' }}>
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        cursor: onClick ? 'pointer' : 'default',
+        userSelect: 'none'
+      }}>
       <span style={{ fontSize: '18px', fontWeight: 800, color: '#FFFFFF', lineHeight: 1.2, letterSpacing: '-0.2px' }}>
         {value}
       </span>
@@ -35,11 +43,91 @@ function FigmaStatItem({
       </span>
     </div>
   );
+}
 
-  if (href) {
-    return <Link href={href} style={{ textDecoration: 'none' }}>{content}</Link>;
-  }
-  return content;
+// ---- User List Item Component (Inside Followers/Following Modal) ----
+function UserListItem({
+  targetUser,
+  currentUserId,
+  onClose
+}: {
+  targetUser: any;
+  currentUserId?: string;
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const initialIsFollowing = targetUser.followers?.some((f: any) => f.followerId === currentUserId) ?? false;
+  const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
+  const [loading, setLoading] = useState(false);
+
+  const isMe = currentUserId === targetUser.id;
+  const identity = targetUser.creatorProfile?.creatorType || targetUser.personalProfile?.mainIdentity || targetUser.accountType || 'User';
+
+  const handleFollow = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!currentUserId || loading) return;
+    setLoading(true);
+    const prev = isFollowing;
+    setIsFollowing(!isFollowing);
+    try {
+      await toggleFollow(targetUser.id);
+    } catch {
+      setIsFollowing(prev);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div
+      onClick={() => { onClose(); router.push(`/user/${targetUser.id}`); }}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '8px 6px',
+        borderRadius: '12px',
+        cursor: 'pointer',
+        transition: 'background-color 0.15s ease'
+      }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+        <ProfilePicture
+          src={targetUser.avatarData}
+          name={targetUser.name || targetUser.username}
+          size={44}
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 700, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {targetUser.name || targetUser.username}
+            </span>
+          </div>
+          <span style={{ fontSize: '12px', color: '#A1A1AA' }}>
+            @{targetUser.username || 'user'} • <span style={{ color: '#71717A' }}>{identity}</span>
+          </span>
+        </div>
+      </div>
+
+      {!isMe && currentUserId && (
+        <button
+          onClick={handleFollow}
+          disabled={loading}
+          style={{
+            padding: '6px 16px',
+            borderRadius: '999px',
+            backgroundColor: isFollowing ? '#27272A' : '#0284C7',
+            color: '#FFFFFF',
+            fontSize: '12px',
+            fontWeight: 600,
+            border: 'none',
+            cursor: 'pointer',
+            flexShrink: 0,
+            transition: 'background-color 0.15s ease'
+          }}>
+          {isFollowing ? 'Following' : 'Follow'}
+        </button>
+      )}
+    </div>
+  );
 }
 
 export default function UserProfileClient({
@@ -83,6 +171,12 @@ export default function UserProfileClient({
   const [showRestrictModal, setShowRestrictModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Followers & Following List Modal State
+  const [activeListModal, setActiveListModal] = useState<'followers' | 'following' | null>(
+    initialTab === 'followers' || initialTab === 'following' ? (initialTab as 'followers' | 'following') : null
+  );
+  const [listSearchQuery, setListSearchQuery] = useState('');
+
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 2500);
@@ -110,15 +204,23 @@ export default function UserProfileClient({
     setShowMenu(false);
   };
 
-  // Stats calculation
-  const followersCount = user.followers?.length
-    ? (user.followers.length >= 1000 ? `${(user.followers.length / 1000).toFixed(0)}K` : user.followers.length)
-    : '101K';
-  const followingCount = user.following?.length ? user.following.length : '320';
-  const apPoints = user.amerigamPoints > 0 ? user.amerigamPoints.toLocaleString() : '1200';
-  const networkCount = (user.outgoingConnections?.length || user.incomingConnections?.length)
-    ? (user.outgoingConnections?.length || 0) + (user.incomingConnections?.length || 0)
-    : '38';
+  // Real stats calculation (no hardcoded fallback strings)
+  const rawFollowers = user.followers || [];
+  const rawFollowing = user.following || [];
+
+  const rawFollowersCount = rawFollowers.length;
+  const followersCount = rawFollowersCount >= 1000 
+    ? `${(rawFollowersCount / 1000).toFixed(1)}K` 
+    : rawFollowersCount;
+
+  const rawFollowingCount = rawFollowing.length;
+  const followingCount = rawFollowingCount >= 1000 
+    ? `${(rawFollowingCount / 1000).toFixed(1)}K` 
+    : rawFollowingCount;
+
+  const apPoints = (user.amerigamPoints || 0).toLocaleString();
+
+  const networkCount = (user.outgoingConnections?.length || 0) + (user.incomingConnections?.length || 0);
   const ratingValue = '9.3';
 
   // Format joined date
@@ -512,8 +614,8 @@ export default function UserProfileClient({
               marginTop: '4px',
               padding: '6px 0'
             }}>
-              <FigmaStatItem value={followersCount} label="Followers" href={`/user/${targetUserId}/followers`} />
-              <FigmaStatItem value={followingCount} label="Following" href={`/user/${targetUserId}/following`} />
+              <FigmaStatItem value={followersCount} label="Followers" onClick={() => setActiveListModal('followers')} />
+              <FigmaStatItem value={followingCount} label="Following" onClick={() => setActiveListModal('following')} />
               <FigmaStatItem value={apPoints} label="AP" />
               <FigmaStatItem value={networkCount} label="Network" />
               <FigmaStatItem value={ratingValue} label="Rating" />
@@ -1132,6 +1234,146 @@ export default function UserProfileClient({
                 }}>
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          MODAL 4: FOLLOWERS & FOLLOWING LIST MODAL
+         ============================================================ */}
+      {activeListModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '16px'
+          }}
+          onClick={() => setActiveListModal(null)}>
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '440px',
+              backgroundColor: '#18181B',
+              borderRadius: '24px',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8)',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              maxHeight: '80vh'
+            }}
+            onClick={(e) => e.stopPropagation()}>
+            
+            {/* Modal Header with Tabs */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '16px 20px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+            }}>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <button
+                  onClick={() => setActiveListModal('followers')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: activeListModal === 'followers' ? '2px solid #0284C7' : '2px solid transparent',
+                    paddingBottom: '4px',
+                    color: activeListModal === 'followers' ? '#FFFFFF' : '#A1A1AA',
+                    fontSize: '15px',
+                    fontWeight: activeListModal === 'followers' ? 700 : 500,
+                    cursor: 'pointer'
+                  }}>
+                  Followers ({rawFollowersCount})
+                </button>
+                <button
+                  onClick={() => setActiveListModal('following')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: activeListModal === 'following' ? '2px solid #0284C7' : '2px solid transparent',
+                    paddingBottom: '4px',
+                    color: activeListModal === 'following' ? '#FFFFFF' : '#A1A1AA',
+                    fontSize: '15px',
+                    fontWeight: activeListModal === 'following' ? 700 : 500,
+                    cursor: 'pointer'
+                  }}>
+                  Following ({rawFollowingCount})
+                </button>
+              </div>
+
+              <button
+                onClick={() => setActiveListModal(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#A1A1AA',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Search Input Box */}
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={listSearchQuery}
+                onChange={(e) => setListSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  borderRadius: '12px',
+                  backgroundColor: '#27272A',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#FFFFFF',
+                  fontSize: '13px',
+                  outline: 'none'
+                }}
+              />
+            </div>
+
+            {/* List Content */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {(() => {
+                const targetList = activeListModal === 'followers'
+                  ? rawFollowers.map((f: any) => f.follower).filter(Boolean)
+                  : rawFollowing.map((f: any) => f.following).filter(Boolean);
+
+                const filteredList = targetList.filter((u: any) => {
+                  const q = listSearchQuery.toLowerCase();
+                  return (u.name?.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q));
+                });
+
+                if (filteredList.length === 0) {
+                  return (
+                    <div style={{ textAlign: 'center', padding: '36px 16px', color: '#71717A', fontSize: '14px' }}>
+                      {listSearchQuery ? 'No users matching search.' : activeListModal === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
+                    </div>
+                  );
+                }
+
+                return filteredList.map((u: any) => (
+                  <UserListItem
+                    key={u.id}
+                    targetUser={u}
+                    currentUserId={currentUserId}
+                    onClose={() => setActiveListModal(null)}
+                  />
+                ));
+              })()}
             </div>
           </div>
         </div>
