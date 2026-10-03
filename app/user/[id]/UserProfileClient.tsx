@@ -230,6 +230,8 @@ export default function UserProfileClient({
   });
 
   const locationText = [user.city, user.state, user.country || 'India'].filter(Boolean).join(', ') || 'India';
+  const achievements = user.achievements || [];
+  const highlights = Array.isArray(user.highlights) ? user.highlights : [];
 
   // Tabs list matching Figma
   const tabs = [
@@ -322,46 +324,28 @@ export default function UserProfileClient({
               )}
             </div>
 
-            {/* "Your Achivement" Section under avatar */}
-            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
+            {/* Earned achievements only */}
+            {achievements.length > 0 && <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
               <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 600, letterSpacing: '0.04em', marginBottom: '8px' }}>
-                Your Achivement
+                Achievements
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {/* 4 Gray circles */}
-                {[1, 2, 3, 4].map((idx) => (
-                  <div key={idx} style={{
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '50%',
-                    backgroundColor: '#A1A1AA',
-                    flexShrink: 0
-                  }} />
-                ))}
-
-                {/* Overlapping Blue/Green circles */}
-                <div style={{ position: 'relative', width: '48px', height: '28px', flexShrink: 0 }}>
-                  <div style={{
-                    position: 'absolute',
-                    left: 0,
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '50%',
-                    backgroundColor: '#10B981',
-                    zIndex: 1
-                  }} />
-                  <div style={{
-                    position: 'absolute',
-                    left: '14px',
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '50%',
-                    backgroundColor: '#3B82F6',
-                    zIndex: 2
-                  }} />
-                </div>
+                {achievements.slice(0, 6).map((achievement: any) => {
+                  const icon = achievement.badgeIcon || '';
+                  const isImage = /^(https?:\/\/|\/|data:image\/)/i.test(icon);
+                  return (
+                    <div key={achievement.id} title={achievement.title} style={{
+                      width: '28px', height: '28px', borderRadius: '50%',
+                      backgroundColor: '#18181B', border: '1px solid #3F3F46',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      overflow: 'hidden', flexShrink: 0, fontSize: '15px'
+                    }}>
+                      {isImage ? <img src={icon} alt={achievement.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : icon || <ShieldCheck size={15} color="#10B981" />}
+                    </div>
+                  );
+                })}
               </div>
-            </div>
+            </div>}
           </div>
 
           {/* Right Column: Name, Action Buttons, Title, Stats, Bio, Highlights */}
@@ -458,6 +442,16 @@ export default function UserProfileClient({
                       }}>
                       {isFollowing ? 'Following' : 'Follow'}
                     </button>
+                    {currentUser?.accountType === 'PERSONAL' && user.accountType === 'PERSONAL' && (
+                      <Link href={`/challenge/create/${targetUserId}`} style={{
+                        height: '32px', padding: '0 16px', borderRadius: '999px',
+                        backgroundColor: '#27272A', color: '#FFFFFF', fontSize: '13px',
+                        fontWeight: 600, display: 'flex', alignItems: 'center',
+                        textDecoration: 'none', border: '1px solid rgba(255,255,255,0.12)'
+                      }}>
+                        Challenge
+                      </Link>
+                    )}
                   </>
                 )}
 
@@ -633,19 +627,15 @@ export default function UserProfileClient({
               {user.bio || "Editors are not just a editor they are a 'Creators'\nChess is game about Think.Move.and Win."}
             </div>
 
-            {/* Story Highlights Row */}
-            <div style={{
+            {/* Render highlights only when actual highlight data is available. */}
+            {highlights.length > 0 && <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '16px',
               marginTop: '10px'
             }}>
-              {[
-                { img: '/images/figma/figma_hl1.png', label: 'Highlights' },
-                { img: '/images/figma/figma_hl2.png', label: 'Highlights' },
-                { img: '/images/figma/figma_hl3.png', label: 'Highlights' }
-              ].map((hl, idx) => (
-                <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              {highlights.map((hl: any) => (
+                <div key={hl.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
                   <div style={{
                     width: '60px',
                     height: '60px',
@@ -658,31 +648,14 @@ export default function UserProfileClient({
                     justifyContent: 'center'
                   }}>
                     <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#18181B' }}>
-                      <img src={hl.img} alt="Highlight" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={hl.imageUrl || hl.img} alt={hl.title || 'Highlight'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                   </div>
-                  <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 500 }}>{hl.label}</span>
+                  <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 500 }}>{hl.title || hl.label || 'Highlight'}</span>
                 </div>
               ))}
-
-              {/* Add Highlight Button */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <div style={{
-                  width: '60px',
-                  height: '60px',
-                  borderRadius: '50%',
-                  border: '1.5px solid #3F3F46',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: 'rgba(255,255,255,0.02)',
-                  transition: 'border-color 0.15s ease'
-                }}>
-                  <span style={{ fontSize: '24px', color: '#71717A', fontWeight: 300, lineHeight: 1 }}>+</span>
-                </div>
-                <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 500 }}>Highlights</span>
-              </div>
             </div>
+            }
 
           </div>
         </div>
@@ -940,9 +913,14 @@ export default function UserProfileClient({
         
         {/* Figma Rank Card */}
         <FigmaRankCard
-          rank={rankData.city || rankData.state || rankData.national || '#1'}
+          rank={rankData.city ?? rankData.state ?? rankData.national ?? rankData.intl ?? null}
           creatorTitle={identityLine || 'Editing'}
           creatorDescription="This creator has mastery in his own field of Editing. Design is not just what it looks like and feels like. Design is how it works."
+          badges={achievements.map((achievement: any) => ({
+            id: achievement.id,
+            icon: achievement.badgeIcon || '',
+            label: achievement.title
+          })).filter((badge: { icon: string }) => badge.icon).slice(0, 4)}
         />
 
         {/* Quick Context Card (Joined info & Trust) */}

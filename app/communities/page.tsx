@@ -143,30 +143,35 @@ export default async function CommunitiesPage() {
   const suggestedCommunities = sortedSuggested.slice(0, 4);
 
   return (
-    <div style={{
-      width: '100%',
-      minHeight: '100vh',
-      backgroundColor: '#0A0A0A',
-      color: '#FFFFFF',
-      display: 'flex',
-      justifyContent: 'flex-start',
-      overflowX: 'hidden'
-    }}>
+    <div
+      className="community-page-container"
+      style={{
+        width: '100%',
+        height: '100vh',
+        maxHeight: '100vh',
+        backgroundColor: '#0A0A0A',
+        color: '#FFFFFF',
+        display: 'flex',
+        justifyContent: 'flex-start',
+        overflow: 'hidden'
+      }}
+    >
       <div style={{
         width: '100%',
+        height: '100vh',
         minWidth: 0,
         display: 'flex',
-        minHeight: '100vh',
-        overflowX: 'hidden'
+        overflow: 'hidden'
       }}>
-        {/* Center Main Content Area */}
+        {/* Center Main Content Area (Only this area scrolls) */}
         <div style={{
           flex: 1,
+          height: '100vh',
           minWidth: 0,
           borderRight: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
           flexDirection: 'column',
-          paddingBottom: '80px',
+          overflowY: 'auto',
           overflowX: 'hidden'
         }}>
           <CommunitiesClient
@@ -180,7 +185,7 @@ export default async function CommunitiesPage() {
           />
         </div>
 
-        {/* Right Sidebar (Rendered safely as Server Component) */}
+        {/* Right Sidebar (Stationary Server Component, does not scroll with center) */}
         <AppRightSidebar userId={userId} mode="communities" />
       </div>
     </div>

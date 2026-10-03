@@ -66,7 +66,12 @@ export default async function AppRightSidebar({
       flexDirection: 'column',
       gap: '16px',
       padding: '20px 10px 20px 0',
-      boxSizing: 'border-box'
+      boxSizing: 'border-box',
+      position: 'sticky',
+      top: 0,
+      height: '100vh',
+      overflowY: 'auto',
+      scrollbarWidth: 'none'
     }} className="desktop-only">
       
       {/* ========================================================
@@ -166,19 +171,49 @@ export default async function AppRightSidebar({
             Your Communities
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* 4 Gray Circles */}
-            {[0, 1, 2, 3].map((idx) => (
-              <div
-                key={idx}
-                style={{
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  backgroundColor: '#D4D4D8',
-                  flexShrink: 0
-                }}
-              />
-            ))}
+            {/* 4 Community Circles (real joined or Figma placeholders) */}
+            {[0, 1, 2, 3].map((idx) => {
+              const comm = userCommunities[idx]?.community;
+              if (comm) {
+                return (
+                  <Link
+                    key={comm.id}
+                    href={`/communities/${comm.id}`}
+                    title={comm.name}
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: '#27272A',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      border: '1px solid rgba(255, 255, 255, 0.15)'
+                    }}
+                  >
+                    <img
+                      src={comm.avatarData || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80'}
+                      alt={comm.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </Link>
+                );
+              }
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    backgroundColor: '#D4D4D8',
+                    flexShrink: 0
+                  }}
+                />
+              );
+            })}
             {/* 1 Emerald / Blue gradient circle matching Figma */}
             <div style={{
               width: '20px',
@@ -301,77 +336,74 @@ export default async function AppRightSidebar({
           </span>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {/* Item 1: Behind You - Running RR */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: '#D4D4D8',
-                flexShrink: 0,
-                overflow: 'hidden'
-              }}>
-                <img src="/images/competitions/poster_comp_1.png" alt="comp" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {joinedRegistrations.length > 0 ? (
+              joinedRegistrations.map((reg, idx) => (
+                <Link
+                  key={reg.id || idx}
+                  href={`/competitions/${reg.eventId}`}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}
+                >
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    backgroundColor: '#D4D4D8',
+                    flexShrink: 0,
+                    overflow: 'hidden'
+                  }}>
+                    <img
+                      src={reg.event.posterUrl || `/images/competitions/poster_comp_${(idx % 2) + 1}.png`}
+                      alt={reg.event.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+                    <span style={{
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      color: '#FFFFFF',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {reg.event.name}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '9px', color: '#C5F82A' }}>
+                      <span>📅 {new Date(reg.event.startDate || reg.joinedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      <span style={{ color: '#71717A' }}>📍 {reg.event.city || reg.event.venue || 'ONLINE'}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <p style={{ fontSize: '12px', color: '#A1A1AA', margin: 0, lineHeight: '1.4' }}>
+                  You haven&apos;t joined any competitions yet.
+                </p>
+                <Link
+                  href="/competitions"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#FFFFFF',
+                    color: '#000000',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    padding: '7px 14px',
+                    borderRadius: '999px',
+                    textDecoration: 'none',
+                    width: 'fit-content',
+                    marginTop: '2px'
+                  }}
+                >
+                  Explore Competitions
+                </Link>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
-                <span style={{
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  color: '#FFFFFF',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  Behind You - Running RR
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '9px', color: '#C5F82A' }}>
-                  <span>📅 SEP 8 2026 7:00AM</span>
-                  <span style={{ color: '#71717A' }}>📍 SURAT</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Item 2: Tried-Jump */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: '#D4D4D8',
-                flexShrink: 0,
-                overflow: 'hidden'
-              }}>
-                <img src="/images/competitions/poster_comp_2.png" alt="comp" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
-                <span style={{
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  color: '#FFFFFF',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  Tried-Jump
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '9px', color: '#C5F82A' }}>
-                  <span>📅 OCT 11 2026 9:00AM</span>
-                  <span style={{ color: '#71717A' }}>📍 AHMEDABAD</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Item 3: Skeleton Lines */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#D4D4D8', flexShrink: 0 }} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
-                <div style={{ height: '3px', width: '55px', backgroundColor: '#C5F82A', borderRadius: '999px' }} />
-                <div style={{ height: '3px', width: '35px', backgroundColor: '#52525B', borderRadius: '999px' }} />
-              </div>
-            </div>
+            )}
 
             {/* Accent colored dots at bottom (Lime, Emerald, Blue) matching Figma */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '2px' }}>
+            <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
               <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#C5F82A' }} />
               <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#10B981' }} />
               <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#2563EB' }} />

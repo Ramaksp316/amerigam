@@ -4,7 +4,6 @@ import React, { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Search, Plus, X, Users, Upload, Check, Loader2, Sparkles } from 'lucide-react';
 import { toggleJoinCommunity, createCommunity } from './actions';
-import FloatingBottomNav from '../components/FloatingBottomNav';
 
 export interface CommunityItem {
   id: string;
@@ -36,6 +35,14 @@ const SUGGESTED_COLORS = [
 
 const DEFAULT_COMMUNITY_DP = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80';
 
+// Real accurate member count formatter
+const formatMemberCount = (count: number) => {
+  if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M members joined`;
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}k members joined`;
+  if (count === 1) return '1 member joined';
+  return `${count} members joined`;
+};
+
 export default function CommunitiesClient({
   userId,
   userAvatar,
@@ -56,6 +63,9 @@ export default function CommunitiesClient({
   const [mineList, setMineList] = useState<CommunityItem[]>(initialMine);
   const [topList, setTopList] = useState<CommunityItem[]>(initialTop);
   const [suggestedList, setSuggestedList] = useState<CommunityItem[]>(initialSuggested);
+  const [showAllMine, setShowAllMine] = useState(false);
+  const [showAllTop, setShowAllTop] = useState(false);
+  const [showAllSuggested, setShowAllSuggested] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isPending, startTransition] = useTransition();
 
@@ -180,7 +190,7 @@ export default function CommunitiesClient({
       display: 'flex',
       flexDirection: 'column',
       position: 'relative',
-      paddingBottom: '110px', // Extra space so bottom floating dock never obstructs cards
+      paddingBottom: '36px',
       boxSizing: 'border-box'
     }}>
 
@@ -358,7 +368,7 @@ export default function CommunitiesClient({
                           overflow: 'hidden',
                           textOverflow: 'ellipsis'
                         }}>
-                          {comm.memberCount} members are joined
+                          {formatMemberCount(comm.memberCount)}
                         </span>
                       </div>
                     </div>
@@ -409,27 +419,49 @@ export default function CommunitiesClient({
                   Mine Community
                 </h2>
 
-                <button
-                  onClick={() => setIsCreateOpen(true)}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    color: '#FFFFFF',
-                    borderRadius: '16px',
-                    padding: '3px 12px',
-                    fontSize: '11px',
-                    fontWeight: 500,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    cursor: 'pointer',
-                    transition: 'background 0.2s'
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
-                >
-                  <Plus size={13} /> Create
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {mineList.length > 6 && (
+                    <button
+                      onClick={() => setShowAllMine(!showAllMine)}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        color: '#FFFFFF',
+                        borderRadius: '16px',
+                        padding: '3px 12px',
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                    >
+                      {showAllMine ? 'Less' : 'More'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setIsCreateOpen(true)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      color: '#FFFFFF',
+                      borderRadius: '16px',
+                      padding: '3px 12px',
+                      fontSize: '11px',
+                      fontWeight: 500,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                  >
+                    <Plus size={13} /> Create
+                  </button>
+                </div>
               </div>
 
               {mineList.length === 0 ? (
@@ -439,7 +471,6 @@ export default function CommunitiesClient({
                   height: '60px',
                   background: '#212121',
                   borderRadius: '22px',
-                  boxShadow: '1px 1px 1.2px black',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
@@ -490,7 +521,7 @@ export default function CommunitiesClient({
                   gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
                   gap: '10px 12px'
                 }}>
-                  {mineList.map((comm) => (
+                  {(showAllMine ? mineList : mineList.slice(0, 6)).map((comm) => (
                     <Link
                       key={comm.id}
                       href={`/communities/${comm.id}`}
@@ -499,7 +530,6 @@ export default function CommunitiesClient({
                         maxWidth: '380px',
                         height: '39px',
                         background: '#212121',
-                        boxShadow: '1px 1px 1.2px black',
                         borderRadius: '22px',
                         display: 'flex',
                         alignItems: 'center',
@@ -512,13 +542,12 @@ export default function CommunitiesClient({
                       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#2B2B2B')}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#212121')}
                     >
-                      {/* Circular 30x30 DP on left with Figma inset shadow */}
+                      {/* Circular 30x30 DP on left */}
                       <div style={{
                         width: '30px',
                         height: '30px',
                         borderRadius: '9999px',
                         backgroundColor: '#2386C4',
-                        boxShadow: '-0.1px -0.2px 0.3px white inset, 0.2px 0.3px 0.3px white inset, 0.7px 0.5px 1.2px black',
                         overflow: 'hidden',
                         flexShrink: 0,
                         display: 'flex',
@@ -546,17 +575,15 @@ export default function CommunitiesClient({
                           {comm.name}
                         </span>
                         <span style={{
-                          color: 'white',
+                          color: 'rgba(255, 255, 255, 0.7)',
                           fontSize: '8px',
                           fontFamily: 'Inter, sans-serif',
-                          fontWeight: 200,
+                          fontWeight: 400,
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis'
                         }}>
-                          {comm.memberCount > 50
-                            ? `${comm.memberCount} members are joined`
-                            : `${comm.memberCount + 104}k+ members are joined`}
+                          {formatMemberCount(comm.memberCount)}
                         </span>
                       </div>
                     </Link>
@@ -571,30 +598,58 @@ export default function CommunitiesClient({
                 horizontal gap 10px, vertical gap 6px! Total width = 774px!
                ======================================================== */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                <h2 style={{
-                  color: '#AFAFAF',
-                  fontSize: '15px',
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 200,
-                  margin: 0,
-                  wordWrap: 'break-word'
-                }}>
-                  Top Community
-                </h2>
-                <span style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  fontSize: '10px',
-                  color: '#C5F82A',
-                  backgroundColor: 'rgba(197, 248, 42, 0.1)',
-                  padding: '1px 7px',
-                  borderRadius: '999px',
-                  fontWeight: 400
-                }}>
-                  <Sparkles size={10} /> Personalized to your field
-                </span>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '10px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h2 style={{
+                    color: '#AFAFAF',
+                    fontSize: '15px',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 200,
+                    margin: 0,
+                    wordWrap: 'break-word'
+                  }}>
+                    Top Community
+                  </h2>
+                  <span style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '10px',
+                    color: '#C5F82A',
+                    backgroundColor: 'rgba(197, 248, 42, 0.1)',
+                    padding: '1px 7px',
+                    borderRadius: '999px',
+                    fontWeight: 400
+                  }}>
+                    <Sparkles size={10} /> Personalized to your field
+                  </span>
+                </div>
+
+                {topList.length > 8 && (
+                  <button
+                    onClick={() => setShowAllTop(!showAllTop)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      color: '#FFFFFF',
+                      borderRadius: '16px',
+                      padding: '3px 12px',
+                      fontSize: '11px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                  >
+                    {showAllTop ? 'Less' : 'More'}
+                  </button>
+                )}
               </div>
 
               {/* Exact 4-Column Grid with 10px horizontal gap & 6px vertical gap */}
@@ -604,7 +659,7 @@ export default function CommunitiesClient({
                 gap: '6px 10px',
                 justifyContent: 'center'
               }}>
-                {topList.slice(0, 8).map((comm, idx) => {
+                {(showAllTop ? topList : topList.slice(0, 8)).map((comm, idx) => {
                   const bg = TOP_COLORS[idx % TOP_COLORS.length];
                   return (
                     <Link
@@ -614,7 +669,6 @@ export default function CommunitiesClient({
                         width: '186px',
                         height: '186px',
                         backgroundColor: bg,
-                        boxShadow: '0.3px 0.3px 1px white inset, 0.7px 0.5px 1.2px black',
                         borderRadius: '22px',
                         display: 'flex',
                         flexDirection: 'column',
@@ -643,7 +697,6 @@ export default function CommunitiesClient({
                         borderRadius: '9999px',
                         overflow: 'hidden',
                         marginBottom: '8px',
-                        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4)',
                         flexShrink: 0
                       }}>
                         <img
@@ -653,7 +706,7 @@ export default function CommunitiesClient({
                         />
                       </div>
 
-                      {/* Community Name: color: 'white', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' */}
+                      {/* Community Name */}
                       <div style={{
                         color: 'white',
                         fontSize: '15px',
@@ -671,12 +724,12 @@ export default function CommunitiesClient({
                         {comm.name}
                       </div>
 
-                      {/* Member Count: color: 'white', fontSize: 8, fontFamily: 'Inter', fontWeight: '200' */}
+                      {/* Real Accurate Member Count */}
                       <div style={{
-                        color: 'white',
-                        fontSize: '8px',
+                        color: 'rgba(255, 255, 255, 0.75)',
+                        fontSize: '9px',
                         fontFamily: 'Inter, sans-serif',
-                        fontWeight: 200,
+                        fontWeight: 400,
                         textAlign: 'center',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
@@ -684,9 +737,7 @@ export default function CommunitiesClient({
                         maxWidth: '166px',
                         wordWrap: 'break-word'
                       }}>
-                        {comm.memberCount > 50
-                          ? `${comm.memberCount} members are joined`
-                          : `${comm.memberCount + 104}k+ members are joined`}
+                        {formatMemberCount(comm.memberCount)}
                       </div>
                     </Link>
                   );
@@ -700,16 +751,44 @@ export default function CommunitiesClient({
                 gap 10px! Total width = 774px!
                ======================================================== */}
             <div>
-              <h2 style={{
-                color: '#AFAFAF',
-                fontSize: '15px',
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 200,
-                margin: '0 0 10px 0',
-                wordWrap: 'break-word'
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '10px'
               }}>
-                Suggested Community
-              </h2>
+                <h2 style={{
+                  color: '#AFAFAF',
+                  fontSize: '15px',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 200,
+                  margin: 0,
+                  wordWrap: 'break-word'
+                }}>
+                  Suggested Community
+                </h2>
+
+                {suggestedList.length > 4 && (
+                  <button
+                    onClick={() => setShowAllSuggested(!showAllSuggested)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      color: '#FFFFFF',
+                      borderRadius: '16px',
+                      padding: '3px 12px',
+                      fontSize: '11px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                  >
+                    {showAllSuggested ? 'Less' : 'More'}
+                  </button>
+                )}
+              </div>
 
               <div style={{
                 display: 'grid',
@@ -717,7 +796,7 @@ export default function CommunitiesClient({
                 gap: '10px',
                 justifyContent: 'center'
               }}>
-                {suggestedList.slice(0, 4).map((comm, idx) => {
+                {(showAllSuggested ? suggestedList : suggestedList.slice(0, 4)).map((comm, idx) => {
                   const bg = SUGGESTED_COLORS[idx % SUGGESTED_COLORS.length];
                   return (
                     <div
@@ -726,7 +805,6 @@ export default function CommunitiesClient({
                         width: '186px',
                         height: '186px',
                         backgroundColor: bg,
-                        boxShadow: '0.3px 0.3px 1px white inset, 0.7px 0.5px 1.2px black',
                         borderRadius: '22px',
                         display: 'flex',
                         flexDirection: 'column',
@@ -756,7 +834,6 @@ export default function CommunitiesClient({
                           borderRadius: '9999px',
                           overflow: 'hidden',
                           marginBottom: '8px',
-                          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4)',
                           flexShrink: 0
                         }}>
                           <img
@@ -784,12 +861,12 @@ export default function CommunitiesClient({
                           {comm.name}
                         </div>
 
-                        {/* Subtitle: 8px, fontWeight: 200 */}
+                        {/* Real Member Count */}
                         <div style={{
-                          color: 'white',
-                          fontSize: '8px',
+                          color: 'rgba(255, 255, 255, 0.75)',
+                          fontSize: '9px',
                           fontFamily: 'Inter, sans-serif',
-                          fontWeight: 200,
+                          fontWeight: 400,
                           textAlign: 'center',
                           marginBottom: '8px',
                           whiteSpace: 'nowrap',
@@ -798,9 +875,7 @@ export default function CommunitiesClient({
                           maxWidth: '166px',
                           wordWrap: 'break-word'
                         }}>
-                          {comm.memberCount > 50
-                            ? `${comm.memberCount} members are joined`
-                            : `${comm.memberCount + 54}k+ members are joined`}
+                          {formatMemberCount(comm.memberCount)}
                         </div>
                       </Link>
 
@@ -839,11 +914,6 @@ export default function CommunitiesClient({
         )}
 
       </div>
-
-      {/* ========================================================
-          FLOATING BOTTOM DOCK NAVIGATION (Figma exact match)
-         ======================================================== */}
-      <FloatingBottomNav userAvatar={userAvatar} userName={userName} />
 
       {/* ========================================================
           CREATE COMMUNITY MODAL (with DP upload)

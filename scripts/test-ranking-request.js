@@ -1,7 +1,11 @@
 const { Client } = require('ssh2');
 const HOST = '168.144.126.4';
 const USERNAME = 'root';
-const password = process.argv[2] || 'Ramaks316@@@Par';
+const password = process.env.DIGITALOCEAN_SSH_PASSWORD;
+
+if (!password) {
+  throw new Error('Set DIGITALOCEAN_SSH_PASSWORD before running this script.');
+}
 
 const conn = new Client();
 conn.on('ready', () => {

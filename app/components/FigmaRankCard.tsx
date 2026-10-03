@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 
 interface FigmaRankCardProps {
-  rank?: number | string;
+  rank?: number | string | null;
   creatorTitle?: string;
   creatorDescription?: string;
   badges?: Array<{
@@ -13,12 +13,16 @@ interface FigmaRankCardProps {
 }
 
 export default function FigmaRankCard({
-  rank = '#1',
+  rank = null,
   creatorTitle = 'Editing',
   creatorDescription = 'This creator has mastery at his own field of Editing.Design is not just what it looks like and feels like. Design is how it works.',
   badges = []
 }: FigmaRankCardProps) {
-  const displayRank = typeof rank === 'number' ? `#${rank}` : (rank.startsWith('#') ? rank : `#${rank}`);
+  const displayRank = rank == null
+    ? 'Unranked'
+    : typeof rank === 'number'
+      ? `#${rank}`
+      : (rank.startsWith('#') ? rank : `#${rank}`);
 
   return (
     <div style={{
@@ -98,6 +102,7 @@ export default function FigmaRankCard({
       </div>
       </Link>
 
+      {badges.length > 0 && <>
       {/* Connected Bridge Notch (media_1790141404798.jpg) */}
       <div style={{
         display: 'flex',
@@ -116,7 +121,7 @@ export default function FigmaRankCard({
         }} />
       </div>
 
-      {/* Bottom Tray for Badges matching media_1790141404798.jpg */}
+      {/* Only earned badges are shown in the tray. */}
       <div style={{
         backgroundColor: '#141417',
         borderRadius: '20px',
@@ -128,72 +133,36 @@ export default function FigmaRankCard({
         gap: '10px',
         boxShadow: '0 12px 28px rgba(0, 0, 0, 0.5)'
       }}>
-        {/* Slot 1: Pink Shield Badge */}
-        <div style={{
-          width: '46px',
-          height: '46px',
-          borderRadius: '14px',
-          backgroundColor: '#1C1C20',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)',
-          transition: 'transform 0.15s ease'
-        }}>
-          <img
-            src="/images/figma/badge_164_309.svg"
-            alt="Pink Badge"
-            style={{ width: '30px', height: '30px', objectFit: 'contain' }}
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = '/images/figma/badge_164_309.png';
-            }}
-          />
-        </div>
-
-        {/* Slot 2: Blue Shield Badge */}
-        <div style={{
-          width: '46px',
-          height: '46px',
-          borderRadius: '14px',
-          backgroundColor: '#1C1C20',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)',
-          transition: 'transform 0.15s ease'
-        }}>
-          <img
-            src="/images/figma/badge_164_318.svg"
-            alt="Blue Badge"
-            style={{ width: '30px', height: '30px', objectFit: 'contain' }}
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = '/images/figma/badge_164_318.png';
-            }}
-          />
-        </div>
-
-        {/* Slot 3: Empty Slot */}
-        <div style={{
-          width: '46px',
-          height: '46px',
-          borderRadius: '14px',
-          backgroundColor: '#0F0F12',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.7)'
-        }} />
-
-        {/* Slot 4: Empty Slot */}
-        <div style={{
-          width: '46px',
-          height: '46px',
-          borderRadius: '14px',
-          backgroundColor: '#0F0F12',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.7)'
-        }} />
+        {badges.map((badge) => {
+          const isImage = /^(https?:\/\/|\/|data:image\/)/i.test(badge.icon);
+          return (
+            <div
+              key={badge.id}
+              title={badge.label}
+              aria-label={badge.label || 'Achievement badge'}
+              style={{
+                width: '46px',
+                height: '46px',
+                borderRadius: '14px',
+                backgroundColor: '#1C1C20',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)',
+                flexShrink: 0
+              }}
+            >
+              {isImage ? (
+                <img src={badge.icon} alt={badge.label || 'Achievement badge'} style={{ width: '30px', height: '30px', objectFit: 'contain' }} />
+              ) : (
+                <span style={{ fontSize: '24px', lineHeight: 1 }}>{badge.icon}</span>
+              )}
+            </div>
+          );
+        })}
       </div>
+      </>}
     </div>
   );
 }

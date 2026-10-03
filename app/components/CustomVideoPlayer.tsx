@@ -24,26 +24,24 @@ export default function CustomVideoPlayer({
   const [showControls, setShowControls] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto-play / pause on scroll via IntersectionObserver (X/Twitter style)
+  // Pause when scrolled away; playback always requires an explicit user action.
   useEffect(() => {
     if (!containerRef.current) return;
+
+    const pauseOutsideFullscreen = () => {
+      if (document.fullscreenElement === containerRef.current) return;
+      videoRef.current?.pause();
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    };
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-            // Auto play muted when scrolled into viewport
-            if (videoRef.current && videoRef.current.paused) {
-              videoRef.current.muted = isMuted;
-              videoRef.current
-                .play()
-                .then(() => setIsPlaying(true))
-                .catch(() => {});
-            }
-          } else {
-            // Auto pause when scrolled away
+          if (!entry.isIntersecting) {
             if (videoRef.current && !videoRef.current.paused) {
               videoRef.current.pause();
+              audioRef.current?.pause();
               setIsPlaying(false);
             }
           }
@@ -53,8 +51,12 @@ export default function CustomVideoPlayer({
     );
 
     observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, [isMuted]);
+    document.addEventListener('fullscreenchange', pauseOutsideFullscreen);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('fullscreenchange', pauseOutsideFullscreen);
+    };
+  }, []);
 
   const togglePlay = (e?: React.MouseEvent) => {
     if (e) {
@@ -67,9 +69,20 @@ export default function CustomVideoPlayer({
       if (audioRef.current) audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      videoRef.current.play().catch(() => {});
-      if (audioRef.current) audioRef.current.play().catch(() => {});
-      setIsPlaying(true);
+      const startPlayback = () => {
+        videoRef.current?.play().then(() => {
+          setIsPlaying(true);
+          audioRef.current?.play().catch(() => {});
+        }).catch(() => setIsPlaying(false));
+      };
+
+      if (document.fullscreenElement === containerRef.current) {
+        startPlayback();
+      } else {
+        enterFullscreen().then((entered) => {
+          if (entered) startPlayback();
+        });
+      }
     }
     resetControlsTimeout();
   };
@@ -121,10 +134,28 @@ export default function CustomVideoPlayer({
       e.stopPropagation();
       e.preventDefault();
     }
-    if (!videoRef.current) return;
-    if (videoRef.current.requestFullscreen) {
-      videoRef.current.requestFullscreen();
+    enterFullscreen();
+  };
+
+  const enterFullscreen = async () => {
+    const container = containerRef.current;
+    if (!container) return false;
+
+    if (container.requestFullscreen) {
+      try {
+        await container.requestFullscreen();
+        return true;
+      } catch {
+        return false;
+      }
     }
+
+    const video = videoRef.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
+    if (video?.webkitEnterFullscreen) {
+      video.webkitEnterFullscreen();
+      return true;
+    }
+    return false;
   };
 
   const resetControlsTimeout = () => {
