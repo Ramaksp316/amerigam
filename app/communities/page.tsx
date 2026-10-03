@@ -171,6 +171,8 @@ export default async function CommunitiesPage() {
         }}>
           <CommunitiesClient
             userId={userId}
+            userAvatar={user.avatarData}
+            userName={user.name}
             mineCommunities={mineCommunities}
             topCommunities={topCommunities}
             suggestedCommunities={suggestedCommunities}
