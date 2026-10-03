@@ -4,7 +4,6 @@ import React, { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Search, Plus, X, Users, Upload, Check, Loader2, Sparkles } from 'lucide-react';
 import { toggleJoinCommunity, createCommunity } from './actions';
-import AppRightSidebar from '../components/AppRightSidebar';
 
 export interface CommunityItem {
   id: string;
@@ -172,654 +171,623 @@ export default function CommunitiesClient({
     : null;
 
   return (
-    <div style={{
-      width: '100%',
-      minHeight: '100vh',
-      backgroundColor: '#0A0A0A',
-      color: '#FFFFFF',
-      display: 'flex',
-      justifyContent: 'flex-start',
-      overflowX: 'hidden'
-    }}>
-      {/* 3-COLUMN WRAPPER (Fluid, zero horizontal overflow) */}
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* ========================================================
+          TOP SEARCH BAR (Pill shape, Figma styled)
+         ======================================================== */}
       <div style={{
-        width: '100%',
-        minWidth: 0,
+        height: '60px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
         display: 'flex',
-        minHeight: '100vh',
-        overflowX: 'hidden'
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0 24px',
+        position: 'sticky',
+        top: 0,
+        backgroundColor: 'rgba(10, 10, 10, 0.95)',
+        backdropFilter: 'blur(16px)',
+        zIndex: 40
       }}>
-        {/* Center Main Content Area */}
         <div style={{
-          flex: 1,
-          minWidth: 0,
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          width: '100%',
+          maxWidth: '774px',
+          height: '39px',
+          backgroundColor: '#212121',
+          borderRadius: '33px',
+          boxShadow: '0.1px 0.06px 0.2px rgba(255,255,255,0.4) inset, 0.7px 0.5px 1.2px black',
+          border: '1px solid rgba(255, 255, 255, 0.06)',
           display: 'flex',
-          flexDirection: 'column',
-          paddingBottom: '80px',
-          overflowX: 'hidden'
+          alignItems: 'center',
+          padding: '0 18px',
+          gap: '12px'
         }}>
-
-          {/* ========================================================
-              TOP SEARCH BAR (Pill shape, Figma styled)
-             ======================================================== */}
-          <div style={{
-            height: '60px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '0 24px',
-            position: 'sticky',
-            top: 0,
-            backgroundColor: 'rgba(10, 10, 10, 0.95)',
-            backdropFilter: 'blur(16px)',
-            zIndex: 40
-          }}>
-            <div style={{
+          <Search size={16} color="#AFAFAF" style={{ flexShrink: 0 }} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search communities, topics, or hobbies..."
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#FFFFFF',
+              fontSize: '14px',
               width: '100%',
-              maxWidth: '774px',
-              height: '39px',
-              backgroundColor: '#212121',
-              borderRadius: '33px',
-              boxShadow: '0.1px 0.06px 0.2px rgba(255,255,255,0.4) inset, 0.7px 0.5px 1.2px black',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              display: 'flex',
-              alignItems: 'center',
-              padding: '0 18px',
-              gap: '12px'
-            }}>
-              <Search size={16} color="#AFAFAF" style={{ flexShrink: 0 }} />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search communities, topics, or hobbies..."
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#FFFFFF',
-                  fontSize: '14px',
-                  width: '100%',
-                  outline: 'none',
-                  fontFamily: 'Inter, sans-serif'
-                }}
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#AFAFAF',
-                    cursor: 'pointer',
-                    padding: '4px',
-                    display: 'flex',
-                    alignItems: 'center'
-                  }}
-                >
-                  <X size={15} />
-                </button>
-              )}
+              outline: 'none',
+              fontFamily: 'Inter, sans-serif'
+            }}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#AFAFAF',
+                cursor: 'pointer',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* MAIN PAGE BODY */}
+      <div style={{
+        maxWidth: '960px',
+        width: '100%',
+        margin: '0 auto',
+        padding: '24px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '36px',
+        boxSizing: 'border-box'
+      }}>
+
+        {/* SEARCH RESULTS VIEW (when typing in search bar) */}
+        {searchResults ? (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '15px', color: '#AFAFAF', fontWeight: 200, fontFamily: 'Inter', margin: 0 }}>
+                Search Results ({searchResults.length})
+              </h2>
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{ background: 'none', border: 'none', color: '#38BDF8', fontSize: '13px', cursor: 'pointer' }}
+              >
+                Clear Search
+              </button>
             </div>
-          </div>
 
-          {/* MAIN PAGE BODY */}
-          <div style={{
-            maxWidth: '960px',
-            width: '100%',
-            margin: '0 auto',
-            padding: '24px 20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '36px'
-          }}>
-
-            {/* SEARCH RESULTS VIEW (when typing in search bar) */}
-            {searchResults ? (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                  <h2 style={{ fontSize: '15px', color: '#AFAFAF', fontWeight: 200, fontFamily: 'Inter', margin: 0 }}>
-                    Search Results ({searchResults.length})
-                  </h2>
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    style={{ background: 'none', border: 'none', color: '#38BDF8', fontSize: '13px', cursor: 'pointer' }}
+            {searchResults.length === 0 ? (
+              <div style={{
+                padding: '40px 20px',
+                textAlign: 'center',
+                background: '#18181B',
+                borderRadius: '22px',
+                color: '#AFAFAF',
+                fontSize: '14px'
+              }}>
+                No communities found matching &quot;{searchQuery}&quot;. Try another search or create one below!
+              </div>
+            ) : (
+              <div className="communities-mine-responsive-grid">
+                {searchResults.map((comm) => (
+                  <Link
+                    key={comm.id}
+                    href={`/communities/${comm.id}`}
+                    style={{
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      background: '#212121',
+                      borderRadius: '22px',
+                      boxShadow: '1px 1px 1.2px black',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      padding: '6px 16px',
+                      minHeight: '44px',
+                      transition: 'transform 0.15s ease, background 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#2A2A2A')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#212121')}
                   >
-                    Clear Search
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '9999px',
+                        backgroundColor: '#2386C4',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        boxShadow: '-0.1px -0.2px 0.3px white inset, 0.2px 0.3px 0.3px white inset, 0.7px 0.5px 1.2px black'
+                      }}>
+                        <img
+                          src={comm.avatarData || DEFAULT_COMMUNITY_DP}
+                          alt={comm.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                        <span style={{
+                          color: 'white',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          fontFamily: 'Inter',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}>
+                          {comm.name}
+                        </span>
+                        <span style={{ color: '#AFAFAF', fontSize: '11px', fontWeight: 300, fontFamily: 'Inter' }}>
+                          {comm.memberCount} members {comm.category ? `• ${comm.category}` : ''}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={(e) => handleToggleJoin(comm, e)}
+                      style={{
+                        padding: '4px 12px',
+                        borderRadius: '999px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: 'none',
+                        backgroundColor: comm.isJoined ? '#27272A' : '#FFFFFF',
+                        color: comm.isJoined ? '#A1A1AA' : '#000000',
+                        flexShrink: 0
+                      }}
+                    >
+                      {comm.isJoined ? 'Joined' : 'Join'}
+                    </button>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* ========================================================
+                SECTION 1: MINE COMMUNITY (Figma capsule pills)
+               ======================================================== */}
+            <div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '14px'
+              }}>
+                <h2 style={{
+                  color: '#AFAFAF',
+                  fontSize: '15px',
+                  fontFamily: 'Inter',
+                  fontWeight: 200,
+                  margin: 0,
+                  letterSpacing: '0.2px'
+                }}>
+                  Mine Community
+                </h2>
+
+                <button
+                  onClick={() => setIsCreateOpen(true)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#FFFFFF',
+                    borderRadius: '16px',
+                    padding: '4px 12px',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                >
+                  <Plus size={14} /> Create Community
+                </button>
+              </div>
+
+              {mineList.length === 0 ? (
+                /* Elegant empty state if user hasn't joined any communities */
+                <div style={{
+                  backgroundColor: '#18181B',
+                  borderRadius: '22px',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  padding: '24px 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '16px',
+                  boxShadow: '1px 1px 1.2px black'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '50%',
+                      backgroundColor: '#27272A',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Users size={20} color="#71717A" />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#FFFFFF', marginBottom: '2px' }}>
+                        You haven&apos;t joined any communities yet
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#A1A1AA' }}>
+                        Join popular communities below matching your field and hobby, or start your own!
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setIsCreateOpen(true)}
+                    style={{
+                      backgroundColor: '#FFFFFF',
+                      color: '#000000',
+                      border: 'none',
+                      borderRadius: '999px',
+                      padding: '8px 16px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Plus size={14} /> Start Community
                   </button>
                 </div>
+              ) : (
+                /* 2-Column Capsule Pills matching Figma */
+                <div className="communities-mine-responsive-grid">
+                  {mineList.map((comm) => (
+                    <Link
+                      key={comm.id}
+                      href={`/communities/${comm.id}`}
+                      style={{
+                        width: '100%',
+                        minHeight: '42px',
+                        background: '#212121',
+                        boxShadow: '1px 1px 1.2px black',
+                        borderRadius: '22px',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '6px 14px',
+                        gap: '12px',
+                        textDecoration: 'none',
+                        boxSizing: 'border-box',
+                        transition: 'transform 0.15s ease, background 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#282828';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#212121';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      {/* Circular 30x30 DP on left */}
+                      <div style={{
+                        width: '30px',
+                        height: '30px',
+                        borderRadius: '9999px',
+                        backgroundColor: '#2386C4',
+                        boxShadow: '-0.1px -0.2px 0.3px white inset, 0.2px 0.3px 0.3px white inset, 0.7px 0.5px 1.2px black',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <img
+                          src={comm.avatarData || DEFAULT_COMMUNITY_DP}
+                          alt={comm.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </div>
 
-                {searchResults.length === 0 ? (
-                  <div style={{
-                    padding: '40px 20px',
-                    textAlign: 'center',
-                    background: '#18181B',
-                    borderRadius: '22px',
-                    color: '#AFAFAF',
-                    fontSize: '14px'
-                  }}>
-                    No communities found matching &quot;{searchQuery}&quot;. Try another search or create one below!
-                  </div>
-                ) : (
-                  <div className="communities-mine-responsive-grid">
-                    {searchResults.map((comm) => (
+                      {/* Community Name & Member count */}
+                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                        <span style={{
+                          color: 'white',
+                          fontSize: '13px',
+                          fontFamily: 'Inter',
+                          fontWeight: 600,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}>
+                          {comm.name}
+                        </span>
+                        <span style={{
+                          color: '#AFAFAF',
+                          fontSize: '10px',
+                          fontFamily: 'Inter',
+                          fontWeight: 300,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}>
+                          {comm.memberCount} members {comm.category ? `• ${comm.category}` : ''}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* ========================================================
+                SECTION 2: TOP COMMUNITY (Exact 4x2 Grid from Figma)
+               ======================================================== */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+                <h2 style={{
+                  color: '#AFAFAF',
+                  fontSize: '15px',
+                  fontFamily: 'Inter',
+                  fontWeight: 200,
+                  margin: 0,
+                  letterSpacing: '0.2px'
+                }}>
+                  Top Community
+                </h2>
+                <span style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '11px',
+                  color: '#C5F82A',
+                  backgroundColor: 'rgba(197, 248, 42, 0.1)',
+                  padding: '2px 8px',
+                  borderRadius: '999px',
+                  fontWeight: 500
+                }}>
+                  <Sparkles size={11} /> Matched to your field
+                </span>
+              </div>
+
+              <div className="communities-top-responsive-grid">
+                {topList.slice(0, 8).map((comm, idx) => {
+                  const bg = TOP_COLORS[idx % TOP_COLORS.length];
+                  return (
+                    <Link
+                      key={comm.id}
+                      href={`/communities/${comm.id}`}
+                      style={{
+                        width: '100%',
+                        height: '186px',
+                        backgroundColor: bg,
+                        boxShadow: '0.3px 0.3px 1px rgba(255,255,255,0.4) inset, 0.7px 0.5px 1.2px black, 0 8px 20px rgba(0,0,0,0.5)',
+                        borderRadius: '22px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '16px 12px',
+                        boxSizing: 'border-box',
+                        textDecoration: 'none',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease',
+                        cursor: 'pointer'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
+                        e.currentTarget.style.boxShadow = '0.4px 0.4px 1.2px rgba(255,255,255,0.6) inset, 0 14px 28px rgba(0,0,0,0.7)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                        e.currentTarget.style.boxShadow = '0.3px 0.3px 1px rgba(255,255,255,0.4) inset, 0.7px 0.5px 1.2px black, 0 8px 20px rgba(0,0,0,0.5)';
+                      }}
+                    >
+                      {/* 70x70 Circular DP matching Figma */}
+                      <div style={{
+                        width: '70px',
+                        height: '70px',
+                        borderRadius: '9999px',
+                        overflow: 'hidden',
+                        marginBottom: '10px',
+                        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4)',
+                        border: '1.5px solid rgba(255, 255, 255, 0.25)',
+                        flexShrink: 0
+                      }}>
+                        <img
+                          src={comm.avatarData || DEFAULT_COMMUNITY_DP}
+                          alt={comm.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </div>
+
+                      {/* Community Name */}
+                      <div style={{
+                        color: 'white',
+                        fontSize: '15px',
+                        fontFamily: 'Inter',
+                        fontWeight: 600,
+                        textAlign: 'center',
+                        marginBottom: '3px',
+                        lineHeight: '1.2',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: '100%'
+                      }}>
+                        {comm.name}
+                      </div>
+
+                      {/* Member Count Subtitle */}
+                      <div style={{
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontSize: '10px',
+                        fontFamily: 'Inter',
+                        fontWeight: 200,
+                        textAlign: 'center',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: '100%'
+                      }}>
+                        {comm.memberCount > 50
+                          ? `${comm.memberCount} members are joined`
+                          : `${comm.memberCount + 104}k+ members are joined`}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ========================================================
+                SECTION 3: SUGGESTED COMMUNITY (4 Muted Cards from Figma)
+               ======================================================== */}
+            <div>
+              <h2 style={{
+                color: '#AFAFAF',
+                fontSize: '15px',
+                fontFamily: 'Inter',
+                fontWeight: 200,
+                margin: '0 0 14px 0',
+                letterSpacing: '0.2px'
+              }}>
+                Suggested Community
+              </h2>
+
+              <div className="communities-top-responsive-grid">
+                {suggestedList.slice(0, 4).map((comm, idx) => {
+                  const bg = SUGGESTED_COLORS[idx % SUGGESTED_COLORS.length];
+                  return (
+                    <div
+                      key={comm.id}
+                      style={{
+                        width: '100%',
+                        height: '186px',
+                        backgroundColor: bg,
+                        boxShadow: '0.3px 0.3px 1px rgba(255,255,255,0.35) inset, 0.7px 0.5px 1.2px black, 0 8px 20px rgba(0,0,0,0.4)',
+                        borderRadius: '22px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '16px 12px',
+                        boxSizing: 'border-box',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }}
+                    >
                       <Link
-                        key={comm.id}
                         href={`/communities/${comm.id}`}
                         style={{
                           textDecoration: 'none',
                           display: 'flex',
+                          flexDirection: 'column',
                           alignItems: 'center',
-                          justifyContent: 'space-between',
-                          background: '#212121',
-                          borderRadius: '22px',
-                          boxShadow: '1px 1px 1.2px black',
-                          border: '1px solid rgba(255, 255, 255, 0.05)',
-                          padding: '6px 16px',
-                          minHeight: '44px',
-                          transition: 'transform 0.15s ease, background 0.15s ease'
+                          width: '100%'
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#2A2A2A')}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#212121')}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
-                          <div style={{
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '9999px',
-                            backgroundColor: '#2386C4',
-                            overflow: 'hidden',
-                            flexShrink: 0,
-                            boxShadow: '-0.1px -0.2px 0.3px white inset, 0.2px 0.3px 0.3px white inset, 0.7px 0.5px 1.2px black'
-                          }}>
-                            <img
-                              src={comm.avatarData || DEFAULT_COMMUNITY_DP}
-                              alt={comm.name}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                            <span style={{
-                              color: 'white',
-                              fontSize: '14px',
-                              fontWeight: 600,
-                              fontFamily: 'Inter',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}>
-                              {comm.name}
-                            </span>
-                            <span style={{ color: '#AFAFAF', fontSize: '11px', fontWeight: 300, fontFamily: 'Inter' }}>
-                              {comm.memberCount} members {comm.category ? `• ${comm.category}` : ''}
-                            </span>
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={(e) => handleToggleJoin(comm, e)}
-                          style={{
-                            padding: '4px 12px',
-                            borderRadius: '999px',
-                            fontSize: '11px',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            border: 'none',
-                            backgroundColor: comm.isJoined ? '#27272A' : '#FFFFFF',
-                            color: comm.isJoined ? '#A1A1AA' : '#000000',
-                            flexShrink: 0
-                          }}
-                        >
-                          {comm.isJoined ? 'Joined' : 'Join'}
-                        </button>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <>
-                {/* ========================================================
-                    SECTION 1: MINE COMMUNITY (Figma capsule pills)
-                   ======================================================== */}
-                <div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: '14px'
-                  }}>
-                    <h2 style={{
-                      color: '#AFAFAF',
-                      fontSize: '15px',
-                      fontFamily: 'Inter',
-                      fontWeight: 200,
-                      margin: 0,
-                      letterSpacing: '0.2px'
-                    }}>
-                      Mine Community
-                    </h2>
-
-                    <button
-                      onClick={() => setIsCreateOpen(true)}
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: '#FFFFFF',
-                        borderRadius: '16px',
-                        padding: '4px 12px',
-                        fontSize: '12px',
-                        fontWeight: 500,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        cursor: 'pointer',
-                        transition: 'background 0.2s'
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
-                    >
-                      <Plus size={14} /> Create Community
-                    </button>
-                  </div>
-
-                  {mineList.length === 0 ? (
-                    /* Elegant empty state if user hasn't joined any communities */
-                    <div style={{
-                      backgroundColor: '#18181B',
-                      borderRadius: '22px',
-                      border: '1px solid rgba(255, 255, 255, 0.06)',
-                      padding: '24px 20px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      flexWrap: 'wrap',
-                      gap: '16px',
-                      boxShadow: '1px 1px 1.2px black'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        {/* 70x70 Circular DP */}
                         <div style={{
-                          width: '42px',
-                          height: '42px',
-                          borderRadius: '50%',
-                          backgroundColor: '#27272A',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                          width: '70px',
+                          height: '70px',
+                          borderRadius: '9999px',
+                          overflow: 'hidden',
+                          marginBottom: '8px',
+                          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4)',
+                          border: '1.5px solid rgba(255, 255, 255, 0.2)',
                           flexShrink: 0
                         }}>
-                          <Users size={20} color="#71717A" />
+                          <img
+                            src={comm.avatarData || DEFAULT_COMMUNITY_DP}
+                            alt={comm.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
                         </div>
-                        <div>
-                          <div style={{ fontSize: '14px', fontWeight: 600, color: '#FFFFFF', marginBottom: '2px' }}>
-                            You haven&apos;t joined any communities yet
-                          </div>
-                          <div style={{ fontSize: '12px', color: '#A1A1AA' }}>
-                            Join popular communities below matching your field and hobby, or start your own!
-                          </div>
-                        </div>
-                      </div>
 
+                        {/* Name */}
+                        <div style={{
+                          color: 'white',
+                          fontSize: '15px',
+                          fontFamily: 'Inter',
+                          fontWeight: 600,
+                          textAlign: 'center',
+                          marginBottom: '2px',
+                          lineHeight: '1.2',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          maxWidth: '100%'
+                        }}>
+                          {comm.name}
+                        </div>
+
+                        {/* Member Count */}
+                        <div style={{
+                          color: 'rgba(255, 255, 255, 0.85)',
+                          fontSize: '9px',
+                          fontFamily: 'Inter',
+                          fontWeight: 200,
+                          textAlign: 'center',
+                          marginBottom: '8px'
+                        }}>
+                          {comm.memberCount > 50
+                            ? `${comm.memberCount} members`
+                            : `${comm.memberCount + 54}k+ members`}
+                        </div>
+                      </Link>
+
+                      {/* Quick Join Button */}
                       <button
-                        onClick={() => setIsCreateOpen(true)}
+                        onClick={(e) => handleToggleJoin(comm, e)}
                         style={{
-                          backgroundColor: '#FFFFFF',
-                          color: '#000000',
-                          border: 'none',
-                          borderRadius: '999px',
-                          padding: '8px 16px',
-                          fontSize: '12px',
+                          backgroundColor: comm.isJoined ? 'rgba(0, 0, 0, 0.5)' : '#FFFFFF',
+                          color: comm.isJoined ? '#FFFFFF' : '#000000',
+                          border: comm.isJoined ? '1px solid rgba(255,255,255,0.2)' : 'none',
+                          borderRadius: '9999px',
+                          padding: '3px 14px',
+                          fontSize: '11px',
                           fontWeight: 600,
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '6px'
+                          gap: '4px',
+                          transition: 'all 0.15s ease'
                         }}
                       >
-                        <Plus size={14} /> Start Community
+                        {comm.isJoined ? (
+                          <>
+                            <Check size={12} /> Joined
+                          </>
+                        ) : (
+                          'Join'
+                        )}
                       </button>
                     </div>
-                  ) : (
-                    /* 2-Column Capsule Pills matching Figma */
-                    <div className="communities-mine-responsive-grid">
-                      {mineList.map((comm) => (
-                        <Link
-                          key={comm.id}
-                          href={`/communities/${comm.id}`}
-                          style={{
-                            width: '100%',
-                            minHeight: '42px',
-                            background: '#212121',
-                            boxShadow: '1px 1px 1.2px black',
-                            borderRadius: '22px',
-                            border: '1px solid rgba(255, 255, 255, 0.05)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '6px 14px',
-                            gap: '12px',
-                            textDecoration: 'none',
-                            boxSizing: 'border-box',
-                            transition: 'transform 0.15s ease, background 0.15s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#282828';
-                            e.currentTarget.style.transform = 'translateY(-1px)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#212121';
-                            e.currentTarget.style.transform = 'translateY(0)';
-                          }}
-                        >
-                          {/* Circular 30x30 DP on left */}
-                          <div style={{
-                            width: '30px',
-                            height: '30px',
-                            borderRadius: '9999px',
-                            backgroundColor: '#2386C4',
-                            boxShadow: '-0.1px -0.2px 0.3px white inset, 0.2px 0.3px 0.3px white inset, 0.7px 0.5px 1.2px black',
-                            overflow: 'hidden',
-                            flexShrink: 0,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}>
-                            <img
-                              src={comm.avatarData || DEFAULT_COMMUNITY_DP}
-                              alt={comm.name}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                          </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
 
-                          {/* Community Name & Member count */}
-                          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-                            <span style={{
-                              color: 'white',
-                              fontSize: '13px',
-                              fontFamily: 'Inter',
-                              fontWeight: 600,
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}>
-                              {comm.name}
-                            </span>
-                            <span style={{
-                              color: '#AFAFAF',
-                              fontSize: '10px',
-                              fontFamily: 'Inter',
-                              fontWeight: 300,
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}>
-                              {comm.memberCount} members {comm.category ? `• ${comm.category}` : ''}
-                            </span>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* ========================================================
-                    SECTION 2: TOP COMMUNITY (Exact 4x2 Grid from Figma)
-                   ======================================================== */}
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-                    <h2 style={{
-                      color: '#AFAFAF',
-                      fontSize: '15px',
-                      fontFamily: 'Inter',
-                      fontWeight: 200,
-                      margin: 0,
-                      letterSpacing: '0.2px'
-                    }}>
-                      Top Community
-                    </h2>
-                    <span style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '11px',
-                      color: '#C5F82A',
-                      backgroundColor: 'rgba(197, 248, 42, 0.1)',
-                      padding: '2px 8px',
-                      borderRadius: '999px',
-                      fontWeight: 500
-                    }}>
-                      <Sparkles size={11} /> Matched to your field
-                    </span>
-                  </div>
-
-                  <div className="communities-top-responsive-grid">
-                    {topList.slice(0, 8).map((comm, idx) => {
-                      const bg = TOP_COLORS[idx % TOP_COLORS.length];
-                      return (
-                        <Link
-                          key={comm.id}
-                          href={`/communities/${comm.id}`}
-                          style={{
-                            width: '100%',
-                            height: '186px',
-                            backgroundColor: bg,
-                            boxShadow: '0.3px 0.3px 1px rgba(255,255,255,0.4) inset, 0.7px 0.5px 1.2px black, 0 8px 20px rgba(0,0,0,0.5)',
-                            borderRadius: '22px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: '16px 12px',
-                            boxSizing: 'border-box',
-                            textDecoration: 'none',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease',
-                            cursor: 'pointer'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
-                            e.currentTarget.style.boxShadow = '0.4px 0.4px 1.2px rgba(255,255,255,0.6) inset, 0 14px 28px rgba(0,0,0,0.7)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                            e.currentTarget.style.boxShadow = '0.3px 0.3px 1px rgba(255,255,255,0.4) inset, 0.7px 0.5px 1.2px black, 0 8px 20px rgba(0,0,0,0.5)';
-                          }}
-                        >
-                          {/* 70x70 Circular DP matching Figma */}
-                          <div style={{
-                            width: '70px',
-                            height: '70px',
-                            borderRadius: '9999px',
-                            overflow: 'hidden',
-                            marginBottom: '10px',
-                            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4)',
-                            border: '1.5px solid rgba(255, 255, 255, 0.25)',
-                            flexShrink: 0
-                          }}>
-                            <img
-                              src={comm.avatarData || DEFAULT_COMMUNITY_DP}
-                              alt={comm.name}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                          </div>
-
-                          {/* Community Name */}
-                          <div style={{
-                            color: 'white',
-                            fontSize: '15px',
-                            fontFamily: 'Inter',
-                            fontWeight: 600,
-                            textAlign: 'center',
-                            marginBottom: '3px',
-                            lineHeight: '1.2',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            maxWidth: '100%'
-                          }}>
-                            {comm.name}
-                          </div>
-
-                          {/* Member Count Subtitle */}
-                          <div style={{
-                            color: 'rgba(255, 255, 255, 0.9)',
-                            fontSize: '10px',
-                            fontFamily: 'Inter',
-                            fontWeight: 200,
-                            textAlign: 'center',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            maxWidth: '100%'
-                          }}>
-                            {comm.memberCount > 50
-                              ? `${comm.memberCount} members are joined`
-                              : `${comm.memberCount + 104}k+ members are joined`}
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* ========================================================
-                    SECTION 3: SUGGESTED COMMUNITY (4 Muted Cards from Figma)
-                   ======================================================== */}
-                <div>
-                  <h2 style={{
-                    color: '#AFAFAF',
-                    fontSize: '15px',
-                    fontFamily: 'Inter',
-                    fontWeight: 200,
-                    margin: '0 0 14px 0',
-                    letterSpacing: '0.2px'
-                  }}>
-                    Suggested Community
-                  </h2>
-
-                  <div className="communities-top-responsive-grid">
-                    {suggestedList.slice(0, 4).map((comm, idx) => {
-                      const bg = SUGGESTED_COLORS[idx % SUGGESTED_COLORS.length];
-                      return (
-                        <div
-                          key={comm.id}
-                          style={{
-                            width: '100%',
-                            height: '186px',
-                            backgroundColor: bg,
-                            boxShadow: '0.3px 0.3px 1px rgba(255,255,255,0.35) inset, 0.7px 0.5px 1.2px black, 0 8px 20px rgba(0,0,0,0.4)',
-                            borderRadius: '22px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: '16px 12px',
-                            boxSizing: 'border-box',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-                          }}
-                        >
-                          <Link
-                            href={`/communities/${comm.id}`}
-                            style={{
-                              textDecoration: 'none',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              width: '100%'
-                            }}
-                          >
-                            {/* 70x70 Circular DP */}
-                            <div style={{
-                              width: '70px',
-                              height: '70px',
-                              borderRadius: '9999px',
-                              overflow: 'hidden',
-                              marginBottom: '8px',
-                              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4)',
-                              border: '1.5px solid rgba(255, 255, 255, 0.2)',
-                              flexShrink: 0
-                            }}>
-                              <img
-                                src={comm.avatarData || DEFAULT_COMMUNITY_DP}
-                                alt={comm.name}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                              />
-                            </div>
-
-                            {/* Name */}
-                            <div style={{
-                              color: 'white',
-                              fontSize: '15px',
-                              fontFamily: 'Inter',
-                              fontWeight: 600,
-                              textAlign: 'center',
-                              marginBottom: '2px',
-                              lineHeight: '1.2',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              maxWidth: '100%'
-                            }}>
-                              {comm.name}
-                            </div>
-
-                            {/* Member Count */}
-                            <div style={{
-                              color: 'rgba(255, 255, 255, 0.85)',
-                              fontSize: '9px',
-                              fontFamily: 'Inter',
-                              fontWeight: 200,
-                              textAlign: 'center',
-                              marginBottom: '8px'
-                            }}>
-                              {comm.memberCount > 50
-                                ? `${comm.memberCount} members`
-                                : `${comm.memberCount + 54}k+ members`}
-                            </div>
-                          </Link>
-
-                          {/* Quick Join Button */}
-                          <button
-                            onClick={(e) => handleToggleJoin(comm, e)}
-                            style={{
-                              backgroundColor: comm.isJoined ? 'rgba(0, 0, 0, 0.5)' : '#FFFFFF',
-                              color: comm.isJoined ? '#FFFFFF' : '#000000',
-                              border: comm.isJoined ? '1px solid rgba(255,255,255,0.2)' : 'none',
-                              borderRadius: '999px',
-                              padding: '3px 14px',
-                              fontSize: '11px',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              transition: 'all 0.15s ease'
-                            }}
-                          >
-                            {comm.isJoined ? (
-                              <>
-                                <Check size={12} /> Joined
-                              </>
-                            ) : (
-                              'Join'
-                            )}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
-            )}
-
-          </div>
-        </div>
-
-        {/* Right Sidebar: Profile Card & Joined Competitions */}
-        <AppRightSidebar userId={userId} mode="communities" />
       </div>
 
       {/* ========================================================

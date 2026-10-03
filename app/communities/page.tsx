@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import CommunitiesClient, { CommunityItem } from './CommunitiesClient';
+import AppRightSidebar from '../components/AppRightSidebar';
 
 export const dynamic = 'force-dynamic';
 
@@ -142,12 +143,44 @@ export default async function CommunitiesPage() {
   const suggestedCommunities = sortedSuggested.slice(0, 4);
 
   return (
-    <CommunitiesClient
-      userId={userId}
-      mineCommunities={mineCommunities}
-      topCommunities={topCommunities}
-      suggestedCommunities={suggestedCommunities}
-      allCommunities={allCommunities}
-    />
+    <div style={{
+      width: '100%',
+      minHeight: '100vh',
+      backgroundColor: '#0A0A0A',
+      color: '#FFFFFF',
+      display: 'flex',
+      justifyContent: 'flex-start',
+      overflowX: 'hidden'
+    }}>
+      <div style={{
+        width: '100%',
+        minWidth: 0,
+        display: 'flex',
+        minHeight: '100vh',
+        overflowX: 'hidden'
+      }}>
+        {/* Center Main Content Area */}
+        <div style={{
+          flex: 1,
+          minWidth: 0,
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+          paddingBottom: '80px',
+          overflowX: 'hidden'
+        }}>
+          <CommunitiesClient
+            userId={userId}
+            mineCommunities={mineCommunities}
+            topCommunities={topCommunities}
+            suggestedCommunities={suggestedCommunities}
+            allCommunities={allCommunities}
+          />
+        </div>
+
+        {/* Right Sidebar (Rendered safely as Server Component) */}
+        <AppRightSidebar userId={userId} mode="communities" />
+      </div>
+    </div>
   );
 }
