@@ -11,7 +11,8 @@ import {
   Bell,
   Globe,
   Share2,
-  Settings
+  Settings,
+  Trophy
 } from 'lucide-react';
 
 export default function DesktopLeftNav({
@@ -24,6 +25,7 @@ export default function DesktopLeftNav({
   const isActive = (path: string) => {
     if (path === '/home') return pathname === '/home' || pathname === '/';
     if (path === '/search') return pathname?.startsWith('/search') || pathname?.startsWith('/explore');
+    if (path === '/competitions') return pathname?.startsWith('/competitions');
     return pathname?.startsWith(path);
   };
 
@@ -31,6 +33,7 @@ export default function DesktopLeftNav({
     { href: '/home', label: 'Home', icon: Home },
     { href: '/feed', label: 'Feed', icon: PlaySquare },
     { href: '/search', label: 'Explore', icon: LayoutGrid },
+    { href: '/competitions', label: 'Competitions', icon: Trophy },
     { href: '/create', label: 'Create', icon: PlusSquare },
     { href: '/messages', label: 'Messages', icon: MessageCircle },
     { href: '/notifications', label: 'Notification', icon: Bell, badge: unreadCount },

@@ -172,6 +172,9 @@ export default function MobileDrawer({ currentUser, joinedCommunities = [], netw
                 <Link href="/network" style={navItemStyle}>
                   <Globe size={24} color="#F4F4F5" /> Network
                 </Link>
+                <Link href="/competitions" style={navItemStyle}>
+                  <Trophy size={24} color="#F4F4F5" /> Competitions
+                </Link>
                 <Link href="/ranking" style={navItemStyle}>
                   <Trophy size={24} color="#F4F4F5" /> Leader
                 </Link>

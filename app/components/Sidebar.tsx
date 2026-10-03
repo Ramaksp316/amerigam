@@ -19,7 +19,8 @@ import {
   Activity,
   Moon,
   AlertCircle,
-  LogOut
+  LogOut,
+  Trophy
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -75,6 +76,7 @@ export default function Sidebar({
     { href: '/home', label: 'Home', icon: Home },
     { href: '/feed', label: 'Feed', icon: PlaySquare },
     { href: '/search', label: 'Explore', icon: LayoutGrid },
+    { href: '/competitions', label: 'Competitions', icon: Trophy },
     { href: '/create', label: 'Create', icon: PlusSquare },
     { href: '/messages', label: 'Messages', icon: MessageCircle },
     { href: '/notifications', label: 'Notification', icon: Bell, badge: displayUnread },
