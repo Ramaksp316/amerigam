@@ -13,7 +13,8 @@ export async function createCommunity(formData: FormData) {
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
   const category = formData.get('category') as string;
-  const type = formData.get('type') as string || 'PUBLIC';
+  const type = (formData.get('type') as string) || 'PUBLIC';
+  const avatarData = (formData.get('avatarData') as string) || null;
 
   if (name) {
     const community = await prisma.community.create({
@@ -22,6 +23,7 @@ export async function createCommunity(formData: FormData) {
         description,
         category,
         type,
+        avatarData: avatarData || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80',
         creatorId: userId,
       }
     });
@@ -37,6 +39,30 @@ export async function createCommunity(formData: FormData) {
     revalidatePath('/communities');
     redirect(`/communities/${community.id}`);
   }
+}
+
+export async function updateCommunityAvatar(communityId: string, avatarData: string) {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) return { success: false, error: 'Unauthorized' };
+
+  const community = await prisma.community.findUnique({
+    where: { id: communityId },
+    select: { creatorId: true },
+  });
+
+  if (!community || community.creatorId !== userId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  await prisma.community.update({
+    where: { id: communityId },
+    data: { avatarData }
+  });
+
+  revalidatePath(`/communities/${communityId}`);
+  revalidatePath('/communities');
+  return { success: true };
 }
 
 export async function joinCommunity(formData: FormData) {
@@ -60,6 +86,45 @@ export async function joinCommunity(formData: FormData) {
   revalidatePath(`/communities/${communityId}`);
   revalidatePath('/communities');
   redirect(`/communities/${communityId}`);
+}
+
+export async function toggleJoinCommunity(communityId: string) {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) return { success: false, error: 'Unauthorized' };
+
+  const existing = await prisma.communityMember.findUnique({
+    where: {
+      userId_communityId: {
+        userId,
+        communityId
+      }
+    }
+  });
+
+  if (existing) {
+    await prisma.communityMember.delete({
+      where: {
+        userId_communityId: {
+          userId,
+          communityId
+        }
+      }
+    });
+    revalidatePath('/communities');
+    revalidatePath(`/communities/${communityId}`);
+    return { success: true, joined: false };
+  } else {
+    await prisma.communityMember.create({
+      data: {
+        userId,
+        communityId
+      }
+    });
+    revalidatePath('/communities');
+    revalidatePath(`/communities/${communityId}`);
+    return { success: true, joined: true };
+  }
 }
 
 export async function deleteCommunity(communityId: string) {

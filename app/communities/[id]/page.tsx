@@ -14,6 +14,7 @@ import DeleteCommunityButton from './DeleteCommunityButton';
 import InviteMembersButton from './InviteMembersButton';
 import AddMemberSection from './AddMemberSection';
 import RemoveMemberButton from './RemoveMemberButton';
+import CommunityAvatarUploader from './CommunityAvatarUploader';
 
 export default async function CommunityDetailPage({ 
   params, 
@@ -89,13 +90,7 @@ export default async function CommunityDetailPage({
             <ArrowLeft size={24} />
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#18181B', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              {community.avatarData ? (
-                <img src={community.avatarData} alt={community.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <Users size={20} color="#71717A" />
-              )}
-            </div>
+            <CommunityAvatarUploader communityId={community.id} currentAvatar={community.avatarData} name={community.name} isAdmin={isAdmin} />
             <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <h1 style={{ color: 'white', fontSize: '16px', fontWeight: 600, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'var(--font-sans), sans-serif' }}>{community.name}</h1>
               <p style={{ color: '#A1A1AA', fontSize: '13px', margin: 0, fontFamily: 'var(--font-sans), sans-serif' }}>{community._count.members} members {community.type === 'PRIVATE' && '• Private'}</p>
