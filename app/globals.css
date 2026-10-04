@@ -2826,4 +2826,9 @@ body:has(.home-blueprint-layout) .main-content,
     max-height: 100vh !important;
     overflow: hidden !important;
   }
+
+  body:has(.community-page-container) .floating-dock-nav,
+  body:has(.competitions-page-container) .floating-dock-nav {
+    display: none !important;
+  }
 }
