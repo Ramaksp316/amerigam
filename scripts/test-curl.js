@@ -1,7 +1,7 @@
 const { Client } = require('ssh2');
 const conn = new Client();
 conn.on('ready', () => {
-  conn.exec('curl -s -i -H "Cookie: userId=fe70b00c-d4fe-4d99-be03-cccd97b9886b" http://localhost:3000/communities | head -n 45', (err, stream) => {
+  conn.exec('curl -s -i -H "Cookie: userId=fe70b00c-d4fe-4d99-be03-cccd97b9886b" http://localhost:3000/competitions | grep -E "Competition for you|Other Competition|Setting" | head -n 10', (err, stream) => {
     if (err) throw err;
     stream.on('close', (code, signal) => {
       conn.end();
