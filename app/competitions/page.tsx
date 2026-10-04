@@ -4,9 +4,63 @@ import { redirect } from 'next/navigation';
 import CompetitionsClient from './CompetitionsClient';
 import AppRightSidebar from '../components/AppRightSidebar';
 
-export default async function CompetitionsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  const resolvedSearchParams = await searchParams;
-  const searchQuery = resolvedSearchParams.q || '';
+export const dynamic = 'force-dynamic';
+
+const FALLBACK_POSTERS = [
+  '/images/competitions/poster_comp_1.png',
+  '/images/competitions/poster_comp_2.png',
+  '/images/competitions/poster_comp_3.png',
+  '/images/competitions/poster_comp_4.png',
+  'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800&q=80',
+  'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=800&q=80',
+  'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800&q=80',
+  'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80',
+  'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80',
+  'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80'
+];
+
+export interface CompetitionCardData {
+  id: string;
+  title: string;
+  date: string;
+  location: string;
+  prize: string;
+  prizeLabel: string;
+  poster: string;
+  category?: string | null;
+}
+
+function formatEventToCard(e: any, index: number): CompetitionCardData {
+  const startDate = e.startDate ? new Date(e.startDate) : new Date();
+  const formattedDate = startDate.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  }).toUpperCase();
+  const formattedTime = startDate.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  }).replace(' ', '');
+
+  const locationStr = (e.city || (e.venue ? e.venue.split(',')[0] : 'ONLINE') || 'SURAT').toUpperCase();
+  const rawPrize = e.prizePool ? e.prizePool.split('\n')[0].replace('Prize Pool:', '').trim() : '';
+  const prizeStr = rawPrize || (e.entryFee && e.entryFee > 0 ? `AP ${e.entryFee * 3}-$${e.entryFee}` : 'AP 150-$50');
+  const poster = e.coverImage || FALLBACK_POSTERS[index % FALLBACK_POSTERS.length];
+
+  return {
+    id: e.id,
+    title: e.name || 'Competition',
+    date: `${formattedDate} ${formattedTime}`,
+    location: locationStr,
+    prize: prizeStr,
+    prizeLabel: '/winner price',
+    poster,
+    category: e.category
+  };
+}
+
+export default async function CompetitionsPage() {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
 
@@ -14,62 +68,33 @@ export default async function CompetitionsPage({ searchParams }: { searchParams:
     redirect('/login');
   }
 
-  // Get current user details and follows
+  // 1. Fetch current user with personal and creator profiles
   const currentUser = await prisma.user.findUnique({
     where: { id: userId },
     include: {
-      following: true,
-      personalProfile: true
+      personalProfile: true,
+      creatorProfile: true
     }
   });
 
-  const followingIds = currentUser?.following.map(f => f.followingId) || [];
-
-  // Fetch Search Results if querying
-  let searchResults: any[] = [];
-  if (searchQuery.trim() !== '') {
-    searchResults = await prisma.event.findMany({
-      where: {
-        status: 'PUBLISHED',
-        name: {
-          contains: searchQuery,
-          mode: 'insensitive'
-        }
-      },
-      include: {
-        creator: {
-          select: { id: true, name: true, avatarData: true }
-        },
-        _count: {
-          select: { registrations: true }
-        }
-      },
-      orderBy: { startDate: 'asc' },
-      take: 20
-    });
+  if (!currentUser) {
+    redirect('/login');
   }
 
-  // Fetch Following Events
-  const followingEvents = await prisma.event.findMany({
-    where: {
-      creatorId: { in: followingIds },
-      status: 'PUBLISHED'
-    },
-    include: {
-      creator: {
-        select: { id: true, name: true, avatarData: true }
-      },
-      _count: {
-        select: { registrations: true }
-      }
-    },
-    orderBy: { startDate: 'asc' },
-    take: 10
-  });
+  // 2. Extract Profession Keywords for "Competition for you"
+  const userProfessionKeywords: string[] = [
+    currentUser.mainIdentity,
+    currentUser.accountType,
+    currentUser.creatorProfile?.creatorType,
+    currentUser.creatorProfile?.category,
+    currentUser.personalProfile?.profession
+  ]
+    .filter(Boolean)
+    .map(k => String(k).toLowerCase());
 
-  // Get User Keywords for Personalization
-  let userKeywords: string[] = [];
-  if (currentUser?.personalProfile) {
+  // 3. Extract Hobby Keywords for "Other Competition"
+  let userHobbyKeywords: string[] = [];
+  if (currentUser.personalProfile) {
     const pProfile = currentUser.personalProfile;
     let skills: string[] = [];
     let interests: string[] = [];
@@ -77,67 +102,20 @@ export default async function CompetitionsPage({ searchParams }: { searchParams:
     try { if (pProfile.skills) skills = JSON.parse(pProfile.skills); } catch(e){}
     try { if (pProfile.interests) interests = JSON.parse(pProfile.interests); } catch(e){}
     try { if (pProfile.hobbies) hobbies = JSON.parse(pProfile.hobbies); } catch(e){}
-    
-    userKeywords = [
-      pProfile.mainIdentity,
+
+    userHobbyKeywords = [
+      pProfile.hobby,
       ...skills,
       ...interests,
       ...hobbies
-    ].filter(Boolean).map(k => String(k).toLowerCase());
+    ]
+      .filter(Boolean)
+      .map(k => String(k).toLowerCase());
   }
 
-  // Fetch all published events not created by following (since following is shown above)
-  const availableEvents = await prisma.event.findMany({
-    where: {
-      status: 'PUBLISHED',
-      NOT: { creatorId: { in: followingIds } }
-    },
-    include: {
-      creator: {
-        select: { id: true, name: true, avatarData: true, accountType: true }
-      },
-      _count: {
-        select: { registrations: true }
-      }
-    }
-  });
-
-  // Score events for Suggestions and Top
-  const scoredEvents = availableEvents.map(event => {
-    let score = 0;
-    const matchText = [
-      event.name,
-      event.description,
-      event.category,
-      event.creator.name
-    ].join(' ').toLowerCase();
-
-    userKeywords.forEach(kw => {
-      if (matchText.includes(kw)) score += 3;
-    });
-
-    if (event.creator.accountType === currentUser?.accountType) {
-      score += 1;
-    }
-
-    // Popularity modifier
-    const popularity = (event._count.registrations || 0) + (event.participantLimit ? event.participantLimit / 100 : 0);
-    
-    return { event, score, popularity };
-  });
-
-  // Suggested Events: Prioritize personalization score
-  const suggestedEvents = [...scoredEvents]
-    .sort((a, b) => b.score - a.score || b.popularity - a.popularity)
-    .map(item => item.event)
-    .slice(0, 10);
-
-  // Top Events: Fetch flagship Figma events explicitly first
-  const flagshipNames = ['Behind You - Running RR', 'Tried-Jump', 'WAR-E-Man', 'Trocfy'];
-  const flagshipEvents = await prisma.event.findMany({
-    where: {
-      name: { in: flagshipNames }
-    },
+  // 4. Fetch all published events from database
+  const allPublishedEvents = await prisma.event.findMany({
+    where: { status: 'PUBLISHED' },
     include: {
       creator: {
         select: { id: true, name: true, avatarData: true }
@@ -145,76 +123,107 @@ export default async function CompetitionsPage({ searchParams }: { searchParams:
       _count: {
         select: { registrations: true }
       }
-    }
+    },
+    orderBy: { startDate: 'desc' }
   });
 
-  const orderedFlagships = flagshipNames
-    .map(name => flagshipEvents.find(e => e.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(e.name.toLowerCase())))
-    .filter(Boolean);
+  const flagshipNames = ['Behind You - Running RR', 'Tried-Jump', 'WAR-E-Man', 'Trocfy'];
 
-  const topEventsCombined = [
-    ...orderedFlagships,
-    ...scoredEvents
-      .sort((a, b) => (b.popularity + b.score * 10) - (a.popularity + a.score * 10))
-      .map(item => item.event)
-      .filter(e => !orderedFlagships.some(fe => fe && fe.id === e.id))
-  ].slice(0, 15);
+  // 5. Sort "Competition for you" matching user's profession
+  const scoredForYou = [...allPublishedEvents].sort((a, b) => {
+    const aText = `${a.name} ${a.description || ''} ${a.category || ''}`.toLowerCase();
+    const bText = `${b.name} ${b.description || ''} ${b.category || ''}`.toLowerCase();
 
-  // Fetch Current User's registrations to pass state down
-  const userRegistrations = await prisma.eventRegistration.findMany({
-    where: { userId }
+    let scoreA = 0;
+    let scoreB = 0;
+
+    // Prioritize flagship events
+    if (flagshipNames.some(fn => a.name.toLowerCase().includes(fn.toLowerCase()))) scoreA += 50;
+    if (flagshipNames.some(fn => b.name.toLowerCase().includes(fn.toLowerCase()))) scoreB += 50;
+
+    // Match with user profession
+    userProfessionKeywords.forEach(kw => {
+      if (aText.includes(kw)) scoreA += 15;
+      if (bText.includes(kw)) scoreB += 15;
+    });
+
+    scoreA += (a._count.registrations || 0);
+    scoreB += (b._count.registrations || 0);
+
+    return scoreB - scoreA;
   });
-  const registeredEventIds = userRegistrations.map(r => r.eventId);
 
-  const { getLeaderboard } = await import('@/lib/ranking-service');
-  
-  const userCountry = currentUser?.country || undefined;
-  const userState = currentUser?.state || undefined;
-  const userCity = currentUser?.city || currentUser?.district || undefined;
+  // Top 8 events for "Competition for you"
+  const forYouList = scoredForYou.slice(0, 12);
+  const forYouIds = new Set(forYouList.map(e => e.id));
 
-  const [intlTop, natTop, stateTop, distTop] = await Promise.all([
-    getLeaderboard('INTERNATIONAL', undefined, 10),
-    getLeaderboard('NATIONAL', userCountry, 10),
-    getLeaderboard('STATE', userState, 10),
-    getLeaderboard('DISTRICT', userCity, 10),
-  ]);
+  // 6. Sort "Other Competition" matching user's hobbies & interests
+  const otherCandidates = allPublishedEvents.filter(e => !forYouIds.has(e.id));
+  const scoredOther = [...otherCandidates].sort((a, b) => {
+    const aText = `${a.name} ${a.description || ''} ${a.category || ''}`.toLowerCase();
+    const bText = `${b.name} ${b.description || ''} ${b.category || ''}`.toLowerCase();
 
-  const rankingData = {
-    International: intlTop,
-    National: natTop,
-    State: stateTop,
-    District: distTop
-  };
+    let scoreA = 0;
+    let scoreB = 0;
+
+    // Match with user hobbies
+    userHobbyKeywords.forEach(kw => {
+      if (aText.includes(kw)) scoreA += 15;
+      if (bText.includes(kw)) scoreB += 15;
+    });
+
+    scoreA += (a._count.registrations || 0);
+    scoreB += (b._count.registrations || 0);
+
+    return scoreB - scoreA;
+  });
+
+  // Format cards
+  const formattedForYou = forYouList.map((e, idx) => formatEventToCard(e, idx));
+  const formattedOther = scoredOther.map((e, idx) => formatEventToCard(e, idx + forYouList.length));
+  const formattedAll = allPublishedEvents.map((e, idx) => formatEventToCard(e, idx));
 
   return (
-    <div style={{
-      width: '100%',
-      minHeight: '100vh',
-      backgroundColor: '#000000',
-      color: '#FFFFFF',
-      display: 'flex',
-      justifyContent: 'flex-start',
-      overflowX: 'hidden'
-    }}>
-      {/* 3-COLUMN WRAPPER (Fluid layout, zero horizontal overflow) */}
+    <div
+      className="competitions-page-container"
+      style={{
+        width: '100%',
+        height: '100vh',
+        maxHeight: '100vh',
+        backgroundColor: '#0A0A0A',
+        color: '#FFFFFF',
+        display: 'flex',
+        justifyContent: 'flex-start',
+        overflow: 'hidden'
+      }}
+    >
       <div style={{
         width: '100%',
+        height: '100vh',
         minWidth: 0,
         display: 'flex',
-        minHeight: '100vh',
-        overflowX: 'hidden'
+        overflow: 'hidden'
       }}>
-        <CompetitionsClient 
-          followingEvents={followingEvents}
-          suggestedEvents={suggestedEvents}
-          topEvents={topEventsCombined}
-          searchResults={searchResults}
-          initialSearchQuery={searchQuery}
-          rankingData={rankingData}
-          currentUser={currentUser}
-          registeredEventIds={registeredEventIds}
-        />
-        {/* Right Rail: User Profile Card & Joined Competitions */}
+        {/* Center Main Content Area (Only this area scrolls independently) */}
+        <div style={{
+          flex: 1,
+          height: '100vh',
+          minWidth: 0,
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflowY: 'auto',
+          overflowX: 'hidden'
+        }}>
+          <CompetitionsClient
+            forYouCompetitions={formattedForYou}
+            otherCompetitions={formattedOther}
+            allCompetitions={formattedAll}
+            userId={userId}
+          />
+        </div>
+
+        {/* Right Sidebar (Stationary Server Component, does not scroll with center) */}
         <AppRightSidebar userId={userId} mode="competitions" />
       </div>
     </div>

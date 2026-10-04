@@ -76,14 +76,13 @@ export default function Sidebar({
     { href: '/home', label: 'Home', icon: Home },
     { href: '/feed', label: 'Feed', icon: PlaySquare },
     { href: '/search', label: 'Explore', icon: LayoutGrid },
-    { href: '/competitions', label: 'Competitions', icon: Trophy },
     { href: '/create', label: 'Create', icon: PlusSquare },
     { href: '/messages', label: 'Messages', icon: MessageCircle },
     { href: '/notifications', label: 'Notification', icon: Bell, badge: displayUnread },
   ];
 
   const secondaryItems = [
-    { href: '/communities', label: 'Communities', icon: Globe },
+    { href: '/communities', label: 'Communites', icon: Globe },
     { href: '/network', label: 'Network', icon: Share2 },
   ];
 
@@ -208,192 +207,32 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* Bottom Section: Settings & "More" Menu matching Instagram Web */}
-      <div ref={moreMenuRef} style={{ marginTop: 'auto', paddingTop: '16px', position: 'relative' }}>
-        {/* Instagram Style "More" Floating Popover Menu */}
-        {showMoreMenu && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '56px',
-              left: 0,
-              width: '240px',
-              backgroundColor: '#1E1E22',
-              borderRadius: '16px',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              boxShadow: '0 16px 48px rgba(0, 0, 0, 0.85)',
-              padding: '8px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px',
-              zIndex: 100,
-              animation: 'fadeInUp 0.18s cubic-bezier(0.16, 1, 0.3, 1)'
-            }}
-          >
-            <Link
-              href="/settings"
-              onClick={() => setShowMoreMenu(false)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                padding: '10px 14px',
-                borderRadius: '10px',
-                color: '#FFFFFF',
-                textDecoration: 'none',
-                fontSize: '14px',
-                fontWeight: 500,
-                transition: 'background-color 0.12s ease'
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              <Settings size={18} />
-              <span>Settings</span>
-            </Link>
-
-            <Link
-              href="/saved?tab=liked"
-              onClick={() => setShowMoreMenu(false)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                padding: '10px 14px',
-                borderRadius: '10px',
-                color: '#FFFFFF',
-                textDecoration: 'none',
-                fontSize: '14px',
-                fontWeight: 500,
-                transition: 'background-color 0.12s ease'
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              <Activity size={18} />
-              <span>Your activity</span>
-            </Link>
-
-            <Link
-              href="/saved?tab=saved"
-              onClick={() => setShowMoreMenu(false)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                padding: '10px 14px',
-                borderRadius: '10px',
-                color: '#FFFFFF',
-                textDecoration: 'none',
-                fontSize: '14px',
-                fontWeight: 500,
-                transition: 'background-color 0.12s ease'
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              <Bookmark size={18} />
-              <span>Saved</span>
-            </Link>
-
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                padding: '10px 14px',
-                borderRadius: '10px',
-                color: '#A1A1AA',
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'background-color 0.12s ease'
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              <Moon size={18} />
-              <span>Dark appearance (Active)</span>
-            </div>
-
-            <Link
-              href="/settings"
-              onClick={() => setShowMoreMenu(false)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                padding: '10px 14px',
-                borderRadius: '10px',
-                color: '#FFFFFF',
-                textDecoration: 'none',
-                fontSize: '14px',
-                fontWeight: 500,
-                transition: 'background-color 0.12s ease'
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              <AlertCircle size={18} />
-              <span>Report a problem</span>
-            </Link>
-
-            {/* Divider */}
-            <div style={{ height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.08)', margin: '4px 0' }} />
-
-            <Link
-              href="/login"
-              onClick={() => setShowMoreMenu(false)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                padding: '10px 14px',
-                borderRadius: '10px',
-                color: '#EF4444',
-                textDecoration: 'none',
-                fontSize: '14px',
-                fontWeight: 600,
-                transition: 'background-color 0.12s ease'
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              <LogOut size={18} />
-              <span>Log out</span>
-            </Link>
-          </div>
-        )}
-
-        {/* More Trigger Button */}
-        <button
-          onClick={() => setShowMoreMenu(!showMoreMenu)}
+      {/* Bottom Section: Setting matching Figma */}
+      <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+        <Link
+          href="/settings"
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '16px',
             padding: '10px 12px',
             borderRadius: '12px',
-            border: 'none',
-            background: showMoreMenu ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-            color: showMoreMenu ? '#FFFFFF' : '#A1A1AA',
-            fontWeight: showMoreMenu ? 700 : 500,
+            textDecoration: 'none',
+            color: pathname === '/settings' ? '#FFFFFF' : '#A1A1AA',
+            fontWeight: pathname === '/settings' ? 700 : 400,
             fontSize: '15px',
-            cursor: 'pointer',
-            width: '100%',
-            textAlign: 'left',
             transition: 'all 0.15s ease'
           }}
           onMouseEnter={(e) => {
-            if (!showMoreMenu) e.currentTarget.style.color = '#FFFFFF';
+            if (pathname !== '/settings') e.currentTarget.style.color = '#FFFFFF';
           }}
           onMouseLeave={(e) => {
-            if (!showMoreMenu) e.currentTarget.style.color = '#A1A1AA';
+            if (pathname !== '/settings') e.currentTarget.style.color = '#A1A1AA';
           }}
         >
-          <Menu size={22} strokeWidth={showMoreMenu ? 2.4 : 1.8} />
-          <span>More</span>
-        </button>
+          <Settings size={20} strokeWidth={pathname === '/settings' ? 2.3 : 1.8} color={pathname === '/settings' ? '#FFFFFF' : '#A1A1AA'} />
+          <span>Setting</span>
+        </Link>
       </div>
     </aside>
   );

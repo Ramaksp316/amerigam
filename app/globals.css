@@ -2814,11 +2814,14 @@ body:has(.home-blueprint-layout) .main-content,
     gap: 10px !important;
   }
 }
-/* ─── COMMUNITY PAGE INDEPENDENT SCROLLING (Desktop Left/Right Fixed, Center Scroll) ─── */
+/* ─── COMMUNITY & COMPETITIONS INDEPENDENT SCROLLING (Desktop Left/Right Fixed, Center Scroll) ─── */
 @media (min-width: 1024px) {
   body:has(.community-page-container),
   body:has(.community-page-container) .app-layout,
-  body:has(.community-page-container) .main-content {
+  body:has(.community-page-container) .main-content,
+  body:has(.competitions-page-container),
+  body:has(.competitions-page-container) .app-layout,
+  body:has(.competitions-page-container) .main-content {
     height: 100vh !important;
     max-height: 100vh !important;
     overflow: hidden !important;

@@ -1,530 +1,473 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { Search, Calendar, MapPin, Trophy } from 'lucide-react';
+import { Search, Calendar, MapPin, X, ChevronDown } from 'lucide-react';
+import { CompetitionCardData } from './page';
 
 export default function CompetitionsClient({
-  followingEvents = [],
-  suggestedEvents = [],
-  topEvents = [],
-  searchResults = [],
-  initialSearchQuery = '',
-  currentUser,
-  registeredEventIds = []
+  forYouCompetitions = [],
+  otherCompetitions = [],
+  allCompetitions = [],
+  userId
 }: {
-  followingEvents?: any[];
-  suggestedEvents?: any[];
-  topEvents?: any[];
-  searchResults?: any[];
-  initialSearchQuery?: string;
-  rankingData?: any;
-  currentUser?: any;
-  registeredEventIds?: string[];
+  forYouCompetitions: CompetitionCardData[];
+  otherCompetitions: CompetitionCardData[];
+  allCompetitions: CompetitionCardData[];
+  userId: string;
 }) {
-  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [visibleForYouLines, setVisibleForYouLines] = useState(1); // 1 line = 4 cards
+  const [visibleOtherLines, setVisibleOtherLines] = useState(1);   // 1 line = 4 cards
 
-  // Gather all unique real events from database
-  const allEventsList = [
-    ...(searchResults && searchResults.length > 0 ? searchResults : []),
-    ...(topEvents || []),
-    ...(suggestedEvents || []),
-    ...(followingEvents || [])
-  ];
+  // Search filtering
+  const query = searchQuery.trim().toLowerCase();
+  const searchResults = query
+    ? allCompetitions.filter(c =>
+        c.title.toLowerCase().includes(query) ||
+        (c.category && c.category.toLowerCase().includes(query)) ||
+        c.location.toLowerCase().includes(query)
+      )
+    : null;
 
-  const uniqueEventsMap = new Map();
-  allEventsList.forEach((e) => {
-    if (e && e.id && !uniqueEventsMap.has(e.id)) {
-      uniqueEventsMap.set(e.id, e);
-    }
-  });
-  const realEvents = Array.from(uniqueEventsMap.values());
+  // Sliced items according to visible lines
+  const displayedForYou = forYouCompetitions.slice(0, visibleForYouLines * 4);
+  const displayedOther = otherCompetitions.slice(0, visibleOtherLines * 4);
 
-  const figmaNamesOrder = [
-    'Behind You - Running RR',
-    'Behind You',
-    'Tried-Jump',
-    'WAR-E-Man',
-    'Trocfy'
-  ];
+  const renderCard = (comp: CompetitionCardData) => (
+    <Link
+      key={comp.id}
+      href={`/competitions/${comp.id}`}
+      style={{
+        width: '176px',
+        height: '321px',
+        backgroundColor: '#212121',
+        borderRadius: '22px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        textDecoration: 'none',
+        boxShadow: '0.3px 0.3px 1px rgba(255, 255, 255, 0.3) inset, 0.7px 0.5px 1.2px black',
+        transition: 'transform 0.15s ease, filter 0.15s ease',
+        flexShrink: 0
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-3px)';
+        e.currentTarget.style.filter = 'brightness(1.06)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.filter = 'brightness(1)';
+      }}
+    >
+      {/* Poster Image 176x234 matching exact Figma dimensions */}
+      <div style={{
+        width: '176px',
+        height: '234px',
+        position: 'relative',
+        overflow: 'hidden',
+        backgroundColor: '#161616',
+        flexShrink: 0
+      }}>
+        <img
+          src={comp.poster}
+          alt={comp.title}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+        {/* Top-Right Watermark Logo */}
+        <div style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          opacity: 0.9,
+          zIndex: 2,
+          pointerEvents: 'none'
+        }}>
+          <img
+            src="/amerigam-logo-transparent.png"
+            alt="logo"
+            style={{ width: '18px', height: '10px', objectFit: 'contain' }}
+          />
+        </div>
+      </div>
 
-  const sortedRealEvents = [...realEvents].sort((a, b) => {
-    const aIndex = figmaNamesOrder.findIndex(name => (a.name || '').toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes((a.name || '').toLowerCase()));
-    const bIndex = figmaNamesOrder.findIndex(name => (b.name || '').toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes((b.name || '').toLowerCase()));
-    if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-    if (aIndex !== -1) return -1;
-    if (bIndex !== -1) return 1;
-    return 0;
-  });
+      {/* Bottom Meta Content (Exact Figma Typography & Colors) */}
+      <div style={{
+        padding: '10px 10px 12px 10px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        flex: 1,
+        boxSizing: 'border-box'
+      }}>
+        {/* Row 1: Date & Location */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+            <Calendar size={9} color="#D2FE0F" />
+            <span style={{
+              color: '#D2FE0F',
+              fontSize: '8px',
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 400,
+              whiteSpace: 'nowrap'
+            }}>
+              {comp.date}
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <MapPin size={8} color="#CDCDCD" />
+            <span style={{
+              color: '#CDCDCD',
+              fontSize: '6px',
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 400,
+              whiteSpace: 'nowrap',
+              textTransform: 'uppercase'
+            }}>
+              {comp.location}
+            </span>
+          </div>
+        </div>
 
-  const fallbackPosters = [
-    '/images/competitions/poster_comp_1.png',
-    '/images/competitions/poster_comp_2.png',
-    '/images/competitions/poster_comp_3.png',
-    '/images/competitions/poster_comp_4.png'
-  ];
+        {/* Row 2: Title */}
+        <div style={{
+          color: '#FFFFFF',
+          fontSize: '13px',
+          fontFamily: 'Inter, sans-serif',
+          fontWeight: 700,
+          lineHeight: '1.25',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          marginTop: '4px'
+        }}>
+          {comp.title}
+        </div>
 
-  const formatEventCard = (e: any, index: number) => {
-    const lowerName = (e.name || '').toLowerCase();
-    
-    // Explicit exact Figma match overrides for the 4 flagship competitions
-    if (lowerName.includes('behind you')) {
-      return {
-        id: e.id,
-        title: 'Behind You - Running...',
-        date: 'SEP 8 2026 7:00AM',
-        location: 'SURAT',
-        prize: 'AP 150-$50',
-        prizeLabel: '/ Winner price',
-        posterSrc: '/images/competitions/poster_comp_1.png',
-        hasCoverImage: true
-      };
-    }
-    if (lowerName.includes('tried-jump')) {
-      return {
-        id: e.id,
-        title: 'Tried-Jump',
-        date: 'OCT 11 2026 9:00AM',
-        location: 'AHMEDABAD',
-        prize: 'AP 100-$20',
-        prizeLabel: '/ Winner price',
-        posterSrc: '/images/competitions/poster_comp_2.png',
-        hasCoverImage: true
-      };
-    }
-    if (lowerName.includes('war-e-man')) {
-      return {
-        id: e.id,
-        title: 'WAR-E-Man',
-        date: 'SEP 8 2026 8:00AM',
-        location: 'SURAT',
-        prize: 'AP 250-$60',
-        prizeLabel: '/ Winner price',
-        posterSrc: '/images/competitions/poster_comp_3.png',
-        hasCoverImage: true
-      };
-    }
-    if (lowerName.includes('trocfy')) {
-      return {
-        id: e.id,
-        title: 'Trocfy',
-        date: 'SEP 8 2026 7:00AM',
-        location: 'SURAT',
-        prize: 'AP 150-$50',
-        prizeLabel: '/ Winner price',
-        posterSrc: '/images/competitions/poster_comp_4.png',
-        hasCoverImage: true
-      };
-    }
-
-    const startDate = e.startDate ? new Date(e.startDate) : new Date();
-    const formattedDate = startDate.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    }).toUpperCase();
-    const formattedTime = startDate.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    }).replace(' ', '');
-
-    const locationStr = (e.city || (e.venue ? e.venue.split(',')[0] : 'SURAT') || 'SURAT').toUpperCase();
-    const rawPrize = e.prizePool ? e.prizePool.split('\n')[0].trim() : '';
-    const prizeStr = rawPrize || (e.entryFee && e.entryFee > 0 ? `AP ${e.entryFee * 3}-$${e.entryFee}` : 'AP 150-$50');
-    const posterSrc = e.coverImage || fallbackPosters[index % fallbackPosters.length];
-
-    return {
-      id: e.id,
-      title: e.name || 'Amerigam Championship',
-      date: `${formattedDate} ${formattedTime}`,
-      location: locationStr,
-      prize: prizeStr,
-      prizeLabel: '/ Winner price',
-      posterSrc: posterSrc,
-      hasCoverImage: !!e.coverImage
-    };
-  };
-
-  // 1. Featured cards: first 4 real events (Figma flagship events first)
-  const featuredCompetitions = sortedRealEvents.slice(0, 4).map((e, i) => formatEventCard(e, i));
-
-  // 2. Other cards: next real events from database
-  const otherCompetitions = sortedRealEvents.slice(4, 12).map((e, i) => formatEventCard(e, i + 4));
+        {/* Row 3: AP Prize */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+          <span style={{
+            color: '#D2FE0F',
+            fontSize: '8px',
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: 700
+          }}>
+            {comp.prize}
+          </span>
+          <span style={{
+            color: '#CDCDCD',
+            fontSize: '6px',
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: 400
+          }}>
+            /winner price
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
 
   return (
     <div style={{
-      flex: 1,
-      minWidth: 0,
-      borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+      width: '100%',
+      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      paddingBottom: '80px',
-      overflowX: 'hidden'
+      position: 'relative',
+      paddingBottom: '40px',
+      boxSizing: 'border-box'
     }}>
-          
-          {/* 1. TOP CENTER SEARCH PILL (Exact Figma match) */}
-          <div className="responsive-search-pill" style={{
-            height: '64px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '0 24px',
-            position: 'sticky',
-            top: 0,
-            backgroundColor: '#000000',
-            zIndex: 40
-          }}>
-            <div style={{
-              width: '440px',
-              maxWidth: '100%',
-              height: '40px',
-              borderRadius: '999px',
-              backgroundColor: 'rgba(24, 25, 30, 0.85)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255, 255, 255, 0.18)',
-              display: 'flex',
-              alignItems: 'center',
-              padding: '0 16px',
-              gap: '10px',
-              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.25)',
-              transition: 'all 0.2s ease'
-            }}>
-              <Search size={16} color="#8E8E93" style={{ flexShrink: 0 }} />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#FFFFFF',
-                  fontSize: '14px',
-                  width: '100%',
-                  outline: 'none',
-                  fontFamily: 'inherit'
-                }}
-              />
+
+      {/* ========================================================
+          TOP SEARCH BAR (Exact Figma: width 772px, height 38px, borderRadius 33px)
+         ======================================================== */}
+      <div style={{
+        width: '100%',
+        padding: '16px 20px',
+        display: 'flex',
+        justifyContent: 'center',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{
+          width: '772px',
+          maxWidth: '100%',
+          height: '38px',
+          backgroundColor: '#212121',
+          borderRadius: '33px',
+          boxShadow: '0.1px 0.03px 0.2px white inset, 0.7px 0.5px 1.2px black',
+          outline: '1px #454545 solid',
+          outlineOffset: '-0.5px',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 18px',
+          gap: '12px',
+          boxSizing: 'border-box'
+        }}>
+          <Search size={15} color="#CDCDCD" style={{ flexShrink: 0 }} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search competitions, venues, or categories..."
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'white',
+              fontSize: '14px',
+              width: '100%',
+              outline: 'none',
+              fontFamily: 'Inter, sans-serif'
+            }}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#AFAFAF',
+                cursor: 'pointer',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ========================================================
+          MAIN CONTENT AREA (Strictly 772px wide matching Figma blueprint)
+         ======================================================== */}
+      <div style={{
+        width: '772px',
+        maxWidth: '100%',
+        margin: '0 auto',
+        padding: '0 16px',
+        display: 'flex',
+        flexDirection: 'column',
+        boxSizing: 'border-box'
+      }}>
+
+        {/* SEARCH RESULTS VIEW */}
+        {searchResults ? (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h2 style={{
+                color: 'white',
+                fontSize: '15px',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 200,
+                margin: 0
+              }}>
+                Search Results ({searchResults.length})
+              </h2>
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{ background: 'none', border: 'none', color: '#D2FE0F', fontSize: '12px', cursor: 'pointer' }}
+              >
+                Clear Search
+              </button>
             </div>
+
+            {searchResults.length === 0 ? (
+              <div style={{
+                padding: '40px 20px',
+                textAlign: 'center',
+                background: '#212121',
+                borderRadius: '22px',
+                color: '#AFAFAF',
+                fontSize: '14px'
+              }}>
+                No competitions found matching &quot;{searchQuery}&quot;. Try another search!
+              </div>
+            ) : (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 176px)',
+                gap: '16px 22px',
+                justifyContent: 'center'
+              }}>
+                {searchResults.map(renderCard)}
+              </div>
+            )}
           </div>
-
-          {/* MAIN PAGE BODY */}
-          <div className="responsive-page-container">
-
+        ) : (
+          <>
             {/* ========================================================
-                SECTION 1: "Competition for you"
+                SECTION 1: "Competition for you" (Matching Profession)
+                Exact Figma: fontSize 15, fontWeight 200, color white
+                Grid: 4 Columns x 176px, gap 16px vertical, 22px horizontal
                ======================================================== */}
             <div>
-              <h2 style={{
-                fontSize: '18px',
-                fontWeight: 600,
-                color: '#FFFFFF',
-                margin: '0 0 16px 0',
-                letterSpacing: '-0.2px'
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '16px'
               }}>
-                Competition for you
-              </h2>
+                <h2 style={{
+                  color: 'white',
+                  fontSize: '15px',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 200,
+                  margin: 0,
+                  wordWrap: 'break-word'
+                }}>
+                  Competition for you
+                </h2>
 
-              {/* Responsive Cards Grid */}
-              <div className="competitions-responsive-grid">
-                {featuredCompetitions.map((comp) => (
-                  <Link
-                    key={comp.id}
-                    href={`/competitions/${comp.id}`}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <div style={{
-                      backgroundColor: '#18181B',
-                      borderRadius: '22px',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      overflow: 'hidden',
+                {forYouCompetitions.length > displayedForYou.length && (
+                  <button
+                    onClick={() => setVisibleForYouLines(prev => prev + 3)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#FFFFFF',
+                      borderRadius: '16px',
+                      padding: '3px 12px',
+                      fontSize: '11px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
                       display: 'flex',
-                      flexDirection: 'column',
-                      boxShadow: '0 14px 32px rgba(0, 0, 0, 0.7)',
-                      transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease',
-                      cursor: 'pointer'
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'background 0.2s'
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-4px)';
-                      e.currentTarget.style.boxShadow = '0 18px 42px rgba(0, 0, 0, 0.9), 0 0 20px rgba(197, 248, 42, 0.18)';
-                      e.currentTarget.style.borderColor = 'rgba(197, 248, 42, 0.4)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 14px 32px rgba(0, 0, 0, 0.7)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                    }}
-                    >
-                      {/* Top Poster Image (Exact from Figma) */}
-                      <div style={{
-                        width: '100%',
-                        aspectRatio: '135 / 185',
-                        overflow: 'hidden',
-                        position: 'relative',
-                        backgroundColor: '#111113'
-                      }}>
-                        <img
-                          src={comp.posterSrc}
-                          alt={comp.title}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            display: 'block'
-                          }}
-                        />
-                        {/* Amerigam Watermark icon in top-right */}
-                        <div style={{
-                          position: 'absolute',
-                          top: '10px',
-                          right: '10px',
-                          opacity: 0.9,
-                          zIndex: 2,
-                          pointerEvents: 'none'
-                        }}>
-                          <img
-                            src="/amerigam-logo-transparent.png"
-                            alt="logo"
-                            style={{ width: '22px', height: '12px', objectFit: 'contain' }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Bottom Meta Content */}
-                      <div style={{
-                        padding: '12px 14px 16px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px'
-                      }}>
-                        {/* Date & Location Row (Neon Lime) */}
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          fontSize: '10px',
-                          fontWeight: 700
-                        }}>
-                          <span style={{
-                            color: '#C5F82A',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            letterSpacing: '0.02em',
-                            textShadow: '0 0 8px rgba(197, 248, 42, 0.3)'
-                          }}>
-                            📅 {comp.date}
-                          </span>
-                          <span style={{
-                            color: '#A1A1AA',
-                            fontSize: '9px',
-                            fontWeight: 600,
-                            letterSpacing: '0.03em'
-                          }}>
-                            📍 {comp.location}
-                          </span>
-                        </div>
-
-                        {/* Title */}
-                        <div style={{
-                          fontSize: '13px',
-                          fontWeight: 700,
-                          color: '#FFFFFF',
-                          lineHeight: '1.25',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          marginTop: '2px'
-                        }}>
-                          {comp.title}
-                        </div>
-
-                        {/* Prize Row (Neon Lime) */}
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          fontSize: '11px',
-                          fontWeight: 800,
-                          marginTop: '2px'
-                        }}>
-                          <span style={{
-                            color: '#C5F82A',
-                            textShadow: '0 0 8px rgba(197, 248, 42, 0.3)'
-                          }}>
-                            {comp.prize}
-                          </span>
-                          <span style={{
-                            color: '#71717A',
-                            fontSize: '10px',
-                            fontWeight: 500
-                          }}>
-                            {comp.prizeLabel}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                  >
+                    More <ChevronDown size={12} />
+                  </button>
+                )}
               </div>
+
+              {displayedForYou.length === 0 ? (
+                <div style={{
+                  padding: '30px',
+                  textAlign: 'center',
+                  background: '#212121',
+                  borderRadius: '22px',
+                  color: '#AFAFAF',
+                  fontSize: '13px'
+                }}>
+                  No profession-matched competitions at the moment. Explore other competitions below!
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(4, 176px)',
+                  gap: '16px 22px',
+                  justifyContent: 'center'
+                }}>
+                  {displayedForYou.map(renderCard)}
+                </div>
+              )}
             </div>
 
             {/* ========================================================
-                SECTION 2: "Other Competition" (Exact match to Figma media_1789994884346.png)
+                SECTION 2: "Other Competition" (Matching Hobbies & General)
+                Exact Figma: fontSize 15, fontWeight 200, color white
+                Grid: 4 Columns x 176px, gap 16px vertical, 22px horizontal
                ======================================================== */}
-            <div>
-              <h2 style={{
-                fontSize: '18px',
-                fontWeight: 600,
-                color: '#FFFFFF',
-                margin: '0 0 16px 0',
-                letterSpacing: '-0.2px'
+            <div style={{ marginTop: '28px' }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '16px'
               }}>
-                Other Competition
-              </h2>
+                <h2 style={{
+                  color: 'white',
+                  fontSize: '15px',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 200,
+                  margin: 0,
+                  wordWrap: 'break-word'
+                }}>
+                  Other Competition
+                </h2>
 
-              {/* 4 Charcoal Skeleton Placeholder Cards matching Figma */}
-              <div className="competitions-responsive-grid">
-                {[0, 1, 2, 3].map((idx) => {
-                  const linkedComp = otherCompetitions[idx] || featuredCompetitions[idx];
-                  const linkHref = linkedComp?.id ? `/competitions/${linkedComp.id}` : '#';
-
-                  return (
-                    <Link
-                      key={idx}
-                      href={linkHref}
-                      style={{ textDecoration: 'none' }}
-                    >
-                      <div
-                        style={{
-                          backgroundColor: '#1E1E22',
-                          borderRadius: '22px',
-                          border: '1px solid rgba(255, 255, 255, 0.08)',
-                          overflow: 'hidden',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          boxShadow: '0 14px 32px rgba(0, 0, 0, 0.7)',
-                          transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease',
-                          cursor: 'pointer'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-4px)';
-                          e.currentTarget.style.boxShadow = '0 18px 42px rgba(0, 0, 0, 0.9), 0 0 20px rgba(197, 248, 42, 0.15)';
-                          e.currentTarget.style.borderColor = 'rgba(197, 248, 42, 0.35)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 14px 32px rgba(0, 0, 0, 0.7)';
-                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                        }}
-                      >
-                        {/* Dark Charcoal Top Poster Box matching Figma */}
-                        <div style={{
-                          width: '100%',
-                          aspectRatio: '135 / 185',
-                          position: 'relative',
-                          backgroundColor: '#3E3E42',
-                          overflow: 'hidden'
-                        }}>
-                          {/* Corner Amerigam watermark icon */}
-                          <div style={{
-                            position: 'absolute',
-                            top: '10px',
-                            right: '10px',
-                            opacity: 0.9,
-                            zIndex: 2,
-                            pointerEvents: 'none'
-                          }}>
-                            <img
-                              src="/amerigam-logo-transparent.png"
-                              alt="logo"
-                              style={{ width: '22px', height: '12px', objectFit: 'contain' }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Bottom Skeleton Content matching Figma */}
-                        <div style={{
-                          padding: '12px 14px 16px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '8px',
-                          backgroundColor: '#1E1E22'
-                        }}>
-                          {/* Date & Location Skeleton Line Row */}
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            fontSize: '10px'
-                          }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <span style={{ fontSize: '10px' }}>📅</span>
-                              <div style={{
-                                width: '58px',
-                                height: '3px',
-                                backgroundColor: '#C5F82A',
-                                borderRadius: '999px',
-                                boxShadow: '0 0 6px rgba(197, 248, 42, 0.4)'
-                              }} />
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                              <span style={{ fontSize: '9px' }}>📍</span>
-                              <div style={{
-                                width: '26px',
-                                height: '3px',
-                                backgroundColor: '#52525B',
-                                borderRadius: '999px'
-                              }} />
-                            </div>
-                          </div>
-
-                          {/* Title Skeleton Line */}
-                          <div style={{
-                            width: '80px',
-                            height: '3.5px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.85)',
-                            borderRadius: '999px',
-                            margin: '4px 0 2px'
-                          }} />
-
-                          {/* Prize Row matching Figma: AP ______ / Winner price */}
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            fontSize: '11px',
-                            fontWeight: 800,
-                            marginTop: '2px'
-                          }}>
-                            <span style={{
-                              color: '#C5F82A',
-                              textShadow: '0 0 8px rgba(197, 248, 42, 0.3)',
-                              letterSpacing: '0.02em'
-                            }}>
-                              AP <span style={{ textDecoration: 'underline', letterSpacing: '2px' }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                            </span>
-                            <span style={{
-                              color: '#71717A',
-                              fontSize: '10px',
-                              fontWeight: 500
-                            }}>
-                              / Winner price
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
+                {otherCompetitions.length > displayedOther.length && (
+                  <button
+                    onClick={() => setVisibleOtherLines(prev => prev + 3)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#FFFFFF',
+                      borderRadius: '16px',
+                      padding: '3px 12px',
+                      fontSize: '11px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                  >
+                    More <ChevronDown size={12} />
+                  </button>
+                )}
               </div>
-            </div>
 
-          </div>
+              {displayedOther.length === 0 ? (
+                <div style={{
+                  padding: '30px',
+                  textAlign: 'center',
+                  background: '#212121',
+                  borderRadius: '22px',
+                  color: '#AFAFAF',
+                  fontSize: '13px'
+                }}>
+                  No other competitions available currently.
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(4, 176px)',
+                  gap: '16px 22px',
+                  justifyContent: 'center'
+                }}>
+                  {displayedOther.map(renderCard)}
+                </div>
+              )}
+
+              {/* Bottom "More" Button that expands by 3 lines (12 cards) */}
+              {otherCompetitions.length > displayedOther.length && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
+                  <button
+                    onClick={() => setVisibleOtherLines(prev => prev + 3)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#FFFFFF',
+                      borderRadius: '20px',
+                      padding: '8px 28px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'background 0.2s ease, transform 0.1s ease'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+                  >
+                    More Competitions <ChevronDown size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+      </div>
     </div>
   );
 }
