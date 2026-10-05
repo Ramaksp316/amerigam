@@ -2814,21 +2814,119 @@ body:has(.home-blueprint-layout) .main-content,
     gap: 10px !important;
   }
 }
-/* ─── COMMUNITY & COMPETITIONS INDEPENDENT SCROLLING (Desktop Left/Right Fixed, Center Scroll) ─── */
+/* ─── DESKTOP FIXED SIDEBARS & INDEPENDENT CENTER SCROLLING (Desktop Left/Right Fixed, Center Scroll) ─── */
 @media (min-width: 1024px) {
+  body:has(.home-blueprint-layout),
+  body:has(.home-blueprint-layout) .app-layout,
+  body:has(.home-blueprint-layout) .main-content,
+  body:has(.user-profile-layout-container),
+  body:has(.user-profile-layout-container) .app-layout,
+  body:has(.user-profile-layout-container) .main-content,
   body:has(.community-page-container),
   body:has(.community-page-container) .app-layout,
   body:has(.community-page-container) .main-content,
   body:has(.competitions-page-container),
   body:has(.competitions-page-container) .app-layout,
-  body:has(.competitions-page-container) .main-content {
+  body:has(.competitions-page-container) .main-content,
+  body:has(.network-page-container),
+  body:has(.network-page-container) .app-layout,
+  body:has(.network-page-container) .main-content,
+  body:has(.explore-page-container),
+  body:has(.explore-page-container) .app-layout,
+  body:has(.explore-page-container) .main-content {
     height: 100vh !important;
     max-height: 100vh !important;
     overflow: hidden !important;
   }
 
+  /* HOME BLUEPRINT LAYOUT */
+  .home-blueprint-layout {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  .home-main-container {
+    height: calc(100vh - 58px) !important;
+    max-height: calc(100vh - 58px) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+  }
+  .home-center-column {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-gutter: stable;
+  }
+
+  /* USER PROFILE PAGE */
+  .user-profile-layout-container {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    width: 100% !important;
+  }
+  .user-profile-center-column {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-gutter: stable;
+  }
+  .user-profile-right-rail {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    position: sticky !important;
+    top: 0 !important;
+  }
+
+  /* NETWORK PAGE */
+  .network-page-container {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    width: 100% !important;
+  }
+  .network-center-column {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-gutter: stable;
+  }
+
+  /* EXPLORE / SEARCH PAGE */
+  .explore-page-container {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    width: 100% !important;
+  }
+  .explore-center-column {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-gutter: stable;
+  }
+
+  /* HIDE FLOATING DOCK ON DESKTOP */
   body:has(.community-page-container) .floating-dock-nav,
-  body:has(.competitions-page-container) .floating-dock-nav {
+  body:has(.competitions-page-container) .floating-dock-nav,
+  body:has(.user-profile-layout-container) .floating-dock-nav,
+  body:has(.network-page-container) .floating-dock-nav,
+  body:has(.explore-page-container) .floating-dock-nav,
+  body:has(.home-blueprint-layout) .floating-dock-nav {
     display: none !important;
   }
 }
+

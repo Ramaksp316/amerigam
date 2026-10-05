@@ -253,17 +253,21 @@ export default async function ExplorePage({
   }
 
   return (
-    <div style={{
-      width: '100%',
-      minHeight: '100vh',
-      backgroundColor: '#000000',
-      color: '#FFFFFF',
-      display: 'flex',
-      justifyContent: 'center',
-      boxSizing: 'border-box'
-    }}>
+    <div
+      className="explore-page-container"
+      style={{
+        width: '100%',
+        minHeight: '100vh',
+        backgroundColor: '#000000',
+        color: '#FFFFFF',
+        display: 'flex',
+        justifyContent: 'center',
+        boxSizing: 'border-box'
+      }}
+    >
       {/* Center Main Content Area matching Image 2 Blueprint */}
       <div
+        className="explore-center-column"
         style={{
           flex: 1,
           maxWidth: '920px',

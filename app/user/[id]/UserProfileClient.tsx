@@ -244,13 +244,16 @@ export default function UserProfileClient({
   ];
 
   return (
-    <div style={{
-      display: 'flex',
-      width: '100%',
-      minHeight: '100vh',
-      backgroundColor: '#000000',
-      color: '#FFFFFF'
-    }}>
+    <div
+      className="user-profile-layout-container"
+      style={{
+        display: 'flex',
+        width: '100%',
+        minHeight: '100vh',
+        backgroundColor: '#000000',
+        color: '#FFFFFF'
+      }}
+    >
       {/* Toast Notification */}
       {toastMessage && (
         <div style={{
@@ -274,15 +277,18 @@ export default function UserProfileClient({
       )}
 
       {/* CENTER COLUMN: PROFILE BODY (Max width 740px) */}
-      <div style={{
-        flex: 1,
-        minWidth: 0,
-        maxWidth: '740px',
-        borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative'
-      }}>
+      <div
+        className="user-profile-center-column"
+        style={{
+          flex: 1,
+          minWidth: 0,
+          maxWidth: '740px',
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative'
+        }}
+      >
         
         {/* ============================================================
             SECTION 1: HERO HEADER (Exact match to Figma Profile Page 1)
@@ -1028,14 +1034,23 @@ export default function UserProfileClient({
       {/* ============================================================
           RIGHT RAIL: FIGMA RANK #1 BADGE CARD (node-id=164-284)
          ============================================================ */}
-      <div style={{
-        width: '320px',
-        flexShrink: 0,
-        padding: '36px 20px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '20px'
-      }} className="desktop-only">
+      <div
+        className="user-profile-right-rail desktop-only"
+        style={{
+          width: '320px',
+          flexShrink: 0,
+          padding: '36px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+          height: '100vh',
+          maxHeight: '100vh',
+          position: 'sticky',
+          top: 0,
+          overflowY: 'auto',
+          boxSizing: 'border-box'
+        }}
+      >
         
         {/* Figma Rank Card */}
         <FigmaRankCard
@@ -1539,6 +1554,43 @@ export default function UserProfileClient({
         </div>
       )}
 
+      {/* Desktop Fixed Sidebars & Independent Center Scroll */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            @media (min-width: 1024px) {
+              body:has(.user-profile-layout-container),
+              body:has(.user-profile-layout-container) .app-layout,
+              body:has(.user-profile-layout-container) .main-content {
+                height: 100vh !important;
+                max-height: 100vh !important;
+                overflow: hidden !important;
+              }
+              .user-profile-layout-container {
+                height: 100vh !important;
+                max-height: 100vh !important;
+                overflow: hidden !important;
+                display: flex !important;
+                width: 100% !important;
+              }
+              .user-profile-center-column {
+                height: 100vh !important;
+                max-height: 100vh !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                scrollbar-gutter: stable;
+              }
+              .user-profile-right-rail {
+                height: 100vh !important;
+                max-height: 100vh !important;
+                overflow-y: auto !important;
+                position: sticky !important;
+                top: 0 !important;
+              }
+            }
+          `
+        }}
+      />
     </div>
   );
 }

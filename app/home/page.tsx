@@ -427,6 +427,37 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <style
         dangerouslySetInnerHTML={{
           __html: `
+            @media (min-width: 1024px) {
+              body:has(.home-blueprint-layout),
+              body:has(.home-blueprint-layout) .app-layout,
+              body:has(.home-blueprint-layout) .main-content {
+                height: 100vh !important;
+                max-height: 100vh !important;
+                overflow: hidden !important;
+              }
+              .home-blueprint-layout {
+                height: 100vh !important;
+                max-height: 100vh !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+              }
+              .home-main-container {
+                height: calc(100vh - 58px) !important;
+                max-height: calc(100vh - 58px) !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex: 1 !important;
+                min-height: 0 !important;
+              }
+              .home-center-column {
+                height: 100% !important;
+                max-height: 100% !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                scrollbar-gutter: stable;
+              }
+            }
             @media (max-width: 1024px) {
               .home-center-column {
                 max-width: 100% !important;

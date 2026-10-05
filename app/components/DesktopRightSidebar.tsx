@@ -44,10 +44,11 @@ export default function DesktopRightSidebar({
         flexDirection: 'column',
         gap: '16px',
         position: 'sticky',
-        top: '68px',
-        height: 'fit-content',
-        maxHeight: 'calc(100vh - 75px)',
-        overflowY: 'auto'
+        top: '58px',
+        height: 'calc(100vh - 58px)',
+        maxHeight: 'calc(100vh - 58px)',
+        overflowY: 'auto',
+        boxSizing: 'border-box'
       }}
     >
       {/* ========================================================
