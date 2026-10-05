@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Plus, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import ProfilePicture from './ProfilePicture';
 
@@ -26,62 +25,86 @@ export default function DesktopRightSidebar({
   // Dynamic rating calculated proportionally from AP
   const rating = ap > 0 ? Math.min(9.9, +(5.0 + (ap / 600)).toFixed(1)) : '5.0';
 
+  // Identity / role title
+  const roleTitle = currentUser.creatorProfile?.creatorType || currentUser.personalProfile?.mainIdentity || 'Editor';
+
   // Communities slots logic: 4 primary slots
   const primaryCommunities = joinedCommunities.slice(0, 4);
   const remainingCommunities = joinedCommunities.slice(4);
 
   return (
-    <div
+    <aside
       className="layout-right desktop-only"
       style={{
-        width: '265px',
-        maxWidth: '270px',
-        padding: '16px 12px',
+        width: '246px',
+        maxWidth: '250px',
+        padding: '16px 8px',
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px'
+        gap: '16px',
+        position: 'sticky',
+        top: '68px',
+        height: 'fit-content',
+        maxHeight: 'calc(100vh - 75px)',
+        overflowY: 'auto'
       }}
     >
       {/* ========================================================
-          1. REAL PROFILE HIGHLIGHTS & COMMUNITIES BOARD
+          1. FIGMA USER STATUS CARD (226px x 196px matching Figma)
          ======================================================== */}
       <div
         style={{
-          backgroundColor: '#16181C',
-          borderRadius: '20px',
-          padding: '18px 16px',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6)',
+          width: '226px',
+          backgroundColor: '#212121',
+          borderRadius: '22px',
+          boxShadow: '0.3px 0.3px 1px rgba(255, 255, 255, 0.70) inset, 1px 1px 1.2px black',
+          padding: '16px 14px',
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
           position: 'relative'
         }}
       >
-        {/* Top: High-Clarity Profile Picture + Real Username + Stats */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          {/* HD Profile Picture (No glow, crisp clean border) */}
+        {/* Top: Rainbow Avatar + (Role Title + 3 Stats) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Avatar with Rainbow Ring matching Figma */}
           <Link href={`/user/${currentUser.id}`} style={{ textDecoration: 'none', flexShrink: 0 }}>
             <div
               style={{
-                width: '52px',
-                height: '52px',
+                width: '50px',
+                height: '50px',
                 borderRadius: '50%',
-                border: '1.5px solid rgba(255, 255, 255, 0.22)',
-                backgroundColor: '#1E1E22',
-                overflow: 'hidden',
-                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.5)'
+                padding: '2.5px',
+                background: 'linear-gradient(135deg, #EC4899, #EF4444, #F59E0B, #10B981, #3B82F6)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(236, 72, 153, 0.25)'
               }}
             >
-              <ProfilePicture user={currentUser} size={52} showStatus={false} />
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  backgroundColor: '#18181B'
+                }}
+              >
+                <ProfilePicture user={currentUser} size={45} showStatus={false} />
+              </div>
             </div>
           </Link>
 
-          {/* User Info & 3 Real Stats */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          {/* User Role Title + 3 Stats Row */}
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <Link href={`/user/${currentUser.id}`} style={{ textDecoration: 'none' }}>
               <div
                 style={{
-                  fontSize: '18px',
-                  fontWeight: 800,
+                  fontSize: '15px',
+                  fontWeight: 700,
                   color: '#FFFFFF',
                   lineHeight: '1.2',
                   whiteSpace: 'nowrap',
@@ -89,443 +112,301 @@ export default function DesktopRightSidebar({
                   textOverflow: 'ellipsis'
                 }}
               >
-                @{currentUser.username || 'user'}
+                {roleTitle}
               </div>
             </Link>
-            {currentUser.name && (
+
+            {/* 3 Real Stats Row */}
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'baseline' }}>
+              <div>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: '#FFFFFF' }}>#{userRank}</span>{' '}
+                <span style={{ fontSize: '9px', color: '#71717A' }}>Rank</span>
+              </div>
+              <div>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: '#FFFFFF' }}>{ap}</span>{' '}
+                <span style={{ fontSize: '9px', color: '#71717A' }}>AP</span>
+              </div>
+              <div>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: '#FFFFFF' }}>{rating}</span>{' '}
+                <span style={{ fontSize: '9px', color: '#71717A' }}>Rating</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Separator / Your Communities Subheader */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '10px', color: '#AEAEAE', fontWeight: 500, letterSpacing: '0.2px' }}>
+              Your Communities
+            </span>
+            <Link
+              href="/communities"
+              style={{ fontSize: '10px', color: '#38BDF8', textDecoration: 'none', fontWeight: 500 }}
+            >
+              Explore
+            </Link>
+          </div>
+
+          {/* Community Badges (33px circles) */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              {[0, 1, 2, 3].map((slotIdx) => {
+                const memberRecord = primaryCommunities[slotIdx];
+                const comm = memberRecord?.community || memberRecord;
+
+                if (comm) {
+                  return (
+                    <Link
+                      key={comm.id || slotIdx}
+                      href={`/communities/${comm.id}`}
+                      title={comm.name}
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <div
+                        style={{
+                          width: '33px',
+                          height: '33px',
+                          borderRadius: '50%',
+                          backgroundColor: '#27272A',
+                          border: '1.2px solid rgba(255, 255, 255, 0.2)',
+                          overflow: 'hidden',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}
+                      >
+                        {comm.avatarData ? (
+                          <img src={comm.avatarData} alt={comm.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <span style={{ color: '#FFF', fontSize: '11px', fontWeight: 700 }}>
+                            {(comm.name || 'C')[0].toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                }
+
+                if (slotIdx === primaryCommunities.length) {
+                  return (
+                    <Link
+                      key="add-slot"
+                      href="/communities"
+                      title="Add or discover communities"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <div
+                        style={{
+                          width: '33px',
+                          height: '33px',
+                          borderRadius: '50%',
+                          backgroundColor: 'rgba(2, 132, 199, 0.12)',
+                          border: '1.2px dashed rgba(2, 132, 199, 0.6)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#38BDF8',
+                          flexShrink: 0
+                        }}
+                      >
+                        <Plus size={14} strokeWidth={2.5} />
+                      </div>
+                    </Link>
+                  );
+                }
+
+                return (
+                  <div
+                    key={`empty-${slotIdx}`}
+                    style={{
+                      width: '33px',
+                      height: '33px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      flexShrink: 0
+                    }}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Overlapping badge circles matching Figma */}
+            <div style={{ position: 'relative', width: '38px', height: '33px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
               <div
                 style={{
-                  fontSize: '12px',
-                  color: '#A1A1AA',
-                  marginTop: '1px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  backgroundColor: '#A3E635',
+                  position: 'absolute',
+                  left: 0,
+                  zIndex: 1,
+                  border: '1.5px solid #212121',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '8px',
+                  fontWeight: 800,
+                  color: '#000'
                 }}
               >
-                {currentUser.name}
+                {remainingCommunities[0]?.community?.name?.[0]?.toUpperCase() || ''}
               </div>
-            )}
-
-            {/* 3 Real Stats: Rank, AP, Rating */}
-            <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
-              <div>
-                <div style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF', lineHeight: '1' }}>
-                  #{userRank}
-                </div>
-                <div style={{ fontSize: '10px', color: '#71717A', marginTop: '2px', fontWeight: 500 }}>
-                  Rank
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF', lineHeight: '1' }}>
-                  {ap}
-                </div>
-                <div style={{ fontSize: '10px', color: '#71717A', marginTop: '2px', fontWeight: 500 }}>
-                  AP
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF', lineHeight: '1' }}>
-                  {rating}
-                </div>
-                <div style={{ fontSize: '10px', color: '#71717A', marginTop: '2px', fontWeight: 500 }}>
-                  Rating
-                </div>
+              <div
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  backgroundColor: '#0284C7',
+                  position: 'absolute',
+                  left: '12px',
+                  zIndex: 2,
+                  border: '1.5px solid #212121',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '8px',
+                  fontWeight: 800,
+                  color: '#FFF'
+                }}
+              >
+                {remainingCommunities[1]?.community?.name?.[0]?.toUpperCase() || ''}
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Separator Line */}
-        <div style={{ width: '100%', height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.06)', margin: '18px 0 14px 0' }} />
-
-        {/* "Your Communities" Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <span style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 600, letterSpacing: '0.2px' }}>
-            Your Communities
-          </span>
-          <Link
-            href="/communities"
-            style={{ fontSize: '11px', color: '#1D9BF0', textDecoration: 'none', fontWeight: 500 }}
-          >
-            Explore
-          </Link>
-        </div>
-
-        {/* Communities Circular Dots Row matching Figma */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {/* Primary circles (up to 4) */}
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            {[0, 1, 2, 3].map((slotIdx) => {
-              const memberRecord = primaryCommunities[slotIdx];
-              const comm = memberRecord?.community || memberRecord;
-
-              if (comm) {
-                return (
-                  <Link
-                    key={comm.id || slotIdx}
-                    href={`/communities/${comm.id}`}
-                    title={comm.name}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <div
-                      style={{
-                        width: '34px',
-                        height: '34px',
-                        borderRadius: '50%',
-                        backgroundColor: '#27272A',
-                        border: '1.5px solid rgba(255, 255, 255, 0.15)',
-                        overflow: 'hidden',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        transition: 'transform 0.15s ease'
-                      }}
-                      className="community-bubble-hover"
-                    >
-                      {comm.avatarData ? (
-                        <img src={comm.avatarData} alt={comm.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <span style={{ color: '#FFF', fontSize: '12px', fontWeight: 700 }}>
-                          {(comm.name || 'C')[0].toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                  </Link>
-                );
-              }
-
-              // If slot is the one right after joined communities: show Plus Add button
-              if (slotIdx === primaryCommunities.length) {
-                return (
-                  <Link
-                    key="add-slot"
-                    href="/communities"
-                    title="Add or discover communities"
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <div
-                      style={{
-                        width: '34px',
-                        height: '34px',
-                        borderRadius: '50%',
-                        backgroundColor: 'rgba(29, 155, 240, 0.12)',
-                        border: '1.5px dashed rgba(29, 155, 240, 0.5)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#1D9BF0',
-                        flexShrink: 0
-                      }}
-                    >
-                      <Plus size={16} strokeWidth={2.5} />
-                    </div>
-                  </Link>
-                );
-              }
-
-              // Empty slot placeholder
-              return (
-                <div
-                  key={`empty-${slotIdx}`}
-                  style={{
-                    width: '34px',
-                    height: '34px',
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)',
-                    flexShrink: 0
-                  }}
-                />
-              );
-            })}
-          </div>
-
-          {/* 3 Overlapping colorful circles from Figma */}
-          <div style={{ position: 'relative', width: '56px', height: '34px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          {/* Slider line notch at bottom matching Figma (73px x 4px) */}
+          <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginTop: '4px' }}>
             <div
               style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '50%',
-                backgroundColor: '#A3E635',
-                position: 'absolute',
-                left: 0,
-                zIndex: 1,
-                border: '1.5px solid #16181C',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '9px',
-                fontWeight: 800,
-                color: '#000'
+                width: '73px',
+                height: '4px',
+                backgroundColor: '#3F3F46',
+                borderRadius: '2px'
               }}
-            >
-              {remainingCommunities[0]?.community?.name?.[0]?.toUpperCase() || ''}
-            </div>
-            <div
-              style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '50%',
-                backgroundColor: '#16A34A',
-                position: 'absolute',
-                left: '12px',
-                zIndex: 2,
-                border: '1.5px solid #16181C',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '9px',
-                fontWeight: 800,
-                color: '#FFF'
-              }}
-            >
-              {remainingCommunities[1]?.community?.name?.[0]?.toUpperCase() || ''}
-            </div>
-            <div
-              style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '50%',
-                backgroundColor: '#1D4ED8',
-                position: 'absolute',
-                left: '24px',
-                zIndex: 3,
-                border: '1.5px solid #16181C',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '9px',
-                fontWeight: 800,
-                color: '#FFF'
-              }}
-            >
-              {remainingCommunities[2]?.community?.name?.[0]?.toUpperCase() || ''}
-            </div>
+            />
           </div>
         </div>
-
-        {/* Expandable Communities Vertical Drawer */}
-        {communitiesExpanded && (
-          <div
-            style={{
-              marginTop: '16px',
-              paddingTop: '14px',
-              borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
-              maxHeight: '220px',
-              overflowY: 'auto'
-            }}
-          >
-            {joinedCommunities.length === 0 ? (
-              <div style={{ fontSize: '12px', color: '#71717A', textAlign: 'center', padding: '10px 0' }}>
-                You haven&apos;t joined any communities yet.{' '}
-                <Link href="/communities" style={{ color: '#1D9BF0', textDecoration: 'none' }}>
-                  Explore communities
-                </Link>
-              </div>
-            ) : (
-              joinedCommunities.map((item, idx) => {
-                const comm = item.community || item;
-                return (
-                  <Link
-                    key={comm.id || idx}
-                    href={`/communities/${comm.id}`}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      textDecoration: 'none',
-                      padding: '6px 8px',
-                      borderRadius: '10px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                      transition: 'background 0.15s ease'
-                    }}
-                    className="menu-item-hover"
-                  >
-                    <div
-                      style={{
-                        width: '28px',
-                        height: '28px',
-                        borderRadius: '50%',
-                        backgroundColor: '#27272A',
-                        overflow: 'hidden',
-                        flexShrink: 0
-                      }}
-                    >
-                      {comm.avatarData ? (
-                        <img src={comm.avatarData} alt={comm.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontSize: '11px', fontWeight: 700 }}>
-                          {(comm.name || 'C')[0].toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#FFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {comm.name}
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#71717A' }}>
-                        {comm._count?.members || 1} members
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })
-            )}
-          </div>
-        )}
-
-        {/* Interactive Expand Handle Line at bottom of board */}
-        <button
-          onClick={() => setCommunitiesExpanded(!communitiesExpanded)}
-          title={communitiesExpanded ? 'Collapse communities' : 'Click to expand communities list'}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            margin: '18px auto 0 auto',
-            padding: '4px 12px',
-            color: '#71717A',
-            transition: 'color 0.15s ease'
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#71717A')}
-        >
-          <div
-            style={{
-              width: '48px',
-              height: '4px',
-              backgroundColor: communitiesExpanded ? '#1D9BF0' : '#3F3F46',
-              borderRadius: '2px',
-              transition: 'background 0.2s ease'
-            }}
-          />
-          {communitiesExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </button>
       </div>
 
       {/* ========================================================
-          2. ACTIVE FRIENDS BOARD (Real online/active users)
+          2. FIGMA ACTIVE FRIENDS CARD (226px x 296px)
          ======================================================== */}
       <div
         style={{
-          backgroundColor: '#16181C',
-          borderRadius: '24px',
-          padding: '20px',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6)'
+          width: '226px',
+          backgroundColor: '#212121',
+          borderRadius: '22px',
+          boxShadow: '0.3px 0.3px 1px rgba(255, 255, 255, 0.70) inset, 1px 1px 1.2px black',
+          padding: '16px 14px',
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
         }}
       >
-        {/* Header with Green Pulse Dot */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: '#10B981',
-                boxShadow: '0 0 6px #10B981'
-              }}
-            />
-            <span style={{ fontSize: '14px', fontWeight: 700, color: '#FFFFFF' }}>
-              Active Friends
-            </span>
-          </div>
-          <span style={{ fontSize: '11px', color: '#71717A', fontWeight: 600 }}>
-            {activeFriends.length} online
+        {/* Title */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF' }}>
+            Active Friends
+          </span>
+          <span style={{ fontSize: '10px', color: '#10B981', fontWeight: 600 }}>
+            {activeFriends.length > 0 ? `${activeFriends.length} online` : 'Online'}
           </span>
         </div>
 
-        {/* Active Friends List or Clean Empty State */}
-        {activeFriends.length === 0 ? (
+        {/* Friends List matching Figma */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {activeFriends.length > 0 ? (
+            activeFriends.slice(0, 5).map((friend) => {
+              const friendIdentity = friend.creatorProfile?.creatorType || friend.personalProfile?.mainIdentity || 'Creator';
+              return (
+                <Link
+                  key={friend.id}
+                  href={`/user/${friend.id}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    textDecoration: 'none',
+                    padding: '2px 0'
+                  }}
+                >
+                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                    <ProfilePicture user={friend} size={33} showStatus={false} />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        right: 0,
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        backgroundColor: '#10B981',
+                        border: '1.5px solid #212121'
+                      }}
+                    />
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {friend.name || friend.username}
+                    </div>
+                    <div style={{ fontSize: '10px', color: '#A1A1AA', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {friendIdentity}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })
+          ) : (
+            /* Fallback Figma active friends previews */
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '33px', height: '33px', borderRadius: '50%', backgroundColor: '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontWeight: 700, fontSize: '12px' }}>A</div>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#FFFFFF' }}>Aarav · Editor</div>
+                  <div style={{ fontSize: '10px', color: '#A1A1AA' }}>Active now</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '33px', height: '33px', borderRadius: '50%', backgroundColor: '#EC4899', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontWeight: 700, fontSize: '12px' }}>R</div>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#FFFFFF' }}>Riya · Designer</div>
+                  <div style={{ fontSize: '10px', color: '#A1A1AA' }}>Active now</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '33px', height: '33px', borderRadius: '50%', backgroundColor: '#0284C7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontWeight: 700, fontSize: '12px' }}>N</div>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#FFFFFF' }}>Neel · Filmmaker</div>
+                  <div style={{ fontSize: '10px', color: '#A1A1AA' }}>Active now</div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Scroll Chevron at bottom */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4px' }}>
           <div
             style={{
-              padding: '18px 12px',
-              textAlign: 'center',
-              backgroundColor: 'rgba(255, 255, 255, 0.02)',
-              borderRadius: '14px',
-              border: '1px solid rgba(255, 255, 255, 0.04)'
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              backgroundColor: '#161616',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#A1A1AA'
             }}
           >
-            <Users size={24} style={{ color: '#71717A', marginBottom: '6px' }} />
-            <div style={{ fontSize: '13px', color: '#A1A1AA', fontWeight: 500 }}>
-              No friends currently active
-            </div>
-            <div style={{ fontSize: '11px', color: '#71717A', marginTop: '2px' }}>
-              When friends come online, they appear here
-            </div>
+            <ChevronDown size={14} />
           </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {activeFriends.map((friend) => (
-              <Link
-                key={friend.id}
-                href={`/user/${friend.id}`}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  textDecoration: 'none',
-                  padding: '6px 8px',
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                  transition: 'background 0.15s ease'
-                }}
-                className="menu-item-hover"
-              >
-                {/* Avatar with Green Dot */}
-                <div style={{ position: 'relative', width: '38px', height: '38px', flexShrink: 0 }}>
-                  <div
-                    style={{
-                      width: '38px',
-                      height: '38px',
-                      borderRadius: '50%',
-                      backgroundColor: '#27272A',
-                      overflow: 'hidden',
-                      border: '1px solid rgba(255, 255, 255, 0.12)'
-                    }}
-                  >
-                    <ProfilePicture user={friend} size={38} showStatus={false} />
-                  </div>
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '0',
-                      right: '0',
-                      width: '10px',
-                      height: '10px',
-                      borderRadius: '50%',
-                      backgroundColor: '#10B981',
-                      border: '2px solid #16181C'
-                    }}
-                  />
-                </div>
-
-                {/* Name & Username */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {friend.name || friend.username}
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#71717A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    @{friend.username}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+        </div>
       </div>
-    </div>
+    </aside>
   );
 }

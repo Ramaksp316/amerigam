@@ -15,6 +15,7 @@ import DesktopFeedTop from '../components/DesktopFeedTop';
 import FollowButton from '../components/FollowButton';
 import PostDropdownMenu from '../components/PostDropdownMenu';
 import PostMediaCarousel from '../components/PostMediaCarousel';
+import FeedPostCard from '../components/FeedPostCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -398,137 +399,16 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 else identityLine = post.author.accountType.charAt(0) + post.author.accountType.slice(1).toLowerCase();
               }
 
-              // Consolidate media URLs (multiple or single)
-              const mediaList: string[] = (post.mediaUrls && post.mediaUrls.length > 0)
-                ? post.mediaUrls
-                : (post.mediaUrl ? [post.mediaUrl] : []);
-
               return (
-                <article
+                <FeedPostCard
                   key={post.id}
-                  className="home-post-card"
-                  style={{
-                    backgroundColor: '#16181C',
-                    borderRadius: '18px',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    padding: '18px 20px',
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
-                    display: 'flex',
-                    flexDirection: 'column'
-                  }}
-                >
-                  {/* Post Header: Avatar + Identity Context + Follow + 3-Dots */}
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                    <Link href={`/user/${post.authorId}`} style={{ flexShrink: 0 }}>
-                      <ProfilePicture user={post.author} size={42} />
-                    </Link>
-                    
-                    <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', minWidth: 0 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Link
-                            href={`/user/${post.authorId}`}
-                            style={{
-                              color: '#FFFFFF',
-                              fontWeight: 700,
-                              textDecoration: 'none',
-                              fontSize: '15px',
-                              letterSpacing: '-0.2px',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}
-                          >
-                            {post.author.name || post.author.username}
-                          </Link>
-                          {isVerified && <CheckCircle2 size={15} color="#0284C7" fill="#0284C7" />}
-                        </div>
-                        
-                        <div style={{ fontSize: '13px', color: '#A1A1AA', marginTop: '1px', fontWeight: 500 }}>
-                          {identityLine}
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#71717A', marginTop: '2px' }}>
-                          <span>@{post.author.username}</span>
-                          <span style={{ fontSize: '10px' }}>•</span>
-                          <LocalTime date={post.createdAt} format="relative" />
-                        </div>
-                      </div>
-                      
-                      {/* Header Actions: Follow Button + 3-Dots Dropdown */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-                        {!isFollowing && post.authorId !== userId && (
-                          <div className="desktop-only">
-                            <FollowButton targetUserId={post.authorId} initialIsFollowing={false} />
-                          </div>
-                        )}
-                        
-                        <PostDropdownMenu 
-                          postId={post.id}
-                          authorId={post.authorId}
-                          authorUsername={post.author.username || 'user'}
-                          initialIsFollowing={isFollowing}
-                          likesCount={post.likes?.length || 0}
-                          commentsCount={post.comments?.length || 0}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Post Text Content */}
-                  {post.content && (
-                    <div
-                      style={{ 
-                        fontSize: '15px', 
-                        color: '#F4F4F5', 
-                        lineHeight: '1.45', 
-                        whiteSpace: 'pre-wrap', 
-                        wordBreak: 'break-word',
-                        marginTop: '12px',
-                        fontWeight: 400
-                      }}
-                    >
-                      {post.content}
-                    </div>
-                  )}
-
-                  {/* Media Content: Video or Image Carousel */}
-                  {mediaList.length > 0 && (
-                    <div style={{ marginTop: '14px', borderRadius: '14px', overflow: 'hidden' }}>
-                      {post.mediaType === 'video' ? (
-                        <div style={{ 
-                          borderRadius: '14px',
-                          overflow: 'hidden',
-                          border: '1px solid rgba(255, 255, 255, 0.08)',
-                          backgroundColor: '#0F1015',
-                          width: '100%',
-                          display: 'block'
-                        }}>
-                          <CustomVideoPlayer 
-                            src={mediaList[0]} 
-                            audioSrc={post.audioUrl || undefined}
-                            style={{ width: '100%', display: 'block' }} 
-                          />
-                        </div>
-                      ) : (
-                        <PostMediaCarousel 
-                          mediaUrls={mediaList} 
-                          mediaType="image"
-                          alt={post.content?.slice(0, 30) || 'Post media'} 
-                        />
-                      )}
-                    </div>
-                  )}
-
-                  {/* Action Buttons Bar: Like, Comment, Repost, Share, Bookmark */}
-                  <PostActionButtons 
-                    postId={post.id} 
-                    hasLiked={hasLiked} 
-                    likesCount={post.likes?.length || 0} 
-                    commentsCount={post.comments?.length || 0} 
-                    initialIsBookmarked={post.bookmarks?.some((b: any) => b.userId === userId) || false}
-                  />
-                </article>
+                  post={post}
+                  currentUserId={userId}
+                  isFollowing={isFollowing}
+                  hasLiked={hasLiked}
+                  isVerified={isVerified}
+                  identityLine={identityLine}
+                />
               );
             })}
           </div>

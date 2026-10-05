@@ -124,6 +124,13 @@ export default async function UserProfilePage({
     } catch {}
   }
 
+  // Dynamic global AP rank based on user's points
+  const userPoints = user.amerigamPoints || 0;
+  const higherUsersCount = await prisma.user.count({
+    where: { amerigamPoints: { gt: userPoints } }
+  });
+  const calculatedGlobalRank = higherUsersCount + 1;
+
   return (
     <UserProfileClient
       user={user}
@@ -137,6 +144,7 @@ export default async function UserProfilePage({
       interests={interests}
       hobbies={hobbies}
       rankData={rankData}
+      globalRank={calculatedGlobalRank}
       activeTab={activeTab}
     />
   );
