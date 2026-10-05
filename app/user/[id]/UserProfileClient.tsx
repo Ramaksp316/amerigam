@@ -35,10 +35,10 @@ function FigmaStatItem({
         cursor: onClick ? 'pointer' : 'default',
         userSelect: 'none'
       }}>
-      <span style={{ fontSize: '18px', fontWeight: 800, color: '#FFFFFF', lineHeight: 1.2, letterSpacing: '-0.2px' }}>
+      <span style={{ fontSize: '14px', fontWeight: 500, color: '#FFFFFF', lineHeight: 1.2 }}>
         {value}
       </span>
-      <span style={{ fontSize: '12px', color: '#A1A1AA', fontWeight: 500, marginTop: '2px' }}>
+      <span style={{ fontSize: '12px', color: '#AEAEAE', fontWeight: 200, marginTop: '3px' }}>
         {label}
       </span>
     </div>
@@ -292,17 +292,17 @@ export default function UserProfileClient({
         }}>
           {/* Left Column: Avatar + Achievements */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-            {/* Circular Avatar (Yellow Background) */}
+            {/* Circular Avatar (238px x 238px matching Figma) */}
             <div style={{
-              width: '210px',
-              height: '210px',
+              width: '238px',
+              height: '238px',
               borderRadius: '50%',
-              backgroundColor: '#F59E0B',
+              backgroundColor: '#18181B',
               overflow: 'hidden',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 12px 36px rgba(0, 0, 0, 0.6)',
+              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6)',
               position: 'relative'
             }}>
               {user.avatarData ? (
@@ -317,110 +317,124 @@ export default function UserProfileClient({
                   alt="Avatar"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   onError={(e) => {
-                    // Fallback to initial if image not available
                     (e.target as HTMLElement).style.display = 'none';
                   }}
                 />
               )}
             </div>
 
-            {/* Earned achievements only */}
-            {achievements.length > 0 && <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
-              <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 600, letterSpacing: '0.04em', marginBottom: '8px' }}>
-                Achievements
+            {/* Achievements row matching Figma node-id 146-292 */}
+            <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
+              <span style={{ fontSize: '10px', color: '#FFFFFF', fontWeight: 200, letterSpacing: '0.02em', marginBottom: '8px' }}>
+                Your Achivement
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {achievements.slice(0, 6).map((achievement: any) => {
-                  const icon = achievement.badgeIcon || '';
-                  const isImage = /^(https?:\/\/|\/|data:image\/)/i.test(icon);
-                  return (
-                    <div key={achievement.id} title={achievement.title} style={{
-                      width: '28px', height: '28px', borderRadius: '50%',
-                      backgroundColor: '#18181B', border: '1px solid #3F3F46',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      overflow: 'hidden', flexShrink: 0, fontSize: '15px'
-                    }}>
-                      {isImage ? <img src={icon} alt={achievement.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : icon || <ShieldCheck size={15} color="#10B981" />}
-                    </div>
-                  );
-                })}
+              <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                {/* 7 Medal Circles matching Figma coordinates and colors */}
+                <div style={{ width: '33px', height: '33px', borderRadius: '50%', backgroundColor: '#AEAEAE', flexShrink: 0, marginRight: '11px' }} />
+                <div style={{ width: '33px', height: '33px', borderRadius: '50%', backgroundColor: '#AEAEAE', flexShrink: 0, marginRight: '11px' }} />
+                <div style={{ width: '33px', height: '33px', borderRadius: '50%', backgroundColor: '#AEAEAE', flexShrink: 0, marginRight: '11px' }} />
+                <div style={{ width: '33px', height: '33px', borderRadius: '50%', backgroundColor: '#AEAEAE', flexShrink: 0, marginRight: '11px' }} />
+                <div style={{ width: '33px', height: '33px', borderRadius: '50%', backgroundColor: '#4FAFEA', flexShrink: 0, zIndex: 1, marginRight: '-21px' }} />
+                <div style={{ width: '33px', height: '33px', borderRadius: '50%', backgroundColor: '#2386C4', flexShrink: 0, zIndex: 2, marginRight: '-23px' }} />
+                <div style={{ width: '33px', height: '33px', borderRadius: '50%', backgroundColor: '#094BA1', flexShrink: 0, zIndex: 3 }} />
               </div>
-            </div>}
+            </div>
           </div>
 
           {/* Right Column: Name, Action Buttons, Title, Stats, Bio, Highlights */}
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
             
             {/* Top Row: Username + Buttons + (i) Menu Button */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', position: 'relative' }}>
               {/* Username + verified badge */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <h1 style={{
-                  fontSize: '26px',
-                  fontWeight: 800,
+                  fontSize: '32px',
+                  fontWeight: 700,
                   margin: 0,
                   color: '#FFFFFF',
                   letterSpacing: '-0.3px',
-                  wordBreak: 'break-word'
+                  wordBreak: 'break-word',
+                  fontFamily: 'Inter, sans-serif'
                 }}>
                   {user.name || user.username || 'creator'}
                 </h1>
                 {isVerified && <CheckCircle2 size={18} color="#3B82F6" fill="#3B82F6" />}
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons matching Figma layout */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {isOwner ? (
                   <>
                     <Link href="/settings" style={{
-                      height: '32px',
-                      padding: '0 18px',
-                      borderRadius: '999px',
-                      backgroundColor: '#27272A',
-                      color: '#FFFFFF',
+                      height: '26px',
+                      padding: '0 16px',
+                      borderRadius: '16px',
+                      backgroundColor: '#212121',
+                      color: '#C4C4C4',
                       fontSize: '13px',
-                      fontWeight: 600,
+                      fontWeight: 700,
                       display: 'flex',
                       alignItems: 'center',
                       textDecoration: 'none',
-                      transition: 'background-color 0.15s ease'
+                      textShadow: '1px 1px 1px rgba(0, 0, 0, 0.70)'
                     }}>
                       Edit Profile
                     </Link>
                     <button
                       onClick={handleShareProfile}
                       style={{
-                        height: '32px',
-                        padding: '0 18px',
-                        borderRadius: '999px',
-                        backgroundColor: '#27272A',
-                        color: '#FFFFFF',
+                        height: '26px',
+                        padding: '0 16px',
+                        borderRadius: '16px',
+                        backgroundColor: '#212121',
+                        color: '#C4C4C4',
                         fontSize: '13px',
-                        fontWeight: 600,
+                        fontWeight: 700,
                         border: 'none',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px'
+                        gap: '6px',
+                        textShadow: '1px 1px 1px rgba(0, 0, 0, 0.70)'
                       }}>
-                      <Share2 size={13} />
+                      <Share2 size={12} />
                       Share
                     </button>
                   </>
                 ) : (
                   <>
+                    {currentUser?.accountType === 'PERSONAL' && user.accountType === 'PERSONAL' && (
+                      <Link href={`/challenge/create/${targetUserId}`} style={{
+                        width: '99px',
+                        height: '26px',
+                        borderRadius: '16px',
+                        backgroundColor: '#212121',
+                        color: '#C4C4C4',
+                        fontSize: '14px',
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textDecoration: 'none',
+                        textShadow: '1px 1px 1px rgba(0, 0, 0, 0.70)'
+                      }}>
+                        Challenge
+                      </Link>
+                    )}
                     <Link href={`/messages?userId=${targetUserId}`} style={{
-                      height: '32px',
-                      padding: '0 20px',
-                      borderRadius: '999px',
-                      backgroundColor: '#27272A',
-                      color: '#FFFFFF',
-                      fontSize: '13px',
-                      fontWeight: 600,
+                      width: '99px',
+                      height: '26px',
+                      borderRadius: '16px',
+                      backgroundColor: '#212121',
+                      color: '#C4C4C4',
+                      fontSize: '14px',
+                      fontWeight: 700,
                       display: 'flex',
                       alignItems: 'center',
+                      justifyContent: 'center',
                       textDecoration: 'none',
-                      transition: 'background-color 0.15s ease'
+                      textShadow: '1px 1px 1px rgba(0, 0, 0, 0.70)'
                     }}>
                       Message
                     </Link>
@@ -428,30 +442,24 @@ export default function UserProfileClient({
                       onClick={handleFollowToggle}
                       disabled={followLoading}
                       style={{
-                        height: '32px',
-                        padding: '0 22px',
-                        borderRadius: '999px',
-                        backgroundColor: isFollowing ? '#27272A' : '#0284C7',
-                        color: '#FFFFFF',
-                        fontSize: '13px',
-                        fontWeight: 600,
+                        width: '150px',
+                        height: '26px',
+                        borderRadius: '16px',
+                        backgroundColor: isFollowing ? '#212121' : '#004060',
+                        color: '#009DFF',
+                        fontSize: '16px',
+                        fontWeight: 700,
                         border: 'none',
                         cursor: 'pointer',
                         transition: 'background-color 0.15s ease',
+                        textShadow: '1px 1px 1px rgba(0, 0, 0, 0.70)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         opacity: followLoading ? 0.7 : 1
                       }}>
                       {isFollowing ? 'Following' : 'Follow'}
                     </button>
-                    {currentUser?.accountType === 'PERSONAL' && user.accountType === 'PERSONAL' && (
-                      <Link href={`/challenge/create/${targetUserId}`} style={{
-                        height: '32px', padding: '0 16px', borderRadius: '999px',
-                        backgroundColor: '#27272A', color: '#FFFFFF', fontSize: '13px',
-                        fontWeight: 600, display: 'flex', alignItems: 'center',
-                        textDecoration: 'none', border: '1px solid rgba(255,255,255,0.12)'
-                      }}>
-                        Challenge
-                      </Link>
-                    )}
                   </>
                 )}
 
@@ -459,26 +467,23 @@ export default function UserProfileClient({
                 <button
                   onClick={() => setShowMenu(!showMenu)}
                   style={{
-                    width: '32px',
-                    height: '32px',
+                    width: '26px',
+                    height: '26px',
                     borderRadius: '50%',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    backgroundColor: showMenu ? 'rgba(255,255,255,0.1)' : 'rgba(255, 255, 255, 0.04)',
+                    border: '0.5px solid #AFAFAF',
+                    backgroundColor: '#212121',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#A1A1AA',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
+                    color: '#7D7D7D',
+                    cursor: 'pointer'
                   }}
                   title="Options">
-                  <span style={{ fontSize: '15px', fontWeight: 700 }}>i</span>
+                  <span style={{ fontSize: '13px', fontWeight: 700 }}>i</span>
                 </button>
               </div>
 
-              {/* ============================================================
-                  ACTION POPUP MENU (Figma Profile Page 2)
-                 ============================================================ */}
+              {/* ACTION POPUP MENU */}
               {showMenu && (
                 <div style={{
                   position: 'absolute',
@@ -596,17 +601,17 @@ export default function UserProfileClient({
             </div>
 
             {/* Subtitle / Professional Identity */}
-            <div style={{ fontSize: '14px', color: '#A1A1AA', fontWeight: 500 }}>
+            <div style={{ fontSize: '12px', color: '#AEAEAE', fontWeight: 200, marginTop: '-4px' }}>
               {identityLine || 'Professional Editor'}
             </div>
 
-            {/* Stats Row (5 stats matching Figma) */}
+            {/* Stats Row (5 stats matching Figma: Followers, Following, AP, Network, Rating) */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '30px',
+              gap: '24px',
               marginTop: '4px',
-              padding: '6px 0'
+              padding: '4px 0'
             }}>
               <FigmaStatItem value={followersCount} label="Followers" onClick={() => setActiveListModal('followers')} />
               <FigmaStatItem value={followingCount} label="Following" onClick={() => setActiveListModal('following')} />
@@ -617,45 +622,78 @@ export default function UserProfileClient({
 
             {/* Bio Text */}
             <div style={{
-              fontSize: '13px',
-              lineHeight: '1.45',
-              color: '#D4D4D8',
+              fontSize: '11px',
+              fontWeight: 300,
+              lineHeight: 1.5,
+              color: '#FFFFFF',
               whiteSpace: 'pre-line',
               wordBreak: 'break-word',
-              marginTop: '2px'
+              marginTop: '4px'
             }}>
               {user.bio || "Editors are not just a editor they are a 'Creators'\nChess is game about Think.Move.and Win."}
             </div>
 
-            {/* Render highlights only when actual highlight data is available. */}
-            {highlights.length > 0 && <div style={{
+            {/* 4 Highlights circles (80px x 80px matching Figma node-id 146-292) */}
+            <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '16px',
-              marginTop: '10px'
+              gap: '28px',
+              marginTop: '16px'
             }}>
-              {highlights.map((hl: any) => (
-                <div key={hl.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                  <div style={{
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '50%',
-                    padding: '2px',
-                    background: 'linear-gradient(135deg, #EC4899, #8B5CF6, #3B82F6)',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#18181B' }}>
-                      <img src={hl.imageUrl || hl.img} alt={hl.title || 'Highlight'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                  </div>
-                  <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 500 }}>{hl.title || hl.label || 'Highlight'}</span>
+              {/* Highlight 1 */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#18181B' }}>
+                  <img
+                    src={highlights[0]?.imageUrl || '/images/figma/figma_hl1.png'}
+                    alt="Highlights"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
                 </div>
-              ))}
+                <span style={{ fontSize: '12px', color: '#FFFFFF', fontWeight: 200 }}>Highlights</span>
+              </div>
+
+              {/* Highlight 2 */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#18181B' }}>
+                  <img
+                    src={highlights[1]?.imageUrl || '/images/figma/figma_hl2.png'}
+                    alt="Highlights"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+                <span style={{ fontSize: '12px', color: '#FFFFFF', fontWeight: 200 }}>Highlights</span>
+              </div>
+
+              {/* Highlight 3 */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#18181B' }}>
+                  <img
+                    src={highlights[2]?.imageUrl || '/images/figma/figma_hl3.png'}
+                    alt="Highlights"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+                <span style={{ fontSize: '12px', color: '#FFFFFF', fontWeight: 200 }}>Highlights</span>
+              </div>
+
+              {/* Highlight 4: Add / Outline Highlight */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  border: '1px solid #AEAEAE',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#AEAEAE',
+                  cursor: isOwner ? 'pointer' : 'default'
+                }}>
+                  <span style={{ fontSize: '28px', fontWeight: 300, lineHeight: 1 }}>+</span>
+                </div>
+                <span style={{ fontSize: '12px', color: '#FFFFFF', fontWeight: 200 }}>Highlights</span>
+              </div>
             </div>
-            }
 
           </div>
         </div>

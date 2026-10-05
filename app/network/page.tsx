@@ -109,7 +109,7 @@ export default async function NetworkPage({
       businessProfile: true,
       _count: { select: { followers: true, following: true } }
     },
-    take: 50
+    take: 100
   });
 
   // 3. Compute Connected Network members (Real connections only, no fake data)
@@ -134,12 +134,24 @@ export default async function NetworkPage({
     currentUser.creatorProfile?.creatorType
   );
 
+function userMatchesCategory(u: any, queryKey: string) {
+  const text = `${u.name || ''} ${u.username || ''} ${u.bio || ''} ${u.personalProfile?.mainIdentity || ''} ${u.creatorProfile?.creatorType || ''} ${u.personalProfile?.skills || ''} ${u.accountType || ''}`.toLowerCase();
+  const q = queryKey.toLowerCase();
+  if (q === 'developer') return text.includes('dev') || text.includes('code') || text.includes('engineer') || text.includes('software');
+  if (q === 'designer') return text.includes('design') || text.includes('ui') || text.includes('ux') || text.includes('visual') || text.includes('motion');
+  if (q === 'editor') return text.includes('edit') || text.includes('cut') || text.includes('colorist') || text.includes('vfx') || text.includes('sound');
+  if (q === 'creator') return text.includes('creator') || text.includes('content') || text.includes('direct') || text.includes('cinemat') || text.includes('film');
+  if (q === 'writer') return text.includes('writ') || text.includes('script') || text.includes('story') || text.includes('essay');
+  if (q === 'producer') return text.includes('produc') || text.includes('show') || text.includes('exec');
+  if (q === 'founder') return text.includes('founder') || text.includes('startup') || text.includes('build') || text.includes('ceo');
+  if (q === 'marketer') return text.includes('market') || text.includes('growth') || text.includes('sales');
+  if (q === 'photographer') return text.includes('photo') || text.includes('camera') || text.includes('shoot');
+  return text.includes(q);
+}
+
   const roleCategories = rawCategories.map((cat) => {
-    const count = allUsers.filter((u) => {
-      const text = `${u.name || ''} ${u.username || ''} ${u.bio || ''} ${u.personalProfile?.mainIdentity || ''} ${u.creatorProfile?.creatorType || ''} ${u.personalProfile?.skills || ''} ${u.accountType || ''}`.toLowerCase();
-      return text.includes(cat.queryKey.toLowerCase()) || text.includes(cat.title.toLowerCase().slice(0, -1));
-    }).length;
-    return { ...cat, count: count > 0 ? count : 12 };
+    const count = allUsers.filter((u) => userMatchesCategory(u, cat.queryKey)).length;
+    return { ...cat, count };
   });
 
   // 5. Suggested Users (exclude already connected/followed)
