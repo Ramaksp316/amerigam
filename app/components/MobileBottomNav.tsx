@@ -21,36 +21,6 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
     setIsVisible(true);
   }, [pathname]);
 
-  // Smooth Auto-hide on scroll down, Auto-reveal on scroll up
-  useEffect(() => {
-    let ticking = false;
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          // If scrolled near top (< 35px), always keep visible
-          if (currentScrollY < 35) {
-            setIsVisible(true);
-          } else if (currentScrollY > lastScrollY.current + 10) {
-            // Scrolling down by more than 10px -> smoothly slide down
-            setIsVisible(false);
-          } else if (currentScrollY < lastScrollY.current - 8) {
-            // Scrolling up by more than 8px -> smoothly slide up
-            setIsVisible(true);
-          }
-          lastScrollY.current = currentScrollY;
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   const isActive = (route: string) => {
     if (route === '/home') {
       return pathname === '/home' || pathname === '/';
@@ -61,7 +31,15 @@ export default function MobileBottomNav({ currentUser }: { currentUser?: any }) 
     return pathname?.startsWith(route);
   };
 
-  if (isCommunityPage || pathname?.includes('/apply') || pathname?.startsWith('/dev-board')) return null;
+  // Hide bottom dock on community detail pages, apply flows, dev-board, and active direct message chat
+  if (
+    isCommunityPage ||
+    pathname?.includes('/apply') ||
+    pathname?.startsWith('/dev-board') ||
+    pathname?.startsWith('/messages/')
+  ) {
+    return null;
+  }
 
   return (
     <>

@@ -35,6 +35,15 @@ interface MessageItem {
   isRead?: boolean;
 }
 
+const formatMessageTime = (dateStr: string | Date) => {
+  try {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return '';
+  }
+};
+
 export default function ChatClient({
   initialMessages = [],
   conversationId,
@@ -520,6 +529,19 @@ export default function ChatClient({
           messages.map((msg) => {
             const isMe = msg.senderId === currentUserId;
             const isSticker = msg.mediaType === 'sticker';
+            const isImage = msg.mediaType === 'image';
+            const isVideo = msg.mediaType === 'video';
+            const isVoice = msg.mediaType === 'voice';
+
+            // Check if there is actual custom text caption
+            const hasCustomText = Boolean(
+              msg.content &&
+              msg.content !== '📷 Photo' &&
+              msg.content !== '📹 Video' &&
+              msg.content !== '🎙️ Voice message' &&
+              msg.content !== '🎴 Sticker' &&
+              msg.content.trim() !== ''
+            );
 
             return (
               <div
@@ -528,10 +550,11 @@ export default function ChatClient({
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: isMe ? 'flex-end' : 'flex-start',
-                  width: '100%'
+                  width: '100%',
+                  margin: '3px 0'
                 }}
               >
-                {/* Sticker rendering without bubble background */}
+                {/* 1. Sticker rendering without bubble background */}
                 {isSticker && msg.mediaUrl ? (
                   <div style={{ maxWidth: '180px', maxHeight: '180px', margin: '4px 0' }}>
                     <img
@@ -540,79 +563,237 @@ export default function ChatClient({
                       style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                     />
                   </div>
-                ) : (
-                  /* Standard / Media Message Bubble matching Normal message 2.png */
-                  <div
-                    style={{
-                      maxWidth: '70%',
-                      backgroundColor: isMe ? '#0284C7' : 'rgba(255, 255, 255, 0.08)',
-                      color: '#FFFFFF',
-                      borderRadius: '999px',
-                      padding: msg.mediaUrl && !msg.voiceDuration ? '8px' : '10px 22px',
-                      border: 'none',
-                      boxShadow: 'none',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '4px'
-                    }}
-                  >
-                    {/* Image Attachment */}
-                    {msg.mediaType === 'image' && msg.mediaUrl && (
+                ) : isImage && msg.mediaUrl ? (
+                  /* 2. Image Attachment */
+                  !hasCustomText ? (
+                    /* Pure Image (No Text Caption) -> Clean image card, NO blue bubble background */
+                    <div
+                      style={{
+                        borderRadius: '16px',
+                        overflow: 'hidden',
+                        maxWidth: 'min(82vw, 320px)',
+                        backgroundColor: '#16171B',
+                        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.45)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        position: 'relative'
+                      }}
+                    >
+                      <ImageLightbox src={msg.mediaUrl} alt="Photo" />
                       <div
                         style={{
-                          borderRadius: '16px',
-                          overflow: 'hidden',
-                          maxWidth: '300px',
-                          maxHeight: '340px',
-                          backgroundColor: '#000000'
+                          position: 'absolute',
+                          bottom: '6px',
+                          right: '8px',
+                          backgroundColor: 'rgba(0, 0, 0, 0.65)',
+                          backdropFilter: 'blur(4px)',
+                          padding: '2px 6px',
+                          borderRadius: '8px',
+                          fontSize: '10px',
+                          color: '#FFFFFF',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                          pointerEvents: 'none'
                         }}
                       >
+                        <span>{formatMessageTime(msg.createdAt)}</span>
+                        {isMe && <Check size={11} strokeWidth={2.5} style={{ opacity: msg.isRead ? 1 : 0.7 }} />}
+                      </div>
+                    </div>
+                  ) : (
+                    /* Image with Text Caption */
+                    <div
+                      style={{
+                        maxWidth: 'min(82vw, 320px)',
+                        backgroundColor: isMe ? '#0284C7' : '#27272A',
+                        borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                        overflow: 'hidden',
+                        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.35)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        display: 'flex',
+                        flexDirection: 'column'
+                      }}
+                    >
+                      <div style={{ width: '100%', overflow: 'hidden' }}>
                         <ImageLightbox src={msg.mediaUrl} alt="Photo" />
                       </div>
-                    )}
-
-                    {/* Video Attachment */}
-                    {msg.mediaType === 'video' && msg.mediaUrl && (
-                      <div
-                        style={{
-                          borderRadius: '16px',
-                          overflow: 'hidden',
-                          maxWidth: '320px',
-                          maxHeight: '360px',
-                          backgroundColor: '#000000'
-                        }}
-                      >
-                        <video
-                          src={msg.mediaUrl}
-                          controls
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      </div>
-                    )}
-
-                    {/* Voice Note Player */}
-                    {msg.mediaType === 'voice' && msg.mediaUrl && (
-                      <VoiceMessagePlayer
-                        src={msg.mediaUrl}
-                        duration={msg.voiceDuration}
-                        isMe={isMe}
-                      />
-                    )}
-
-                    {/* Text Content */}
-                    {msg.content && msg.mediaType !== 'voice' && (!msg.mediaUrl || msg.content !== '📷 Photo') && (
-                      <div
-                        style={{
+                      <div style={{ padding: '8px 12px 6px 12px' }}>
+                        <div style={{
                           fontSize: '14px',
                           lineHeight: 1.45,
+                          color: '#FFFFFF',
                           wordBreak: 'break-word',
-                          whiteSpace: 'pre-wrap',
-                          padding: msg.mediaUrl ? '4px 6px' : 0
+                          whiteSpace: 'pre-wrap'
+                        }}>
+                          {msg.content}
+                        </div>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'flex-end',
+                          gap: '3px',
+                          marginTop: '3px',
+                          fontSize: '10px',
+                          color: isMe ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.5)'
+                        }}>
+                          <span>{formatMessageTime(msg.createdAt)}</span>
+                          {isMe && <Check size={11} strokeWidth={2.5} style={{ opacity: msg.isRead ? 1 : 0.7 }} />}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                ) : isVideo && msg.mediaUrl ? (
+                  /* 3. Video Attachment */
+                  !hasCustomText ? (
+                    /* Pure Video (No Text Caption) -> Clean video player, NO blue bubble background */
+                    <div
+                      style={{
+                        borderRadius: '16px',
+                        overflow: 'hidden',
+                        maxWidth: 'min(86vw, 340px)',
+                        width: '100%',
+                        backgroundColor: '#000000',
+                        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.5)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        position: 'relative'
+                      }}
+                    >
+                      <video
+                        src={msg.mediaUrl}
+                        controls
+                        playsInline
+                        style={{ width: '100%', maxHeight: '420px', objectFit: 'contain', display: 'block', backgroundColor: '#000000' }}
+                      />
+                      <div
+                        style={{
+                          padding: '4px 8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'flex-end',
+                          gap: '3px',
+                          fontSize: '10px',
+                          color: 'rgba(255, 255, 255, 0.65)',
+                          backgroundColor: '#121214'
                         }}
                       >
-                        {msg.content}
+                        <span>{formatMessageTime(msg.createdAt)}</span>
+                        {isMe && <Check size={11} strokeWidth={2.5} style={{ opacity: msg.isRead ? 1 : 0.7 }} />}
                       </div>
-                    )}
+                    </div>
+                  ) : (
+                    /* Video with Text Caption */
+                    <div
+                      style={{
+                        maxWidth: 'min(86vw, 340px)',
+                        backgroundColor: isMe ? '#0284C7' : '#27272A',
+                        borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                        overflow: 'hidden',
+                        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.35)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        display: 'flex',
+                        flexDirection: 'column'
+                      }}
+                    >
+                      <video
+                        src={msg.mediaUrl}
+                        controls
+                        playsInline
+                        style={{ width: '100%', maxHeight: '420px', objectFit: 'contain', display: 'block', backgroundColor: '#000000' }}
+                      />
+                      <div style={{ padding: '8px 12px 6px 12px' }}>
+                        <div style={{
+                          fontSize: '14px',
+                          lineHeight: 1.45,
+                          color: '#FFFFFF',
+                          wordBreak: 'break-word',
+                          whiteSpace: 'pre-wrap'
+                        }}>
+                          {msg.content}
+                        </div>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'flex-end',
+                          gap: '3px',
+                          marginTop: '3px',
+                          fontSize: '10px',
+                          color: isMe ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.5)'
+                        }}>
+                          <span>{formatMessageTime(msg.createdAt)}</span>
+                          {isMe && <Check size={11} strokeWidth={2.5} style={{ opacity: msg.isRead ? 1 : 0.7 }} />}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                ) : isVoice && msg.mediaUrl ? (
+                  /* 4. Voice Note */
+                  <div
+                    style={{
+                      maxWidth: 'min(80vw, 320px)',
+                      backgroundColor: isMe ? '#0284C7' : '#27272A',
+                      borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                      padding: '8px 14px',
+                      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.25)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '2px'
+                    }}
+                  >
+                    <VoiceMessagePlayer src={msg.mediaUrl} duration={msg.voiceDuration} isMe={isMe} />
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-end',
+                      gap: '3px',
+                      fontSize: '10px',
+                      color: isMe ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.5)'
+                    }}>
+                      <span>{formatMessageTime(msg.createdAt)}</span>
+                      {isMe && <Check size={11} strokeWidth={2.5} style={{ opacity: msg.isRead ? 1 : 0.7 }} />}
+                    </div>
+                  </div>
+                ) : (
+                  /* 5. Text Message (Clean 18px rounded bubble for both short and big/multi-line messages) */
+                  <div
+                    style={{
+                      maxWidth: 'min(82vw, 540px)',
+                      backgroundColor: isMe ? '#0284C7' : '#27272A',
+                      color: '#FFFFFF',
+                      borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                      padding: '10px 16px',
+                      border: 'none',
+                      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '3px',
+                      wordBreak: 'break-word'
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: '14.5px',
+                        lineHeight: 1.48,
+                        wordBreak: 'break-word',
+                        whiteSpace: 'pre-wrap'
+                      }}
+                    >
+                      {msg.content}
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        gap: '3px',
+                        marginTop: '1px',
+                        fontSize: '10px',
+                        color: isMe ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.5)',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <span>{formatMessageTime(msg.createdAt)}</span>
+                      {isMe && <Check size={11} strokeWidth={2.5} style={{ opacity: msg.isRead ? 1 : 0.7 }} />}
+                    </div>
                   </div>
                 )}
               </div>
