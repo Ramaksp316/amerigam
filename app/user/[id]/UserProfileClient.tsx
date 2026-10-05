@@ -870,8 +870,8 @@ export default function UserProfileClient({
                     position: 'relative',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
                   }}>
-                    <img src="/images/figma/figma_post1.png" alt="Artwork 1" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <div style={{ position: 'absolute', bottom: '8px', left: '8px', display: 'flex', alignItems: 'center', gap: '4px', color: '#FFFFFF', fontSize: '11px', fontWeight: 600 }}>
+                    <ImageLightbox src="/images/figma/figma_post1.png" alt="Artwork 1" />
+                    <div style={{ position: 'absolute', bottom: '8px', left: '8px', display: 'flex', alignItems: 'center', gap: '4px', color: '#FFFFFF', fontSize: '11px', fontWeight: 600, pointerEvents: 'none' }}>
                       <Play size={10} fill="#FFFFFF" color="#FFFFFF" />
                       <span>18.2K</span>
                     </div>
@@ -884,8 +884,8 @@ export default function UserProfileClient({
                     position: 'relative',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
                   }}>
-                    <img src="/images/figma/figma_post2.png" alt="Artwork 2" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <div style={{ position: 'absolute', bottom: '8px', left: '8px', display: 'flex', alignItems: 'center', gap: '4px', color: '#FFFFFF', fontSize: '11px', fontWeight: 600 }}>
+                    <ImageLightbox src="/images/figma/figma_post2.png" alt="Artwork 2" />
+                    <div style={{ position: 'absolute', bottom: '8px', left: '8px', display: 'flex', alignItems: 'center', gap: '4px', color: '#FFFFFF', fontSize: '11px', fontWeight: 600, pointerEvents: 'none' }}>
                       <Play size={10} fill="#FFFFFF" color="#FFFFFF" />
                       <span>10.8K</span>
                     </div>

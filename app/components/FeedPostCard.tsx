@@ -9,6 +9,7 @@ import FollowButton from './FollowButton';
 import PostDropdownMenu from './PostDropdownMenu';
 import CustomVideoPlayer from './CustomVideoPlayer';
 import ImageLightbox from './ImageLightbox';
+import PostMediaCarousel from './PostMediaCarousel';
 import LikeButton from './LikeButton';
 import { toggleBookmark } from '../actions/postActions';
 
@@ -273,8 +274,18 @@ export default function FeedPostCard({
           - If Portrait with NO text: single centered portrait media!
          ======================================================== */}
       {hasMedia ? (
-        isPortrait ? (
-          /* PORTRAIT FORMAT (Ubhi photo / mobile ratio matching media_1791179339547.png) */
+        mediaList.length > 1 ? (
+          /* MULTI-MEDIA CAROUSEL: Smooth horizontal peek animations, 1/N badge, indicator dots & animated zoom lightbox */
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <PostMediaCarousel
+              mediaUrls={mediaList}
+              mediaType={isVideo ? 'video' : 'image'}
+              alt={post.content?.slice(0, 30) || 'Post media'}
+            />
+            {renderTextContent(false)}
+          </div>
+        ) : isPortrait ? (
+          /* PORTRAIT FORMAT (Ubhi photo / single 9:16 vertical) */
           hasText ? (
             /* 2-Column Row: Tall photo on left, text on right */
             <div
@@ -286,7 +297,7 @@ export default function FeedPostCard({
                 alignItems: 'flex-start'
               }}
             >
-              {/* Left Column: Portrait Media */}
+              {/* Left Column: Portrait Media with Lightbox Animation */}
               <div
                 style={{
                   width: '230px',
@@ -303,9 +314,16 @@ export default function FeedPostCard({
                     style={{ width: '100%', maxHeight: '420px', objectFit: 'cover', display: 'block' }}
                   />
                 ) : (
-                  <img
+                  <ImageLightbox
                     src={mediaList[0]}
                     alt="Post media"
+                    imgStyle={{
+                      width: '100%',
+                      maxHeight: '420px',
+                      objectFit: 'cover',
+                      display: 'block',
+                      borderRadius: '12px'
+                    }}
                     onLoad={(e) => {
                       const img = e.currentTarget;
                       if (img.naturalHeight > img.naturalWidth * 1.1) {
@@ -313,13 +331,6 @@ export default function FeedPostCard({
                       } else {
                         setIsPortrait(false);
                       }
-                    }}
-                    style={{
-                      width: '100%',
-                      maxHeight: '420px',
-                      objectFit: 'cover',
-                      display: 'block',
-                      borderRadius: '12px'
                     }}
                   />
                 )}
@@ -353,10 +364,10 @@ export default function FeedPostCard({
                     style={{ width: '100%', maxHeight: '460px', objectFit: 'cover', display: 'block' }}
                   />
                 ) : (
-                  <img
+                  <ImageLightbox
                     src={mediaList[0]}
                     alt="Post media"
-                    style={{
+                    imgStyle={{
                       width: '100%',
                       maxHeight: '460px',
                       objectFit: 'cover',
@@ -369,7 +380,7 @@ export default function FeedPostCard({
             </div>
           )
         ) : (
-          /* LANDSCAPE FORMAT (Aadi photo / widescreen / desktop ratio matching media_1791179339547.png) */
+          /* LANDSCAPE FORMAT (Aadi photo / widescreen / desktop ratio) */
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {/* Media ON TOP (Contained height, does not overflow full screen!) */}
             <div
@@ -388,21 +399,21 @@ export default function FeedPostCard({
                   style={{ width: '100%', maxHeight: '420px', objectFit: 'cover', display: 'block' }}
                 />
               ) : (
-                <img
+                <ImageLightbox
                   src={mediaList[0]}
                   alt="Post media"
-                  onLoad={(e) => {
-                    const img = e.currentTarget;
-                    if (img.naturalHeight > img.naturalWidth * 1.1) {
-                      setIsPortrait(true);
-                    }
-                  }}
-                  style={{
+                  imgStyle={{
                     width: '100%',
                     maxHeight: '420px',
                     objectFit: 'cover',
                     display: 'block',
                     borderRadius: '12px'
+                  }}
+                  onLoad={(e) => {
+                    const img = e.currentTarget;
+                    if (img.naturalHeight > img.naturalWidth * 1.1) {
+                      setIsPortrait(true);
+                    }
                   }}
                 />
               )}

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import ImageLightbox from './ImageLightbox';
 
 interface PostMediaCarouselProps {
@@ -16,10 +17,10 @@ export default function PostMediaCarousel({
   alt = 'Post media'
 }: PostMediaCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // If only 1 image, render single clean image
+  // If only 1 image, render single clean image with lightbox
   if (!mediaUrls || mediaUrls.length <= 1) {
     const singleUrl = mediaUrls?.[0];
     if (!singleUrl) return null;
@@ -29,7 +30,6 @@ export default function PostMediaCarousel({
   const handleScroll = () => {
     if (!containerRef.current) return;
     const { scrollLeft, clientWidth } = containerRef.current;
-    // Each item takes approximately 86% of clientWidth
     const itemWidth = clientWidth * 0.86 + 12;
     const index = Math.round(scrollLeft / itemWidth);
     if (index >= 0 && index < mediaUrls.length) {
@@ -47,16 +47,38 @@ export default function PostMediaCarousel({
     setActiveIndex(index);
   };
 
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+  };
+
+  const closeLightbox = () => {
+    setLightboxIndex(null);
+  };
+
+  const prevLightbox = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (lightboxIndex !== null && lightboxIndex > 0) {
+      setLightboxIndex(lightboxIndex - 1);
+    }
+  };
+
+  const nextLightbox = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (lightboxIndex !== null && lightboxIndex < mediaUrls.length - 1) {
+      setLightboxIndex(lightboxIndex + 1);
+    }
+  };
+
   return (
     <div style={{ position: 'relative', marginTop: '12px', width: '100%', overflow: 'hidden' }}>
-      {/* Google Pay Style 1/N Badge Pill */}
+      {/* 1/N Pill Badge */}
       <div
         style={{
           position: 'absolute',
           top: '14px',
           left: '14px',
           zIndex: 10,
-          backgroundColor: 'rgba(0, 0, 0, 0.65)',
+          backgroundColor: 'rgba(0, 0, 0, 0.68)',
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
           color: '#FFFFFF',
@@ -65,7 +87,8 @@ export default function PostMediaCarousel({
           padding: '4px 10px',
           borderRadius: '999px',
           border: '1px solid rgba(255, 255, 255, 0.15)',
-          letterSpacing: '0.5px'
+          letterSpacing: '0.5px',
+          pointerEvents: 'none'
         }}
       >
         {activeIndex + 1}/{mediaUrls.length}
@@ -81,7 +104,7 @@ export default function PostMediaCarousel({
             top: '50%',
             transform: 'translateY(-50%)',
             zIndex: 15,
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
             backdropFilter: 'blur(8px)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '50%',
@@ -110,7 +133,7 @@ export default function PostMediaCarousel({
             top: '50%',
             transform: 'translateY(-50%)',
             zIndex: 15,
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
             backdropFilter: 'blur(8px)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '50%',
@@ -148,20 +171,23 @@ export default function PostMediaCarousel({
       >
         {mediaUrls.map((url, idx) => {
           const isActive = idx === activeIndex;
+          const isVideoUrl = url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.mov');
           return (
-            <div
+            <motion.div
               key={idx}
-              onClick={() => setLightboxSrc(url)}
+              onClick={() => openLightbox(idx)}
+              whileHover={{ scale: isActive ? 1.01 : 0.98 }}
               style={{
                 flex: '0 0 86%',
                 maxWidth: '86%',
                 scrollSnapAlign: 'start',
                 cursor: 'pointer',
-                borderRadius: '20px',
+                borderRadius: '16px',
                 overflow: 'hidden',
                 backgroundColor: '#16181C',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
-                aspectRatio: '4/3',
+                aspectRatio: '16 / 10',
+                maxHeight: '400px',
                 position: 'relative',
                 transition: 'transform 0.25s ease, opacity 0.25s ease',
                 transform: isActive ? 'scale(1)' : 'scale(0.96)',
@@ -169,7 +195,7 @@ export default function PostMediaCarousel({
                 boxShadow: isActive ? '0 10px 30px rgba(0, 0, 0, 0.6)' : 'none'
               }}
             >
-              {url.endsWith('.mp4') || url.endsWith('.webm') ? (
+              {isVideoUrl ? (
                 <video
                   src={url}
                   muted
@@ -194,7 +220,7 @@ export default function PostMediaCarousel({
                   }}
                 />
               )}
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -228,37 +254,148 @@ export default function PostMediaCarousel({
         ))}
       </div>
 
-      {/* Lightbox when tapped */}
-      {lightboxSrc && (
-        <div
-          onClick={() => setLightboxSrc(null)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.92)',
-            backdropFilter: 'blur(10px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-            padding: '16px'
-          }}
-        >
-          <img
-            src={lightboxSrc}
-            alt="Enlarged media"
+      {/* Lightbox Modal with Framer Motion Zoom Animation */}
+      <AnimatePresence>
+        {lightboxIndex !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={closeLightbox}
             style={{
-              maxWidth: '95vw',
-              maxHeight: '92vh',
-              objectFit: 'contain',
-              borderRadius: '12px'
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.94)',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 99999,
+              padding: '20px',
+              cursor: 'zoom-out'
             }}
-          />
-        </div>
-      )}
+          >
+            {/* Close Button */}
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                closeLightbox();
+              }}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                zIndex: 100000
+              }}
+              aria-label="Close"
+            >
+              <X size={20} />
+            </motion.button>
+
+            {/* Prev Lightbox Button */}
+            {lightboxIndex > 0 && (
+              <button
+                onClick={prevLightbox}
+                style={{
+                  position: 'absolute',
+                  left: '20px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  color: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  zIndex: 100000
+                }}
+              >
+                <ChevronLeft size={24} />
+              </button>
+            )}
+
+            {/* Next Lightbox Button */}
+            {lightboxIndex < mediaUrls.length - 1 && (
+              <button
+                onClick={nextLightbox}
+                style={{
+                  position: 'absolute',
+                  right: '20px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  color: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  zIndex: 100000
+                }}
+              >
+                <ChevronRight size={24} />
+              </button>
+            )}
+
+            {/* Enlarged Media with Spring Zoom Animation */}
+            {mediaUrls[lightboxIndex].endsWith('.mp4') || mediaUrls[lightboxIndex].endsWith('.webm') ? (
+              <video
+                src={mediaUrls[lightboxIndex]}
+                controls
+                autoPlay
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  maxWidth: '92vw',
+                  maxHeight: '90vh',
+                  objectFit: 'contain',
+                  borderRadius: '12px',
+                  boxShadow: '0 25px 60px rgba(0, 0, 0, 0.9)'
+                }}
+              />
+            ) : (
+              <motion.img
+                key={mediaUrls[lightboxIndex]}
+                src={mediaUrls[lightboxIndex]}
+                alt="Enlarged media"
+                initial={{ scale: 0.88, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.88, opacity: 0 }}
+                transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  maxWidth: '92vw',
+                  maxHeight: '90vh',
+                  objectFit: 'contain',
+                  borderRadius: '14px',
+                  boxShadow: '0 25px 60px rgba(0, 0, 0, 0.9)'
+                }}
+              />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
